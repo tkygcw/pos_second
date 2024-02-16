@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 import 'package:quantity_input/quantity_input.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../notifier/cart_notifier.dart';
 import '../../notifier/theme_color.dart';
@@ -20,10 +20,8 @@ import '../object/categories.dart';
 import '../object/product.dart';
 import '../object/product_variant.dart';
 import '../object/variant_group.dart';
-import '../object/variant_item.dart';
 import '../page/progress_bar.dart';
 import '../utils/Utils.dart';
-// import '../cart/cart_dialog.dart';
 
 class ProductOrderDialog extends StatefulWidget {
   final Product? productDetail;
@@ -36,35 +34,63 @@ class ProductOrderDialog extends StatefulWidget {
 }
 
 class _ProductOrderDialogState extends State<ProductOrderDialog> {
+  StreamController controller = StreamController();
+  StreamController actionController = StreamController();
+  late Stream contentStream;
+  late Stream actionStream;
+  late StreamSubscription actionSubscription;
+  late CartModel cart;
   List<BranchLinkProduct> branchLinkProductList = decodeAction.decodedBranchLinkProductList!;
   List<ProductVariant> productVariantList = decodeAction.decodedProductVariantList!;
   List<BranchLinkModifier> branchLinkModifierList = decodeAction.decodedBranchLinkModifierList!;
   Categories? categories;
-  String branchLinkProduct_id = '';
+  late BranchLinkProduct branchLinkProduct;
   String basePrice = '';
   String finalPrice = '';
-  String dialogPrice = '';
-  int simpleIntInput = 1, pressed = 0;
+  String dialogPrice = '', dialogStock = '';
+  num simpleIntInput = 1, pressed = 0;
   int checkedModifierLength = 0;
   String modifierItemPrice = '';
   List<VariantGroup> variantGroup = [];
   List<ModifierGroup> modifierGroup = [];
   List<ModifierItem> checkedModItem = [];
   final remarkController = TextEditingController();
-  final quantityController = TextEditingController();
+  TextEditingController quantityController = TextEditingController();
 
   bool checkboxValueA = false;
   bool isLoaded = false;
   bool hasPromo = false;
-  bool hasStock = false;
   bool isButtonDisabled = false;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    contentStream = controller.stream;
+    actionStream = actionController.stream;
     productChecking();
+    listenAction();
+    simpleIntInput = widget.productDetail!.unit != 'each' ? 0 : 1;
+    quantityController = TextEditingController(text: widget.productDetail!.unit != 'each' ? '' : '$simpleIntInput');
     //getProductPrice(widget.productDetail?.product_id);
+  }
+
+  listenAction(){
+    actionSubscription = actionStream.listen((action) async {
+      switch(action){
+        case 'add-on':{
+          getProductPrice(widget.productDetail!.product_sqlite_id.toString());
+          getProductDialogStock(widget.productDetail!);
+          controller.sink.add("refresh");
+        }break;
+        case 'variant':{
+          getBranchLinkProductId(widget.productDetail!);
+          getProductPrice(widget.productDetail!.product_sqlite_id.toString());
+          getProductDialogStock(widget.productDetail!);
+          controller.sink.add("refresh");
+        }break;
+      }
+    });
   }
 
   Widget variantGroupLayout(VariantGroup variantGroup) {
@@ -76,11 +102,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           RadioListTile<int?>(
             value: variantGroup.child![i].variant_item_sqlite_id,
             groupValue: variantGroup.variant_item_sqlite_id,
-            onChanged: (ind) =>
-                setState(() {
-                  print('ind: ${ind}');
-                  variantGroup.variant_item_sqlite_id = ind;
-                }),
+            onChanged: (ind) {
+              variantGroup.variant_item_sqlite_id = ind;
+              actionController.sink.add("variant");
+            },
             title: Text(variantGroup.child![i].name!),
             controlAffinity: ListTileControlAffinity.trailing,
           )
@@ -97,7 +122,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           CheckboxListTile(
             title: Row(
               children: [
-                Text('${modifierGroup.modifierChild![i].name!}'),
+                Text(modifierGroup.modifierChild![i].name!),
                 Text(
                   ' (+RM ${Utils.convertTo2Dec(modifierGroup.modifierChild![i].price)})',
                   style: TextStyle(fontSize: 12),
@@ -105,15 +130,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
               ],
             ),
             value: modifierGroup.modifierChild![i].isChecked,
-            onChanged: modifierGroup.modifierChild![i].mod_status! == '2'
-                ? null
-                : (isChecked) {
-              setState(() {
-                modifierGroup.modifierChild![i].isChecked = isChecked!;
-                addCheckedModItem(modifierGroup.modifierChild![i]);
-                // print('flavour ${modifierGroup.modifierChild[i].name},'
-                //     'is check ${modifierGroup.modifierChild[i].isChecked}, ${modifierGroup.modifierChild[i].mod_status}');
-              });
+            onChanged: modifierGroup.modifierChild![i].mod_status! == '2' ? null : (isChecked) {
+              modifierGroup.modifierChild![i].isChecked = isChecked!;
+              addCheckedModItem(modifierGroup.modifierChild![i]);
+              actionController.sink.add("add-on");
             },
             controlAffinity: ListTileControlAffinity.trailing,
           )
@@ -133,390 +153,559 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        return LayoutBuilder(builder: (context, constraints) {
-          if (constraints.maxWidth > 800) {
-            return this.isLoaded
-                ? Center(
-              child: SingleChildScrollView(
-                child: AlertDialog(
-                  title: Row(
-                    children: [
-                      Container(
-                        constraints: BoxConstraints(maxWidth: 300),
-                        child: Text(widget.productDetail!.name!,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            )),
-                      ),
-                      Spacer(),
-                      // Text("RM ${Utils.convertTo2Dec(dialogPrice)}",
-                      //     style: TextStyle(
-                      //       fontSize: 16,
-                      //       fontWeight: FontWeight.bold,
-                      //     )),
-                    ],
-                  ),
-                  content: Container(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height > 500
-                          ?
-                      500.0
-                          :
-                      MediaQuery.of(context).size.height / 2.5,
-                    ),
-                    height: MediaQuery.of(context).size.height > 500 ? 500.0
-                        : MediaQuery.of(context).size.height / 2.5, // Change as per your requirement
-                    width: MediaQuery.of(context).size.width / 3,
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (int i = 0; i < variantGroup.length; i++)
-                            variantGroupLayout(variantGroup[i]),
-                          for (int j = 0; j < modifierGroup.length; j++)
+        this.cart = cart;
+        return StreamBuilder(
+          stream: contentStream,
+          builder: (context, snapshot) {
+            if(snapshot.hasData){
+              return LayoutBuilder(builder: (context, constraints) {
+                if (constraints.maxWidth > 800) {
+                  return AlertDialog(
+                    title: Row(
+                      children: [
+                        Container(
+                          constraints: BoxConstraints(maxWidth: 300),
+                          child: Text(widget.productDetail!.name!,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              )),
+                        ),
+                        Spacer(),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            widget.productDetail!.unit != 'each' ?
+                            Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.per_quantity_unit!}${widget.productDetail!.unit!}",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                )) :
+                            Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.unit!}",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                )),
                             Visibility(
-                              visible: modifierGroup[j].modifierChild!.isNotEmpty &&
-                                  modifierGroup[j].dining_id == "" ||
-                                  modifierGroup[j].dining_id == cart.selectedOptionId
-                                  ? true
-                                  : false,
-                              child: modifierGroupLayout(modifierGroup[j], cart),
-                            ),
-                          Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Quantity",
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
+                              visible: dialogStock != '' ? true : false,
+                              child: Text("In stock: ${dialogStock}${widget.productDetail!.unit != 'each'? widget.productDetail!.unit : ''}",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: dialogStock == '0' ? Colors.red : Colors.black
+                                  )),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                    content: Container(
+                      // constraints: BoxConstraints(
+                      //   maxHeight: MediaQuery.of(context).size.height > 500 ? 500.0 : MediaQuery.of(context).size.height / 2.5,
+                      // ),
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width / 3,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (int i = 0; i < variantGroup.length; i++)
+                              variantGroupLayout(variantGroup[i]),
+                            for (int j = 0; j < modifierGroup.length; j++)
+                              Visibility(
+                                visible: modifierGroup[j].modifierChild!.isNotEmpty &&
+                                    modifierGroup[j].dining_id == "" ||
+                                    modifierGroup[j].dining_id == cart.selectedOptionId
+                                    ? true
+                                    : false,
+                                child: modifierGroupLayout(modifierGroup[j], cart),
                               ),
-                              QuantityInput(
-                                  inputWidth: 273,
-                                  type: QuantityInputType.int,
-                                  minValue: 1,
-                                  acceptsZero: false,
-                                  acceptsNegatives: false,
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Quantity",
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // quantity input
+                                Container(
+                                  width: 400,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // quantity input remove button
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: color.backgroundColor,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: IconButton(
+                                          icon: Icon(Icons.remove, color: Colors.white), // Set the icon color to white.
+                                          onPressed: () {
+                                            if(simpleIntInput >= 1){
+                                              setState(() {
+                                                simpleIntInput -= 1;
+                                                quantityController.text = widget.productDetail!.unit != 'each' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
+                                                simpleIntInput = widget.productDetail!.unit != 'each' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
+                                              });
+                                            } else{
+                                              setState(() {
+                                                simpleIntInput = 0;
+                                                quantityController.text =  widget.productDetail!.unit != 'each' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
+                                                simpleIntInput = widget.productDetail!.unit != 'each' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      // quantity input text field
+                                      Container(
+                                        width: 273,
+                                        child: TextField(
+                                          autofocus: widget.productDetail!.unit != 'each' ? true : false,
+                                          controller: quantityController,
+                                          keyboardType: TextInputType.number,
+                                          inputFormatters: widget.productDetail!.unit != 'each' ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
+                                              : <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                                          textAlign: TextAlign.center,
+                                          decoration: InputDecoration(
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: color.backgroundColor),
+                                            ),
+                                          ),
+                                          onChanged: (value) {
+                                            if(value != ''){
+                                              setState(() => simpleIntInput = widget.productDetail!.unit != 'each' ? double.parse(value.replaceAll(',', '')): int.parse(value.replaceAll(',', '')));
+                                            } else {
+                                              simpleIntInput = 0;
+                                            }
+                                          },
+                                          onSubmitted: _onSubmitted,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      // quantity input add button
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: color.backgroundColor,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: IconButton(
+                                          icon: Icon(Icons.add, color: Colors.white),
+                                          onPressed: () {
+                                            // stock disable or in stock
+                                            if(dialogStock == '' || simpleIntInput+1 < int.parse(dialogStock)) {
+                                              setState(() {
+                                                simpleIntInput += 1;
+                                                quantityController.text = simpleIntInput.toString();
+                                                simpleIntInput =  int.parse(quantityController.text.replaceAll(',', ''));
+                                              });
+                                            } else{
+                                              setState(() {
+                                                simpleIntInput = int.parse(dialogStock);
+                                                quantityController.text = simpleIntInput.toString();
+                                                simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
+                                              });
+                                              if(dialogStock == '0'){
+                                                print('stock_quantity: '+dialogStock);
+                                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(8, 30, 8, 10),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Remark",
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextField(
+                                  controller: remarkController,
                                   decoration: InputDecoration(
                                     focusedBorder: OutlineInputBorder(
                                       borderSide: BorderSide(color: color.backgroundColor),
                                     ),
                                   ),
-                                  buttonColor: color.backgroundColor,
-                                  value: simpleIntInput,
-                                  onChanged: (value) =>
-                                      setState(() =>
-                                      simpleIntInput = int.parse(value.replaceAll(',', ''))))
-                            ],
+                                  keyboardType: TextInputType.multiline,
+                                  maxLines: null,
+                                )
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    actions: <Widget>[
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width / 4,
+                        height: MediaQuery.of(context).size.height / 12,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color.backgroundColor,
                           ),
-                          Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 30, 8, 10),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Remark",
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              TextField(
-                                controller: remarkController,
-                                decoration: InputDecoration(
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: color.backgroundColor),
-                                  ),
-                                ),
-                                keyboardType: TextInputType.multiline,
-                                maxLines: null,
-                              )
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                  actions: <Widget>[
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width / 4,
-                      height: MediaQuery.of(context).size.height / 12,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: color.backgroundColor,
-                        ),
-                        child: Text(
-                          'Close',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        onPressed: isButtonDisabled
-                            ? null
-                            : () {
-                          Navigator.of(context).pop();
+                          child: Text(
+                            'Close',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onPressed: isButtonDisabled
+                              ? null
+                              : () {
+                            Navigator.of(context).pop();
 
-                          // Disable the button after it has been pressed
-                          setState(() {
-                            isButtonDisabled = true;
-                          });
-                        },
+                            // Disable the button after it has been pressed
+                            setState(() {
+                              isButtonDisabled = true;
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width / 4,
-                      height: MediaQuery.of(context).size.height / 12,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: color.buttonColor,
-                        ),
-                        child: Text(
-                          'ADD',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        onPressed: isButtonDisabled
-                            ? null
-                            : () async {
-                          getBranchLinkProductItem(widget.productDetail!);
-                          if (hasStock) {
-                            if (cart.selectedOption == 'Dine in') {
-                              if (simpleIntInput > 0) {
-                                if (cart.selectedTable.isNotEmpty) {
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width / 4,
+                        height: MediaQuery.of(context).size.height / 12,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color.buttonColor,
+                          ),
+                          child: Text(
+                            'ADD',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onPressed: isButtonDisabled
+                              ? null
+                              : ()  {
+                            switch(checkProductStockStatus(widget.productDetail!, cart)){
+                              case 1 : {
+                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+                                    msg: "Product variant sold out!");
+                              }break;
+                              case 2 : {
+                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+                                    msg: "Quantity input exceed stock amount");
+                              }break;
+                              default: {
+                                if (cart.selectedOption == 'Dine in') {
+                                  if (simpleIntInput > 0) {
+                                    if (cart.selectedTable.isNotEmpty) {
+                                      // Disable the button after it has been pressed
+                                      setState(() {
+                                        isButtonDisabled = true;
+                                      });
+                                      addToCart(cart);
+                                      Navigator.of(context).pop();
+                                    } else {
+                                      openChooseTableDialog(cart);
+                                    }
+                                  } else {
+                                    Fluttertoast.showToast(
+                                        backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
+                                  }
+                                } else {
                                   // Disable the button after it has been pressed
                                   setState(() {
                                     isButtonDisabled = true;
                                   });
                                   addToCart(cart);
                                   Navigator.of(context).pop();
-                                } else {
-                                  openChooseTableDialog(cart);
                                 }
-                              } else {
-                                Fluttertoast.showToast(
-                                    backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
                               }
-                            } else {
-                              // Disable the button after it has been pressed
-                              setState(() {
-                                isButtonDisabled = true;
-                              });
-                              addToCart(cart);
-                              Navigator.of(context).pop();
                             }
-                          } else {
-                            Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                msg: "Product variant sold out!");
-                          }
-                        },
+                            // if (checkProductStock(widget.productDetail!, cart) == true) {
+                            //   if (cart.selectedOption == 'Dine in') {
+                            //     if (simpleIntInput > 0) {
+                            //       if (cart.selectedTable.isNotEmpty) {
+                            //         // Disable the button after it has been pressed
+                            //         setState(() {
+                            //           isButtonDisabled = true;
+                            //         });
+                            //         addToCart(cart);
+                            //         Navigator.of(context).pop();
+                            //       } else {
+                            //         openChooseTableDialog(cart);
+                            //       }
+                            //     } else {
+                            //       Fluttertoast.showToast(
+                            //           backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
+                            //     }
+                            //   } else {
+                            //     // Disable the button after it has been pressed
+                            //     setState(() {
+                            //       isButtonDisabled = true;
+                            //     });
+                            //     addToCart(cart);
+                            //     Navigator.of(context).pop();
+                            //   }
+                            // } else {
+                            //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+                            //       msg: "Product variant sold out!");
+                            // }
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-                : CustomProgressBar();
-          } else {
-            ///mobile layout
-            return Center(
-              child: SingleChildScrollView(
-                child: AlertDialog(
-                  title: Row(
-                    children: [
-                      Container(
-                        constraints: BoxConstraints(maxWidth: MediaQuery
-                            .of(context)
-                            .size
-                            .width / 2),
-                        child: Text(widget.productDetail!.name!,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            )),
-                      ),
-                      Spacer(),
-                      // Text("RM ${Utils.convertTo2Dec(widget.productDetail!.price!)}",
-                      //     style: TextStyle(
-                      //       fontSize: 16,
-                      //       fontWeight: FontWeight.bold,
-                      //     )),
                     ],
-                  ),
-                  content: this.isLoaded
-                      ? Container(
-                    height: MediaQuery
-                        .of(context)
-                        .size
-                        .height, // Change as per your requirement
-                    width: MediaQuery
-                        .of(context)
-                        .size
-                        .width / 1.5,
+                  );
+                } else {
+                  ///mobile layout
+                  return Center(
                     child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (int i = 0; i < variantGroup.length; i++) variantGroupLayout(
-                              variantGroup[i]),
-                          for (int j = 0; j < modifierGroup.length; j++)
-                            Visibility(
-                              visible: modifierGroup[j].modifierChild!.isNotEmpty &&
-                                  modifierGroup[j].dining_id == "" ||
-                                  modifierGroup[j].dining_id == cart.selectedOptionId
-                                  ? true
-                                  : false,
-                              child: modifierGroupLayout(modifierGroup[j], cart),
+                      child: AlertDialog(
+                        title: Row(
+                          children: [
+                            Container(
+                              constraints: BoxConstraints(maxWidth: MediaQuery
+                                  .of(context)
+                                  .size
+                                  .width / 2),
+                              child: Text(widget.productDetail!.name!,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  )),
                             ),
-                          Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
+                            Spacer(),
+                            // Text("RM ${Utils.convertTo2Dec(widget.productDetail!.price!)}",
+                            //     style: TextStyle(
+                            //       fontSize: 16,
+                            //       fontWeight: FontWeight.bold,
+                            //     )),
+                          ],
+                        ),
+                        content: this.isLoaded
+                            ? Container(
+                          height: MediaQuery
+                              .of(context)
+                              .size
+                              .height, // Change as per your requirement
+                          width: MediaQuery
+                              .of(context)
+                              .size
+                              .width / 1.5,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (int i = 0; i < variantGroup.length; i++) variantGroupLayout(
+                                    variantGroup[i]),
+                                for (int j = 0; j < modifierGroup.length; j++)
+                                  Visibility(
+                                    visible: modifierGroup[j].modifierChild!.isNotEmpty &&
+                                        modifierGroup[j].dining_id == "" ||
+                                        modifierGroup[j].dining_id == cart.selectedOptionId
+                                        ? true
+                                        : false,
+                                    child: modifierGroupLayout(modifierGroup[j], cart),
+                                  ),
+                                Column(
                                   children: [
-                                    Text(
-                                      "Quantity",
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Quantity",
+                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                    QuantityInput(
+                                        inputWidth: 273,
+                                        acceptsNegatives: false,
+                                        acceptsZero: false,
+                                        minValue: 1,
+                                        decoration: InputDecoration(
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(color: color.backgroundColor),
+                                          ),
+                                        ),
+                                        buttonColor: color.backgroundColor,
+                                        value: simpleIntInput,
+                                        onChanged: (value) =>
+                                            setState(() =>
+                                            simpleIntInput = int.parse(value.replaceAll(',', ''))))
                                   ],
                                 ),
-                              ),
-                              QuantityInput(
-                                  inputWidth: 273,
-                                  acceptsNegatives: false,
-                                  acceptsZero: false,
-                                  minValue: 1,
-                                  decoration: InputDecoration(
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: color.backgroundColor),
+                                Column(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(8, 30, 8, 10),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Remark",
+                                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  buttonColor: color.backgroundColor,
-                                  value: simpleIntInput,
-                                  onChanged: (value) =>
-                                      setState(() =>
-                                      simpleIntInput = int.parse(value.replaceAll(',', ''))))
-                            ],
+                                    TextField(
+                                      controller: remarkController,
+                                      decoration: InputDecoration(
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(color: color.backgroundColor),
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.multiline,
+                                      maxLines: null,
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
                           ),
-                          Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 30, 8, 10),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Remark",
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
+                        )
+                            : CustomProgressBar(),
+                        actions: <Widget>[
+                          SizedBox(
+                            width: MediaQuery
+                                .of(context)
+                                .size
+                                .width / 2.5,
+                            height: MediaQuery
+                                .of(context)
+                                .size
+                                .height / 10,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
+                              child: Text('${AppLocalizations.of(context)?.translate('close')}'),
+                              onPressed: isButtonDisabled
+                                  ? null
+                                  : () {
+                                // Disable the button after it has been pressed
+                                setState(() {
+                                  isButtonDisabled = true;
+                                });
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width / 2.5,
+                            height: MediaQuery.of(context).size.height / 10,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: color.buttonColor,
                               ),
-                              TextField(
-                                controller: remarkController,
-                                decoration: InputDecoration(
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: color.backgroundColor),
-                                  ),
-                                ),
-                                keyboardType: TextInputType.multiline,
-                                maxLines: null,
-                              )
-                            ],
-                          )
+                              child: Text('${AppLocalizations.of(context)?.translate('add')}'),
+                              onPressed: isButtonDisabled
+                                  ? null
+                                  : () async {
+                                switch(checkProductStockStatus(widget.productDetail!, cart)){
+                                  case 1 : {
+                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+                                        msg: "Product variant sold out!");
+                                  }break;
+                                  case 2 : {
+                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+                                        msg: "Quantity input exceed stock amount");
+                                  }break;
+                                  default: {
+                                    if (cart.selectedOption == 'Dine in') {
+                                      if (simpleIntInput > 0) {
+                                        if (cart.selectedTable.isNotEmpty) {
+                                          // Disable the button after it has been pressed
+                                          setState(() {
+                                            isButtonDisabled = true;
+                                          });
+                                          addToCart(cart);
+                                          Navigator.of(context).pop();
+                                        } else {
+                                          openChooseTableDialog(cart);
+                                        }
+                                      } else {
+                                        Fluttertoast.showToast(
+                                            backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
+                                      }
+                                    } else {
+                                      // Disable the button after it has been pressed
+                                      setState(() {
+                                        isButtonDisabled = true;
+                                      });
+                                      addToCart(cart);
+                                      Navigator.of(context).pop();
+                                    }
+                                  }
+                                }
+                                //await getBranchLinkProductItem(widget.productDetail!);
+                                // if (checkProductStock(widget.productDetail!, cart) == true) {
+                                //   if (cart.selectedOption == 'Dine in') {
+                                //     if (simpleIntInput > 0) {
+                                //       if (cart.selectedTable.isNotEmpty) {
+                                //         // Disable the button after it has been pressed
+                                //         setState(() {
+                                //           isButtonDisabled = true;
+                                //         });
+                                //         //await addToCart(cart);
+                                //         Navigator.of(context).pop();
+                                //       } else {
+                                //         openChooseTableDialog(cart);
+                                //       }
+                                //     } else {
+                                //       Fluttertoast.showToast(
+                                //           backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
+                                //     }
+                                //   } else {
+                                //     // Disable the button after it has been pressed
+                                //     setState(() {
+                                //       isButtonDisabled = true;
+                                //     });
+                                //     //await addToCart(cart);
+                                //     Navigator.of(context).pop();
+                                //   }
+                                // } else {
+                                //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+                                //       msg: "Product variant sold out!");
+                                // }
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  )
-                      : CustomProgressBar(),
-                  actions: <Widget>[
-                    SizedBox(
-                      width: MediaQuery
-                          .of(context)
-                          .size
-                          .width / 2.5,
-                      height: MediaQuery
-                          .of(context)
-                          .size
-                          .height / 10,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
-                        child: Text('${AppLocalizations.of(context)?.translate('close')}'),
-                        onPressed: isButtonDisabled
-                            ? null
-                            : () {
-                          // Disable the button after it has been pressed
-                          setState(() {
-                            isButtonDisabled = true;
-                          });
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width / 2.5,
-                      height: MediaQuery.of(context).size.height / 10,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: color.buttonColor,
-                        ),
-                        child: Text('${AppLocalizations.of(context)?.translate('add')}'),
-                        onPressed: isButtonDisabled
-                            ? null
-                            : () async {
-                          //await getBranchLinkProductItem(widget.productDetail!);
-                          if (hasStock == true) {
-                            if (cart.selectedOption == 'Dine in') {
-                              if (simpleIntInput > 0) {
-                                if (cart.selectedTable.isNotEmpty) {
-                                  // Disable the button after it has been pressed
-                                  setState(() {
-                                    isButtonDisabled = true;
-                                  });
-                                  //await addToCart(cart);
-                                  Navigator.of(context).pop();
-                                } else {
-                                  openChooseTableDialog(cart);
-                                }
-                              } else {
-                                Fluttertoast.showToast(
-                                    backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
-                              }
-                            } else {
-                              // Disable the button after it has been pressed
-                              setState(() {
-                                isButtonDisabled = true;
-                              });
-                              //await addToCart(cart);
-                              Navigator.of(context).pop();
-                            }
-                          } else {
-                            Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                msg: "Product variant sold out!");
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+                  );
+                }
+              });
+            } else {
+              return CustomProgressBar();
+            }
           }
-        });
+        );
       });
     });
   }
 
   productChecking() async {
-    await clientAction.connectRequestPort(action: '2', param: jsonEncode(widget.productDetail!));
-    decodeData();
+    await clientAction.connectRequestPort(action: '2', param: jsonEncode(widget.productDetail!), callback: decodeData);
+    getBranchLinkProductId(widget.productDetail!);
+    getProductPrice(widget.productDetail!.product_sqlite_id.toString());
+    getProductDialogStock(widget.productDetail!);
+    controller.sink.add("refresh");
+    //decodeData();
     // await readProductVariant(widget.productDetail!.product_sqlite_id!);
     // await readProductModifier(widget.productDetail!.product_sqlite_id!);
     // await getProductPrice(widget.productDetail!.product_sqlite_id);
@@ -528,19 +717,16 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     // });
   }
 
-  decodeData(){
+  decodeData(response){
     var json = jsonDecode(clientAction.response!);
     Iterable value1 = json['data']['variant'];
     variantGroup = List<VariantGroup>.from(value1.map((json) => VariantGroup.fromJson(json)));
     Iterable value2 = json['data']['modifier'];
     modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
-    finalPrice = json['data']['final_price'];
-    basePrice = json['data']['base_price'];
-    dialogPrice = json['data']['dialog_price'];
+    // finalPrice = json['data']['final_price'];
+    // basePrice = json['data']['base_price'];
+    // dialogPrice = json['data']['dialog_price'];
 
-    setState(() {
-      isLoaded = true;
-    });
   }
 
   // readProductVariant(int productID) async {
@@ -778,52 +964,234 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         });
   }
 
-  getBranchLinkProductItem(Product product){
-    try{
-      if (product.has_variant == 0) {
-        print('branch link product list: ${branchLinkProductList.length}');
-        BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString());
-        print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
-        branchLinkProduct_id = branchLinkProduct.branch_link_product_sqlite_id.toString();
-        if(branchLinkProduct.stock_type == '2') {
-          if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
-            hasStock = true;
+  _onSubmitted(String value) {
+    print("on submitted called!!!");
+    //AppSetting? localSetting = await PosDatabase.instance.readLocalAppSetting(branch_id.toString());
+    switch(checkProductStockStatus(widget.productDetail!, cart)){
+      case 1 : {
+        Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+            msg: "Product variant sold out!");
+      }break;
+      case 2 : {
+        Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
+            msg: "Quantity input exceed stock amount");
+      }break;
+      default: {
+        if (cart.selectedOption == 'Dine in') {
+          if (simpleIntInput > 0) {
+            if (cart.selectedTable.isNotEmpty) {
+              // Disable the button after it has been pressed
+              setState(() {
+                isButtonDisabled = true;
+              });
+              addToCart(cart);
+              Navigator.of(context).pop();
+            } else {
+              openChooseTableDialog(cart);
+            }
           } else {
-            hasStock = false;
+            Fluttertoast.showToast(
+                backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
           }
         } else {
-          if (int.parse(branchLinkProduct.daily_limit_amount!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit_amount!)) {
-            hasStock = true;
-          } else {
-            hasStock = false;
+          // Disable the button after it has been pressed
+          setState(() {
+            isButtonDisabled = true;
+          });
+          addToCart(cart);
+          Navigator.of(context).pop();
+        }
+      }
+    }
+    // if (checkProductStock(widget.productDetail!, cart) == true) {
+    //   print("check product stock return true called!!!");
+    //   //print("appSettingModel.table_order: ${localSetting!.table_order}");
+    //   if (cart.selectedOption == 'Dine in') {
+    //     if (simpleIntInput > 0) {
+    //       if (cart.selectedTable.isNotEmpty) {
+    //         // Disable the button after it has been pressed
+    //         setState(() {
+    //           isButtonDisabled = true;
+    //         });
+    //         addToCart(cart);
+    //         Navigator.of(context).pop();
+    //       } else {
+    //         openChooseTableDialog(cart);
+    //       }
+    //     } else {
+    //       Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('invalid_qty_input'));
+    //     }
+    //   } else {
+    //     // Disable the button after it has been pressed
+    //     setState(() {
+    //       isButtonDisabled = true;
+    //     });
+    //     addToCart(cart);
+    //     Navigator.of(context).pop();
+    //   }
+    // } else {
+    //   print("on submitted else called!!!");
+    //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+    // }
+  }
+
+  ///Check stock status
+  ///
+  /// 0 = has stock
+  ///
+  /// 1 = out of stock stock
+  ///
+  /// 2 = qty input stock exceed
+  int checkProductStockStatus(Product product, CartModel cart) {
+    int stockStatus = 0;
+    try{
+      if (product.has_variant == 0) {
+        switch(branchLinkProduct.stock_type){
+          case '1' :{
+            if (int.parse(branchLinkProduct.daily_limit!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit!)) {
+              num stockLeft = int.parse(branchLinkProduct.daily_limit!) - checkCartProductQuantity(cart, branchLinkProduct);
+              bool isQtyNotExceed = simpleIntInput <= stockLeft;
+              if(isQtyNotExceed){
+                stockStatus = 0;
+              } else {
+                stockStatus = 2;
+              }
+            } else {
+              stockStatus = 1;
+            }
+          }break;
+          case '2': {
+            if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
+              num stockLeft = int.parse(branchLinkProduct.stock_quantity!) - checkCartProductQuantity(cart, branchLinkProduct);
+              bool isQtyNotExceed = simpleIntInput <= stockLeft;
+              if(isQtyNotExceed){
+                stockStatus = 0;
+              } else {
+                stockStatus = 2;
+              }
+            } else {
+              stockStatus = 1;
+            }
+          }break;
+          default: {
+            stockStatus = 0;
           }
         }
       } else {
-        String productVariantId = getProductVariant(product.product_sqlite_id.toString());
-        print('product variant id: $productVariantId');
-        BranchLinkProduct branchLinkProduct =
-        branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
-        branchLinkProduct_id = branchLinkProduct.branch_link_product_sqlite_id.toString();
-        if (branchLinkProduct.stock_type == '2') {
-          if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
-            hasStock = true;
-          } else {
-            hasStock = false;
-          }
-        } else {
-          if (int.parse(branchLinkProduct.daily_limit_amount!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit_amount!)) {
-            hasStock = true;
-          } else {
-            hasStock = false;
+        switch(branchLinkProduct.stock_type){
+          case '1' :{
+            if (int.parse(branchLinkProduct.daily_limit!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit!)) {
+              num stockLeft =  int.parse(branchLinkProduct.daily_limit!) - checkCartProductQuantity(cart, branchLinkProduct);
+              bool isQtyNotExceed = simpleIntInput <= stockLeft;
+              if(isQtyNotExceed){
+                stockStatus = 0;
+              } else {
+                stockStatus = 2;
+              }
+            } else {
+              stockStatus = 1;
+            }
+          }break;
+          case '2': {
+            if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
+              num stockLeft =  int.parse(branchLinkProduct.stock_quantity!) - checkCartProductQuantity(cart, branchLinkProduct);
+              bool isQtyNotExceed = simpleIntInput <= stockLeft;
+              if(isQtyNotExceed){
+                stockStatus = 0;
+              } else {
+                stockStatus = 2;
+              }
+            } else {
+              stockStatus = 1;
+            }
+          }break;
+          default: {
+            stockStatus = 0;
           }
         }
       }
-      return branchLinkProduct_id;
     } catch(e){
-      print('get branch link product error: $e');
-      //Fluttertoast.showToast(msg: 'Something went wrong, please try again later');
+      print("check product stock error: $e");
+      stockStatus = 1;
+    }
+    return stockStatus;
+  }
+
+  num checkCartProductQuantity(CartModel cart, BranchLinkProduct branchLinkProduct){
+    ///get all same item in cart
+    List<cartProductItem> sameProductList = cart.cartNotifierItem.where(
+            (item) => item.branch_link_product_sqlite_id == branchLinkProduct.branch_link_product_sqlite_id.toString() && item.status == 0
+    ).toList();
+    if(sameProductList.isNotEmpty){
+      /// sum all quantity
+      num totalQuantity = sameProductList.fold(0, (sum, product) => sum + product.quantity!);
+      return totalQuantity;
+    } else {
+      return 0;
     }
   }
+
+  void getBranchLinkProductId(Product product){
+    if(branchLinkProductList.isNotEmpty){
+      if (product.has_variant == 0) {
+        BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString());
+        this.branchLinkProduct = branchLinkProduct;
+      } else {
+        String productVariantId = getProductVariant(product.product_sqlite_id.toString());
+        BranchLinkProduct branchLinkProduct =
+        branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
+        this.branchLinkProduct = branchLinkProduct;
+      }
+    }
+    print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
+  }
+
+  // getBranchLinkProductItem(Product product){
+  //   try{
+  //     if (product.has_variant == 0) {
+  //       print('branch link product list: ${branchLinkProductList.length}');
+  //       BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString());
+  //       print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
+  //       branchLinkProduct_id = branchLinkProduct.branch_link_product_sqlite_id.toString();
+  //       if(branchLinkProduct.stock_type == '2') {
+  //         if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
+  //           hasStock = true;
+  //         } else {
+  //           hasStock = false;
+  //         }
+  //       } else {
+  //         if (int.parse(branchLinkProduct.daily_limit_amount!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit_amount!)) {
+  //           hasStock = true;
+  //         } else {
+  //           hasStock = false;
+  //         }
+  //       }
+  //     } else {
+  //       String productVariantId = getProductVariant(product.product_sqlite_id.toString());
+  //       print('product variant id: $productVariantId');
+  //       BranchLinkProduct branchLinkProduct =
+  //       branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
+  //       branchLinkProduct_id = branchLinkProduct.branch_link_product_sqlite_id.toString();
+  //       if (branchLinkProduct.stock_type == '2') {
+  //         if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
+  //           hasStock = true;
+  //         } else {
+  //           hasStock = false;
+  //         }
+  //       } else {
+  //         if (int.parse(branchLinkProduct.daily_limit_amount!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit_amount!)) {
+  //           hasStock = true;
+  //         } else {
+  //           hasStock = false;
+  //         }
+  //       }
+  //     }
+  //     return branchLinkProduct_id;
+  //   } catch(e){
+  //     print('get branch link product error: $e');
+  //     //Fluttertoast.showToast(msg: 'Something went wrong, please try again later');
+  //   }
+  // }
 
   getProductVariant(String productLocalId){
     String variant = '';
@@ -837,9 +1205,9 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           if (group.variant_item_sqlite_id == group.child![i].variant_item_sqlite_id) {
             group.child![i].isSelected = true;
             if (variant == '') {
-              variant = group.child![i].name!.trim();
+              variant = group.child![i].name!;
               if (variantGroup.length == 1) {
-                ProductVariant data = productVariantList.firstWhere((item) => item.product_sqlite_id == productLocalId && item.variant_name == variant);
+                ProductVariant? data = productVariantList.firstWhere((item) => item.product_sqlite_id == productLocalId && item.variant_name == variant);
                 //List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant);
                 // productVariant = data[0].product_variant_sqlite_id.toString();
                 productVariantLocalId = data.product_variant_sqlite_id.toString();
@@ -876,11 +1244,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     }
   }
 
-  getProductPrice(String? productLocalId){
+  void getProductPrice(String? productLocalId){
     double totalBasePrice = 0.0;
     double totalModPrice = 0.0;
     try {
-      BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == productLocalId);
       if (branchLinkProduct.has_variant == '0') {
         basePrice = branchLinkProduct.price!;
         finalPrice = basePrice;
@@ -899,9 +1266,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           }
         }
       } else {
-        //List<BranchLinkProduct> productVariant = await PosDatabase.instance.checkProductVariant(await getProductVariant(productId!), productId.toString());
-        BranchLinkProduct branchLinkProduct =
-        branchLinkProductList.firstWhere((item) => item.product_sqlite_id == productLocalId && item.product_variant_sqlite_id == getProductVariant(productLocalId!));
         basePrice = branchLinkProduct.price!;
         finalPrice = basePrice;
         dialogPrice = basePrice;
@@ -920,11 +1284,38 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           }
         }
       }
-      return finalPrice;
     } catch (error) {
       print('Get product base price error ${error}');
     }
-    return finalPrice;
+    dialogPrice = finalPrice;
+  }
+
+  void getProductDialogStock(Product product){
+    if (product.has_variant == 0) {
+      switch(branchLinkProduct.stock_type){
+        case '1': {
+          dialogStock = branchLinkProduct.daily_limit.toString();
+        }break;
+        case '2': {
+          dialogStock = branchLinkProduct.stock_quantity.toString();
+        }break;
+        default:{
+          dialogStock = '';
+        }
+      }
+    } else {
+      switch(branchLinkProduct.stock_type){
+        case '1': {
+          dialogStock = branchLinkProduct.daily_limit.toString();
+        }break;
+        case '2': {
+          dialogStock = branchLinkProduct.stock_quantity.toString();
+        }break;
+        default:{
+          dialogStock = '';
+        }
+      }
+    }
   }
 
   compareCartProductModifier({required List<ModifierGroup> cartModifierGroup}){
@@ -947,8 +1338,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     List<int> cartModItemId = [];
     List<int> checkedModItemId = [];
     bool same = true;
-    print('cart mod item length:${checkedCartModItem.length}');
-    print('checked mod item length:${checkedModItem.length}');
     if (checkedCartModItem.length != checkedModItem.length) {
       same = false;
     } else {
@@ -992,11 +1381,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       checkedModItem = [];
     }
     var value = cartProductItem(
-        branch_link_product_sqlite_id: getBranchLinkProductItem(widget.productDetail!),
+        branch_link_product_sqlite_id: branchLinkProduct.branch_link_product_sqlite_id.toString(),
         product_name: widget.productDetail!.name!,
         category_id: widget.productDetail!.category_id!,
         category_name: categories != null ? categories!.name : '',
-        price: getProductPrice(widget.productDetail?.product_sqlite_id.toString()),
+        price: dialogPrice,
         quantity: simpleIntInput,
         checkedModifierLength: checkedModifierLength,
         checkedModifierItem: checkedModItem,
@@ -1008,15 +1397,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         base_price: basePrice,
         refColor: Colors.black,
     );
-    print('value category: ${value.category_name}');
-    // print('base price: ${value.base_price}');
-    // print('price: ${value.price}');
     List<cartProductItem> item = [];
     if(cart.cartNotifierItem.isEmpty){
       cart.addItem(value);
     } else {
       for(int k = 0; k < cart.cartNotifierItem.length; k++){
-        print('cart checked mod item length in cart: ${cart.cartNotifierItem[k].checkedModifierLength}');
         if(cart.cartNotifierItem[k].branch_link_product_sqlite_id == value.branch_link_product_sqlite_id
             && value.remark == cart.cartNotifierItem[k].remark
             && value.checkedModifierLength == cart.cartNotifierItem[k].checkedModifierLength
@@ -1024,7 +1409,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           item.add(cart.cartNotifierItem[k]);
         }
       }
-      print('item length: ${item.length}');
       while(item.length > 1){
         for(int i = 0 ; i < item.length; i++){
           bool status = compareCartProductModifier(cartModifierGroup: item[i].modifier!);
@@ -1033,7 +1417,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           }
         }
       }
-      print('item after first compare length: ${item.length}');
       if(item.length == 1){
         if(item[0].checkedModifierLength == 0){
           item[0].quantity = item[0].quantity! + value.quantity!;
@@ -1049,7 +1432,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       } else {
         cart.addItem(value);
       }
-      print('length after: ${cart.cartNotifierItem.length}');
     }
     cart.resetCount();
     decodeAction.cartProductController.sink.add(cart);

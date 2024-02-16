@@ -22,6 +22,7 @@ class LoadingPage extends StatefulWidget {
 }
 
 class _LoadingPageState extends State<LoadingPage> {
+  StreamController controller = StreamController();
   List<String> decodedBase64ImageList = [];
   bool isDecodeComplete = false;
   @override
@@ -40,7 +41,19 @@ class _LoadingPageState extends State<LoadingPage> {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Scaffold(
         backgroundColor: color.backgroundColor,
-        body: CustomProgressBar(),
+        body: StreamBuilder(
+          stream: controller.stream,
+          builder: (context, snapshot) {
+            if(snapshot.hasData){
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PosPinPage()));
+              });
+              return SizedBox.shrink();
+            } else {
+              return CustomProgressBar();
+            }
+          }
+        ),
       );
     });
   }
@@ -51,6 +64,7 @@ class _LoadingPageState extends State<LoadingPage> {
     // }
     await Future.delayed(Duration(seconds: 3), () {
       decodeAction.decodeAllFunction();
+      controller.sink.add("done");
       //_createProductImgFolder();
     });
     // Future.delayed(Duration(seconds: 5), () {
@@ -80,9 +94,9 @@ class _LoadingPageState extends State<LoadingPage> {
     // }
     // Go to Page2 after 5s.
 
-    Timer(Duration(seconds: 12), () {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PosPinPage()));
-    });
+    // Timer(Duration(seconds: 12), () {
+    //   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => PosPinPage()));
+    // });
 
   }
 

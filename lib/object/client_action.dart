@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/object/cart_product.dart';
 
 class ClientAction{
   late Socket socket;
@@ -20,9 +21,9 @@ class ClientAction{
 
   connectServer(String ips) async  {
     try{
+      int i = 0;
       Map<String, dynamic>? result;
       final buffer = StringBuffer();
-      bool connectStatus = false;
 
       socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
       serverIp = ips;
@@ -30,14 +31,14 @@ class ClientAction{
       result = {'action': '1', 'param': ''};
       socket.write('${jsonEncode(result)}\n');
 
-      //split request call every 1 sec
-      splitRequest(buffer: buffer, serverSocket: socket, response: response);
-
       //socket stream listen for data
       socket.listen( (data) {
-        /// Track the received data
+        print("data chunk received: ${i+1}");
+        // Track the received data
         String receivedData = utf8.decode(data);
         buffer.write(receivedData);
+        //split request call every 1 sec
+        splitRequest(buffer: buffer, serverSocket: socket, response: response);
       },onError: (err){
         print('listen error: $err');
         timer?.cancel();
@@ -51,7 +52,7 @@ class ClientAction{
         notificationModel.enableReconnectDialog();
       });
 
-      return connectStatus = true;
+      return true;
 
       // Socket.connect(ips, 9999, timeout: const Duration(seconds: 3)).then((socket) {
       //   connectStatus = true;
@@ -116,28 +117,48 @@ class ClientAction{
   }
 
   splitRequest({required StringBuffer buffer, required Socket serverSocket, response}) {
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      print("buffer: ${buffer.toString()}");
-      if(loading == false && buffer.toString() != ''){
-        loading = true;
-        final messages = buffer.toString().split('\n');
-        String firstRequest = messages[0];
-        for(int i = 0; i < messages.length; i++){
-          if(i != 0){
-            buffer.clear();
-            buffer.write(messages[i]);
-          }
+    if(loading == false && buffer.toString() != ''){
+      print("if called!!!");
+      loading = true;
+      final messages = buffer.toString().split('\n');
+      String firstRequest = messages[0];
+      for(int i = 0; i < messages.length; i++){
+        if(i != 0){
+          buffer.clear();
+          buffer.write(messages[i]);
         }
-        processData(message: firstRequest, serverSocket: serverSocket);
-        loading = false;
-      } else {
-        return;
       }
-    });
+      processData(message: firstRequest, serverSocket: serverSocket);
+      loading = false;
+    } else {
+      print("else called");
+      return;
+    }
+    // timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+    //   print("loading status: $loading");
+    //   print("splitRequest- buffer: ${buffer.toString()}");
+    //   if(loading == false && buffer.toString() != ''){
+    //     print("if called!!!");
+    //     loading = true;
+    //     final messages = buffer.toString().split('\n');
+    //     String firstRequest = messages[0];
+    //     for(int i = 0; i < messages.length; i++){
+    //       if(i != 0){
+    //         buffer.clear();
+    //         buffer.write(messages[i]);
+    //       }
+    //     }
+    //     processData(message: firstRequest, serverSocket: serverSocket);
+    //     loading = false;
+    //   } else {
+    //     print("else called");
+    //     return;
+    //   }
+    // });
   }
 
   processData({required Socket serverSocket, message}){
-    print("message: ${message}");
+    print("process data message: ${message}");
     if (message != '') {
       response = message;
       Future.delayed(const Duration(milliseconds: 1000), () {
@@ -154,7 +175,7 @@ class ClientAction{
     return utf8.decode(data).endsWith('\n');
   }
 
-  connectRequestPort({required String action, String? param}) async {
+  connectRequestPort({required String action, String? param, Function? callback}) async {
     try{
       print("request port called!");
       Map<String, dynamic>? result;
@@ -177,6 +198,9 @@ class ClientAction{
           final messages = buffer.toString().trim();
           print("message: ${messages}");
           response = messages;
+          if(callback != null){
+            callback(response);
+          }
 
           receivedData = '';
 

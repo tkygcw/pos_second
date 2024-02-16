@@ -37,6 +37,7 @@ import '../../object/tax.dart';
 import '../../object/variant_group.dart';
 import '../../page/loading_dialog.dart';
 import '../../translation/AppLocalizations.dart';
+import '../../utils/Utils.dart';
 import '../logout_dialog.dart';
 import 'cart_dialog.dart';
 import 'cart_remove_dialog.dart';
@@ -116,7 +117,7 @@ class _CartPageState extends State<CartPage> {
   void initState() {
     //controller = StreamController();
     preload();
-    calculateSubtotal();
+    //calculateSubtotal();
     // readAllBranchLinkDiningOption();
     // getPromotionData();
     // readAllPrinters();
@@ -149,18 +150,17 @@ class _CartPageState extends State<CartPage> {
         branchLinkDiningIdList = List.from(value2);
         Iterable value3 = json['data']['promotion_list'];
         promotionList = List<Promotion>.from(value3.map((json) => Promotion.fromJson(json)));
-        isLoaded = true;
+        //isLoaded = true;
       });
-      decodeAction.cartController.sink.add("refresh");
+      // decodeAction.cartController.sink.add("refresh");
     }catch(e){
       print("cart decode data error: $e");
     }
   }
 
   calculateSubtotal(){
-    decodeAction.cartStream.listen((cart) async  {
+    decodeAction.cartStream.listen((cart) async {
       await getSubTotal(cart);
-      decodeAction.cartController.sink.add("refresh");
     });
   }
 
@@ -249,13 +249,13 @@ class _CartPageState extends State<CartPage> {
           // widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'qr_order' || widget.currentPage == 'other_order'
           //     ? getSubTotal(cart)
           //     : getReceiptPaymentDetail(cart);
+          getSubTotal(cart);
           return Scaffold(
             resizeToAvoidBottomInset: false,
             appBar: AppBar(
               automaticallyImplyLeading: false,
               title: Row(
                 children: [
-                  MediaQuery.of(context).size.height > 500 ? Text('Bill', style: TextStyle(fontSize: 20, color: Colors.black)) : SizedBox.shrink(),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -326,8 +326,7 @@ class _CartPageState extends State<CartPage> {
                 //     })
               ],
             ),
-            body: isLoaded ?
-            StreamBuilder(
+            body: StreamBuilder(
                 stream: decodeAction.cartStream,
                 builder: (context, snapshot) {
                   if(snapshot.hasData){
@@ -834,8 +833,6 @@ class _CartPageState extends State<CartPage> {
                     return CustomProgressBar();
                   }
                 })
-                :
-            Container(),
           );
         }),
       );
@@ -1231,7 +1228,7 @@ class _CartPageState extends State<CartPage> {
 
   getAutoApplyPromotion(CartModel cart) {
     try {
-      cart.removeAutoPromotion();
+      //cart.removeAutoPromotion();
       autoApplyPromotionList = [];
       promoName = '';
       hasPromo = false;
@@ -1624,12 +1621,12 @@ class _CartPageState extends State<CartPage> {
     checkCartItem(cart);
     if (cart.myCount == 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _scrollDown();
-        });
+        _scrollDown();
       });
       cart.myCount++;
     }
+
+    decodeAction.cartController.sink.add("refresh");
     // if (!controller.isClosed) {
     //   controller.sink.add('refresh');
     // }
@@ -1662,13 +1659,13 @@ class _CartPageState extends State<CartPage> {
   }
 
   getRounding() {
+    getAllTaxAmount();
     double _round = 0.0;
-    _round = double.parse(totalAmount.toStringAsFixed(1)) - double.parse(totalAmount.toStringAsFixed(2));
-    if (_round.toStringAsFixed(2) != '0.05' && _round.toStringAsFixed(2) != '-0.05') {
-      rounding = _round;
-    } else {
-      rounding = 0.0;
-    }
+    totalAmount = 0.0;
+    discountPrice = total - promoAmount;
+    totalAmount = discountPrice + priceIncAllTaxes;
+    _round = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
+    rounding = _round;
 
     // if (!controller.isClosed) {
     //   controller.sink.add('refresh');
@@ -1676,18 +1673,8 @@ class _CartPageState extends State<CartPage> {
   }
 
   getAllTotal() {
-    getAllTaxAmount();
     try {
-      totalAmount = 0.0;
-      discountPrice = total - promoAmount;
-      totalAmount = discountPrice + priceIncAllTaxes;
-
-      if (rounding == 0.0) {
-        finalAmount = totalAmount.toStringAsFixed(2);
-      } else {
-        finalAmount = totalAmount.toStringAsFixed(1) + '0';
-      }
-      //totalAmount = (totalAmount * 100).truncate() / 100;
+      finalAmount = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))).toStringAsFixed(2);
     } catch (error) {
       print('Total calc error: $error');
     }

@@ -12,7 +12,7 @@ class cartProductItem{
    String? category_id;
    String? category_name;
    String? price;
-   int? quantity;
+   num? quantity;
    int? checkedModifierLength;
    List<ModifierItem>? checkedModifierItem;
    List<ModifierGroup>? modifier ;
@@ -73,7 +73,7 @@ class cartProductItem{
          category_id: json['category_id'] as String?,
          category_name: json['category_name'] as String?,
          price: json['price'] as String?,
-         quantity: json['quantity'] as int?,
+         quantity: json['quantity'] as num?,
          checkedModifierLength: json['checkedModifierLength'] as int?,
          checkedModifierItem: modItem,
          modifier: modGroup,
