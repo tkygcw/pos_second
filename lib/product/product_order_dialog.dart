@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:provider/provider.dart';
 import 'package:quantity_input/quantity_input.dart';
 
@@ -43,6 +44,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   List<BranchLinkProduct> branchLinkProductList = decodeAction.decodedBranchLinkProductList!;
   List<ProductVariant> productVariantList = decodeAction.decodedProductVariantList!;
   List<BranchLinkModifier> branchLinkModifierList = decodeAction.decodedBranchLinkModifierList!;
+  AppSetting appSetting = decodeAction.decodedAppSetting!;
   Categories? categories;
   late BranchLinkProduct branchLinkProduct;
   String basePrice = '';
@@ -72,7 +74,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     listenAction();
     simpleIntInput = widget.productDetail!.unit != 'each' ? 0 : 1;
     quantityController = TextEditingController(text: widget.productDetail!.unit != 'each' ? '' : '$simpleIntInput');
-    //getProductPrice(widget.productDetail?.product_id);
   }
 
   listenAction(){
@@ -370,9 +371,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                             'Close',
                             style: TextStyle(color: Colors.white),
                           ),
-                          onPressed: isButtonDisabled
-                              ? null
-                              : () {
+                          onPressed: isButtonDisabled ? null : () {
                             Navigator.of(context).pop();
 
                             // Disable the button after it has been pressed
@@ -393,74 +392,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                             'ADD',
                             style: TextStyle(color: Colors.white),
                           ),
-                          onPressed: isButtonDisabled
-                              ? null
-                              : ()  {
-                            switch(checkProductStockStatus(widget.productDetail!, cart)){
-                              case 1 : {
-                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                    msg: "Product variant sold out!");
-                              }break;
-                              case 2 : {
-                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                    msg: "Quantity input exceed stock amount");
-                              }break;
-                              default: {
-                                if (cart.selectedOption == 'Dine in') {
-                                  if (simpleIntInput > 0) {
-                                    if (cart.selectedTable.isNotEmpty) {
-                                      // Disable the button after it has been pressed
-                                      setState(() {
-                                        isButtonDisabled = true;
-                                      });
-                                      addToCart(cart);
-                                      Navigator.of(context).pop();
-                                    } else {
-                                      openChooseTableDialog(cart);
-                                    }
-                                  } else {
-                                    Fluttertoast.showToast(
-                                        backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
-                                  }
-                                } else {
-                                  // Disable the button after it has been pressed
-                                  setState(() {
-                                    isButtonDisabled = true;
-                                  });
-                                  addToCart(cart);
-                                  Navigator.of(context).pop();
-                                }
-                              }
-                            }
-                            // if (checkProductStock(widget.productDetail!, cart) == true) {
-                            //   if (cart.selectedOption == 'Dine in') {
-                            //     if (simpleIntInput > 0) {
-                            //       if (cart.selectedTable.isNotEmpty) {
-                            //         // Disable the button after it has been pressed
-                            //         setState(() {
-                            //           isButtonDisabled = true;
-                            //         });
-                            //         addToCart(cart);
-                            //         Navigator.of(context).pop();
-                            //       } else {
-                            //         openChooseTableDialog(cart);
-                            //       }
-                            //     } else {
-                            //       Fluttertoast.showToast(
-                            //           backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
-                            //     }
-                            //   } else {
-                            //     // Disable the button after it has been pressed
-                            //     setState(() {
-                            //       isButtonDisabled = true;
-                            //     });
-                            //     addToCart(cart);
-                            //     Navigator.of(context).pop();
-                            //   }
-                            // } else {
-                            //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                            //       msg: "Product variant sold out!");
-                            // }
+                          onPressed: isButtonDisabled ? null : ()  {
+                            _productStockStatusAction();
                           },
                         ),
                       ),
@@ -612,75 +545,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                 backgroundColor: color.buttonColor,
                               ),
                               child: Text('${AppLocalizations.of(context)?.translate('add')}'),
-                              onPressed: isButtonDisabled
-                                  ? null
-                                  : () async {
-                                switch(checkProductStockStatus(widget.productDetail!, cart)){
-                                  case 1 : {
-                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                        msg: "Product variant sold out!");
-                                  }break;
-                                  case 2 : {
-                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                        msg: "Quantity input exceed stock amount");
-                                  }break;
-                                  default: {
-                                    if (cart.selectedOption == 'Dine in') {
-                                      if (simpleIntInput > 0) {
-                                        if (cart.selectedTable.isNotEmpty) {
-                                          // Disable the button after it has been pressed
-                                          setState(() {
-                                            isButtonDisabled = true;
-                                          });
-                                          addToCart(cart);
-                                          Navigator.of(context).pop();
-                                        } else {
-                                          openChooseTableDialog(cart);
-                                        }
-                                      } else {
-                                        Fluttertoast.showToast(
-                                            backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
-                                      }
-                                    } else {
-                                      // Disable the button after it has been pressed
-                                      setState(() {
-                                        isButtonDisabled = true;
-                                      });
-                                      addToCart(cart);
-                                      Navigator.of(context).pop();
-                                    }
-                                  }
-                                }
-                                //await getBranchLinkProductItem(widget.productDetail!);
-                                // if (checkProductStock(widget.productDetail!, cart) == true) {
-                                //   if (cart.selectedOption == 'Dine in') {
-                                //     if (simpleIntInput > 0) {
-                                //       if (cart.selectedTable.isNotEmpty) {
-                                //         // Disable the button after it has been pressed
-                                //         setState(() {
-                                //           isButtonDisabled = true;
-                                //         });
-                                //         //await addToCart(cart);
-                                //         Navigator.of(context).pop();
-                                //       } else {
-                                //         openChooseTableDialog(cart);
-                                //       }
-                                //     } else {
-                                //       Fluttertoast.showToast(
-                                //           backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
-                                //     }
-                                //   } else {
-                                //     // Disable the button after it has been pressed
-                                //     setState(() {
-                                //       isButtonDisabled = true;
-                                //     });
-                                //     //await addToCart(cart);
-                                //     Navigator.of(context).pop();
-                                //   }
-                                // } else {
-                                //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-                                //       msg: "Product variant sold out!");
-                                // }
+                              onPressed: isButtonDisabled ? null : () {
+                                _productStockStatusAction();
                               },
                             ),
                           ),
@@ -705,240 +571,15 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     getProductPrice(widget.productDetail!.product_sqlite_id.toString());
     getProductDialogStock(widget.productDetail!);
     controller.sink.add("refresh");
-    //decodeData();
-    // await readProductVariant(widget.productDetail!.product_sqlite_id!);
-    // await readProductModifier(widget.productDetail!.product_sqlite_id!);
-    // await getProductPrice(widget.productDetail!.product_sqlite_id);
-    // categories =
-    // await PosDatabase.instance.readSpecificCategoryById(widget.productDetail!.category_sqlite_id!);
-    //print('category init: ${categories}');
-    // setState(() {
-    //   this.isLoaded = true;
-    // });
   }
 
   decodeData(response){
-    var json = jsonDecode(clientAction.response!);
+    var json = jsonDecode(response);
     Iterable value1 = json['data']['variant'];
     variantGroup = List<VariantGroup>.from(value1.map((json) => VariantGroup.fromJson(json)));
     Iterable value2 = json['data']['modifier'];
     modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
-    // finalPrice = json['data']['final_price'];
-    // basePrice = json['data']['base_price'];
-    // dialogPrice = json['data']['dialog_price'];
-
   }
-
-  // readProductVariant(int productID) async {
-  //   //loop variant group first
-  //   List<VariantGroup> data = await PosDatabase.instance.readProductVariantGroup(productID);
-  //   for (int i = 0; i < data.length; i++) {
-  //     variantGroup.add(VariantGroup(
-  //         variant_group_sqlite_id: data[i].variant_group_sqlite_id, variant_group_id: data[i].variant_group_id, child: [], name: data[i].name));
-  //
-  //     //loop variant child based on variant group id
-  //     List<VariantItem> itemData = await PosDatabase.instance.readProductVariantItem(data[i].variant_group_sqlite_id!);
-  //     List<VariantItem> itemChild = [];
-  //     for (int j = 0; j < itemData.length; j++) {
-  //       //pre-check radio button
-  //       if (j == 0) {
-  //         variantGroup[i].variant_item_sqlite_id = itemData[j].variant_item_sqlite_id;
-  //       }
-  //       //store all child into one list
-  //       itemChild.add(VariantItem(
-  //           variant_group_sqlite_id: itemData[j].variant_group_sqlite_id,
-  //           variant_group_id: itemData[j].variant_group_id.toString(),
-  //           name: itemData[j].name,
-  //           variant_item_sqlite_id: itemData[j].variant_item_sqlite_id,
-  //           variant_item_id: itemData[j].variant_item_id));
-  //     }
-  //     //assign list into group child
-  //     variantGroup[i].child = itemChild;
-  //   }
-  // }
-
-  // readProductModifier(int productID) async {
-  //   List<ModifierGroup> data = await PosDatabase.instance.readProductModifierGroupName(productID);
-  //
-  //   for (int i = 0; i < data.length; i++) {
-  //     modifierGroup.add(ModifierGroup(
-  //       modifierChild: [],
-  //       name: data[i].name,
-  //       mod_group_id: data[i].mod_group_id,
-  //       dining_id: data[i].dining_id,
-  //       compulsory: data[i].compulsory,
-  //     ));
-  //
-  //     List<ModifierItem> itemData = await PosDatabase.instance.readProductModifierItem(data[i].mod_group_id!);
-  //     List<ModifierItem> modItemChild = [];
-  //
-  //     for (int j = 0; j < itemData.length; j++) {
-  //       modItemChild.add(ModifierItem(
-  //           mod_group_id: data[i].mod_group_id.toString(),
-  //           name: itemData[j].name!,
-  //           mod_item_id: itemData[j].mod_item_id,
-  //           mod_status: itemData[j].mod_status,
-  //           isChecked: false));
-  //     }
-  //     if(modifierGroup[i].compulsory == '1' && modifierGroup[i].dining_id == widget.cartModel.selectedOptionId){
-  //       for(int k = 0; k < modItemChild.length; k++){
-  //         modItemChild[k].isChecked = true;
-  //       }
-  //       modifierGroup[i].modifierChild = modItemChild;
-  //     }
-  //     modifierGroup[i].modifierChild = modItemChild;
-  //     readProductModifierItemPrice(modifierGroup[i]);
-  //   }
-  // }
-
-  // readProductModifierItemPrice(ModifierGroup modGroup) async {
-  //   modifierItemPrice = '';
-  //
-  //   for (int i = 0; i < modGroup.modifierChild.length; i++) {
-  //     List<BranchLinkModifier> data = await PosDatabase.instance.readBranchLinkModifier(modGroup.modifierChild[i].mod_item_id.toString());
-  //     modGroup.modifierChild[i].price = data[0].price!;
-  //   }
-  // }
-
-  // getProductPrice(int? productId) async {
-  //   double totalBasePrice = 0.0;
-  //   double totalModPrice = 0.0;
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final int? branch_id = prefs.getInt('branch_id');
-  //
-  //     List<BranchLinkProduct> data = await PosDatabase.instance.readBranchLinkSpecificProduct(branch_id.toString(), productId.toString());
-  //     if (data[0].has_variant == '0') {
-  //       basePrice = data[0].price!;
-  //       finalPrice = basePrice;
-  //       //check product mod group
-  //       for (int j = 0; j < modifierGroup.length; j++) {
-  //         ModifierGroup group = modifierGroup[j];
-  //         //loop mod group child
-  //         for (int k = 0; k < group.modifierChild.length; k++) {
-  //           if (group.modifierChild[k].isChecked == true) {
-  //             List<BranchLinkModifier> modPrice = await PosDatabase.instance.readBranchLinkModifier(group.modifierChild[k].mod_item_id.toString());
-  //             totalModPrice += double.parse(modPrice[0].price!);
-  //             totalBasePrice = double.parse(data[0].price!) + totalModPrice;
-  //             finalPrice = totalBasePrice.toStringAsFixed(2);
-  //           }
-  //         }
-  //       }
-  //     } else {
-  //       List<BranchLinkProduct> productVariant = await PosDatabase.instance.checkProductVariant(await getProductVariant(productId!), productId.toString());
-  //       basePrice = productVariant[0].price!;
-  //       finalPrice = basePrice;
-  //       dialogPrice = basePrice;
-  //
-  //       //loop has variant product modifier group
-  //       for (int j = 0; j < modifierGroup.length; j++) {
-  //         ModifierGroup group = modifierGroup[j];
-  //         //loop mod group child
-  //         for (int k = 0; k < group.modifierChild.length; k++) {
-  //           if (group.modifierChild[k].isChecked == true) {
-  //             List<BranchLinkModifier> modPrice = await PosDatabase.instance.readBranchLinkModifier(group.modifierChild[k].mod_item_id.toString());
-  //             totalModPrice += double.parse(modPrice[0].price!);
-  //             totalBasePrice = double.parse(productVariant[0].price!) + totalModPrice;
-  //             finalPrice = totalBasePrice.toStringAsFixed(2);
-  //           }
-  //         }
-  //       }
-  //     }
-  //   } catch (error) {
-  //     print('Get product base price error ${error}');
-  //   }
-  //   return finalPrice;
-  // }
-
-  // getBranchLinkProductItem(Product product) async {
-  //   branchLinkProduct_id = '';
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final int? branch_id = prefs.getInt('branch_id');
-  //     if (product.has_variant == 0) {
-  //       List<BranchLinkProduct> data1 = await PosDatabase.instance.readBranchLinkSpecificProduct(branch_id.toString(), product.product_sqlite_id.toString());
-  //       branchLinkProduct_id = data1[0].branch_link_product_sqlite_id.toString();
-  //       if(data1[0].stock_type == '2') {
-  //         if (int.parse(data1[0].stock_quantity!) > 0 && simpleIntInput <= int.parse(data1[0].stock_quantity!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       } else {
-  //         if (int.parse(data1[0].daily_limit_amount!) > 0 && simpleIntInput <= int.parse(data1[0].daily_limit_amount!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       }
-  //     } else {
-  //       //check has variant product stock
-  //       List<BranchLinkProduct> data = await PosDatabase.instance.checkProductVariant(await getProductVariant(product.product_sqlite_id!), product.product_sqlite_id.toString());
-  //       branchLinkProduct_id = data[0].branch_link_product_sqlite_id.toString();
-  //       if (data[0].stock_type == '2') {
-  //         if (int.parse(data[0].stock_quantity!) > 0 && simpleIntInput <= int.parse(data[0].stock_quantity!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       } else {
-  //         if (int.parse(data[0].daily_limit_amount!) > 0 && simpleIntInput <= int.parse(data[0].daily_limit_amount!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       }
-  //     }
-  //     return branchLinkProduct_id;
-  //   } catch (e) {
-  //     Fluttertoast.showToast(msg: 'Make sure stock is restock');
-  //   }
-  // }
-
-  // getProductVariant(int product_id) async {
-  //   String variant = '';
-  //   String variant2 = '';
-  //   String variant3 = '';
-  //   String productVariant = '';
-  //   try {
-  //     for (int j = 0; j < variantGroup.length; j++) {
-  //       VariantGroup group = variantGroup[j];
-  //       for (int i = 0; i < group.child!.length; i++) {
-  //         if (group.variant_item_sqlite_id == group.child![i].variant_item_sqlite_id) {
-  //           group.child![i].isSelected = true;
-  //           if (variant == '') {
-  //             variant = group.child![i].name!.trim();
-  //             if (variantGroup.length == 1) {
-  //               List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant);
-  //               productVariant = data[0].product_variant_sqlite_id.toString();
-  //               break;
-  //             }
-  //           } else if (variant2 == '') {
-  //             variant2 = variant + " | " + group.child![i].name!;
-  //             if (variantGroup.length == 2) {
-  //               List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant2);
-  //               productVariant = data[0].product_variant_sqlite_id.toString();
-  //               break;
-  //             }
-  //           } else if (variant3 == '') {
-  //             variant3 = variant2 + " | " + group.child![i].name!;
-  //             if (variantGroup.length == 3) {
-  //               List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant3);
-  //               productVariant = data[0].product_variant_sqlite_id.toString();
-  //               break;
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //     // print('variant string: ${variant}');
-  //     // print('product variant: ${productVariant}');
-  //     return productVariant;
-  //   } catch (error) {
-  //     print('get product variant error: ${error}');
-  //     return;
-  //   }
-  // }
 
   Future<Future<Object?>> openChooseTableDialog(CartModel cartModel) async {
     return showGeneralDialog(
@@ -964,9 +605,22 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         });
   }
 
-  _onSubmitted(String value) {
-    print("on submitted called!!!");
-    //AppSetting? localSetting = await PosDatabase.instance.readLocalAppSetting(branch_id.toString());
+  void getBranchLinkProductId(Product product){
+    if(branchLinkProductList.isNotEmpty){
+      if (product.has_variant == 0) {
+        BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString());
+        this.branchLinkProduct = branchLinkProduct;
+      } else {
+        String productVariantId = getProductVariant(product.product_sqlite_id.toString());
+        BranchLinkProduct branchLinkProduct =
+        branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
+        this.branchLinkProduct = branchLinkProduct;
+      }
+    }
+    print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
+  }
+
+  void _productStockStatusAction(){
     switch(checkProductStockStatus(widget.productDetail!, cart)){
       case 1 : {
         Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
@@ -977,7 +631,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
             msg: "Quantity input exceed stock amount");
       }break;
       default: {
-        if (cart.selectedOption == 'Dine in') {
+        if (cart.selectedOption == 'Dine in'&& appSetting.table_order == 1) {
           if (simpleIntInput > 0) {
             if (cart.selectedTable.isNotEmpty) {
               // Disable the button after it has been pressed
@@ -1003,36 +657,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         }
       }
     }
-    // if (checkProductStock(widget.productDetail!, cart) == true) {
-    //   print("check product stock return true called!!!");
-    //   //print("appSettingModel.table_order: ${localSetting!.table_order}");
-    //   if (cart.selectedOption == 'Dine in') {
-    //     if (simpleIntInput > 0) {
-    //       if (cart.selectedTable.isNotEmpty) {
-    //         // Disable the button after it has been pressed
-    //         setState(() {
-    //           isButtonDisabled = true;
-    //         });
-    //         addToCart(cart);
-    //         Navigator.of(context).pop();
-    //       } else {
-    //         openChooseTableDialog(cart);
-    //       }
-    //     } else {
-    //       Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('invalid_qty_input'));
-    //     }
-    //   } else {
-    //     // Disable the button after it has been pressed
-    //     setState(() {
-    //       isButtonDisabled = true;
-    //     });
-    //     addToCart(cart);
-    //     Navigator.of(context).pop();
-    //   }
-    // } else {
-    //   print("on submitted else called!!!");
-    //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
-    // }
+  }
+
+  _onSubmitted(String value) {
+    print("app setting table order: ${appSetting.table_order}");
+    _productStockStatusAction();
   }
 
   ///Check stock status
@@ -1131,68 +760,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     }
   }
 
-  void getBranchLinkProductId(Product product){
-    if(branchLinkProductList.isNotEmpty){
-      if (product.has_variant == 0) {
-        BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString());
-        this.branchLinkProduct = branchLinkProduct;
-      } else {
-        String productVariantId = getProductVariant(product.product_sqlite_id.toString());
-        BranchLinkProduct branchLinkProduct =
-        branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
-        this.branchLinkProduct = branchLinkProduct;
-      }
-    }
-    print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
-  }
-
-  // getBranchLinkProductItem(Product product){
-  //   try{
-  //     if (product.has_variant == 0) {
-  //       print('branch link product list: ${branchLinkProductList.length}');
-  //       BranchLinkProduct? branchLinkProduct = branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString());
-  //       print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
-  //       branchLinkProduct_id = branchLinkProduct.branch_link_product_sqlite_id.toString();
-  //       if(branchLinkProduct.stock_type == '2') {
-  //         if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       } else {
-  //         if (int.parse(branchLinkProduct.daily_limit_amount!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit_amount!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       }
-  //     } else {
-  //       String productVariantId = getProductVariant(product.product_sqlite_id.toString());
-  //       print('product variant id: $productVariantId');
-  //       BranchLinkProduct branchLinkProduct =
-  //       branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
-  //       branchLinkProduct_id = branchLinkProduct.branch_link_product_sqlite_id.toString();
-  //       if (branchLinkProduct.stock_type == '2') {
-  //         if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       } else {
-  //         if (int.parse(branchLinkProduct.daily_limit_amount!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit_amount!)) {
-  //           hasStock = true;
-  //         } else {
-  //           hasStock = false;
-  //         }
-  //       }
-  //     }
-  //     return branchLinkProduct_id;
-  //   } catch(e){
-  //     print('get branch link product error: $e');
-  //     //Fluttertoast.showToast(msg: 'Something went wrong, please try again later');
-  //   }
-  // }
-
   getProductVariant(String productLocalId){
     String variant = '';
     String variant2 = '';
@@ -1208,8 +775,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
               variant = group.child![i].name!;
               if (variantGroup.length == 1) {
                 ProductVariant? data = productVariantList.firstWhere((item) => item.product_sqlite_id == productLocalId && item.variant_name == variant);
-                //List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant);
-                // productVariant = data[0].product_variant_sqlite_id.toString();
                 productVariantLocalId = data.product_variant_sqlite_id.toString();
                 break;
               }
@@ -1218,8 +783,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
               if (variantGroup.length == 2) {
                 ProductVariant data = productVariantList.firstWhere((item) => item.product_sqlite_id == productLocalId && item.variant_name == variant2);
                 productVariantLocalId = data.product_variant_sqlite_id.toString();
-                // List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant2);
-                // productVariant = data[0].product_variant_sqlite_id.toString();
                 break;
               }
             } else if (variant3 == '') {
@@ -1227,16 +790,12 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
               if (variantGroup.length == 3) {
                 ProductVariant data = productVariantList.firstWhere((item) => item.product_sqlite_id == productLocalId && item.variant_name == variant3);
                 productVariantLocalId = data.product_variant_sqlite_id.toString();
-                // List<ProductVariant> data = await PosDatabase.instance.readSpecificProductVariant(product_id.toString(), variant3);
-                // productVariant = data[0].product_variant_sqlite_id.toString();
                 break;
               }
             }
           }
         }
       }
-      // print('variant string: ${variant}');
-      // print('product variant: ${productVariant}');
       return productVariantLocalId;
     } catch (error) {
       print('get product variant error: ${error}');
@@ -1257,7 +816,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           //loop mod group child
           for (int k = 0; k < group.modifierChild!.length; k++) {
             if (group.modifierChild![k].isChecked == true) {
-              //List<BranchLinkModifier> modPrice = await PosDatabase.instance.readBranchLinkModifier(group.modifierChild![k].mod_item_id.toString());
               BranchLinkModifier branchLinkModifier = branchLinkModifierList.firstWhere((item) => item.mod_item_id == group.modifierChild![k].mod_item_id.toString());
               totalModPrice += double.parse(branchLinkModifier.price!);
               totalBasePrice = double.parse(branchLinkProduct.price!) + totalModPrice;

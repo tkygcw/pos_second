@@ -134,20 +134,6 @@ class _CartDialogState extends State<CartDialog> {
     );
   }
 
-  hexToColor(String hexCode) {
-    return new Color(int.parse(hexCode.substring(1, 7), radix: 16) + 0xFF000000);
-  }
-
-  toColor(String hex) {
-    var hexColor = hex.replaceAll("#", "");
-    if (hexColor.length == 6) {
-      hexColor = "FF" + hexColor;
-    }
-    if (hexColor.length == 8) {
-      return Color(int.parse("0x$hexColor"));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
@@ -283,6 +269,29 @@ class _CartDialogState extends State<CartDialog> {
     return selected;
   }
 
+  fontColor({required PosTable posTable}){
+    if(posTable.status == 1){
+      Color fontColor = Colors.black;
+      Color backgroundColor = toColor(posTable.card_color!);
+      if(backgroundColor.computeLuminance() > 0.5){
+        fontColor = Colors.black;
+      } else {
+        fontColor = Colors.white;
+      }
+      return fontColor;
+    }
+  }
+
+  toColor(String hex) {
+    var hexColor = hex.replaceAll("#", "");
+    if (hexColor.length == 6) {
+      hexColor = "FF$hexColor";
+    }
+    if (hexColor.length == 8) {
+      return Color(int.parse("0x$hexColor"));
+    }
+  }
+
   Widget tableItem(CartModel cart, ThemeColor color, index) {
     return Container(
       key: Key(index.toString()),
@@ -293,12 +302,7 @@ class _CartDialogState extends State<CartDialog> {
             shape: tableList[index].isSelected
                 ? new RoundedRectangleBorder(side: new BorderSide(color: color.backgroundColor, width: 3.0), borderRadius: BorderRadius.circular(4.0))
                 : new RoundedRectangleBorder(side: new BorderSide(color: Colors.white, width: 3.0), borderRadius: BorderRadius.circular(4.0)),
-            color: tableList[index].status == 1
-                ?
-            Utils.toColor(tableList[index].card_color!)
-            //toColor(tableList[index].card_color!)
-                :
-            Colors.white,
+            color: Colors.white,
             child: InkWell(
               splashColor: Colors.blue.withAlpha(30),
               onDoubleTap: () {
@@ -347,130 +351,218 @@ class _CartDialogState extends State<CartDialog> {
                 }
               },
               child: Container(
-                margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.all(10) : null,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    tableList[index].group != null && MediaQuery.of(context).size.height > 500
-                        ? Row(
-                        children: [
-                          Text("Group: ${tableList[index].group}",
-                            style: TextStyle(fontSize: 18),
+                margin: EdgeInsets.all(10),
+                child: Container(
+                  //margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.fromLTRB(0, 2, 0, 2) : null,
+                  height: 100,
+                  child: Stack(
+                    children: [
+                      tableList[index].seats == '2'
+                          ? Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage("drawable/two-seat.jpg"),
+                            fit: BoxFit.cover,
                           ),
-                          Spacer(),
-                          Visibility(
-                              visible: tableList[index].isSelected ? true : false,
-                              child: IconButton(
-                                icon: Icon(Icons.close, size: 18),
-                                constraints: BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                                onPressed: () async {
-                                  sameGroupTbList = [];
-                                  for (int i = 0; i < tableList.length; i++) {
-                                    if (tableList[index].group == tableList[i].group) {
-                                      sameGroupTbList.add(tableList[i]);
-                                    }
-                                  }
-                                  if (sameGroupTbList.length > 1) {
-                                    //await callRemoveTableQuery(tableList[index].table_sqlite_id!);
-                                    tableList[index].isSelected = false;
-                                    tableList[index].group = null;
-                                    cart.removeAllTable();
-                                    cart.removeAllCartItem();
-                                  } else {
-                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "Cannot remove this table");
-                                  }
-                                },
-                              ))
-                        ])
-                        :
-                    SizedBox.shrink(),
-                    Container(
-                      //margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.fromLTRB(0, 2, 0, 2) : null,
-                      height: 100,
-                      child: Stack(
-                        children: [
-                          tableList[index].seats == '2'
-                              ? Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage("drawable/two-seat.jpg"),
-                                fit: BoxFit.cover,
+                        ),
+                      )
+                          : tableList[index].seats == '4'
+                          ? Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage("drawable/four-seat.jpg"),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                          : tableList[index].seats == '6'
+                          ? Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage("drawable/six-seat.jpg"),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                          : SizedBox.shrink(),
+                      Container(alignment: Alignment.center, child: Text(tableList[index].number!)),
+                      tableList[index].group != null ? Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.only(right: 5.0, left: 5.0),
+                              decoration: BoxDecoration(
+                                  color: tableList[index].group != null
+                                      ?
+                                  toColor(tableList[index].card_color!)
+                                      :
+                                  Colors.white,
+                                  borderRadius: BorderRadius.circular(5.0)
+                              ),
+                              child: MediaQuery.of(context).size.height > 500 ? Text(
+                                "Group: ${tableList[index].group}",
+                                style: TextStyle(fontSize: 18, color: fontColor(posTable: tableList[index])),
+                              ) : Text(
+                                "${tableList[index].group}",
+                                style: TextStyle(fontSize: 14, color: fontColor(posTable: tableList[index])),
                               ),
                             ),
-                          )
-                              : tableList[index].seats == '4'
-                              ? Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage("drawable/four-seat.jpg"),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          )
-                              : tableList[index].seats == '6'
-                              ? Container(
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage("drawable/six-seat.jpg"),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          )
-                              : SizedBox.shrink(),
-                          // Ink.image(
-                          //   image: tableList[index].seats == '2'
-                          //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/two-seat.jpg'))
-                          //   // NetworkImage(
-                          //   //         "https://www.hometown.in/media/cms/icon/Two-Seater-Dining-Sets.png")
-                          //       : tableList[index].seats == '4'
-                          //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/four-seat.jpg'))
-                          //   // NetworkImage(
-                          //   //             "https://www.hometown.in/media/cms/icon/Four-Seater-Dining-Sets.png")
-                          //       : tableList[index].seats == '6'
-                          //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/six-seat.jpg'))
-                          //   // NetworkImage(
-                          //   //                 "https://www.hometown.in/media/cms/icon/Six-Seater-Dining-Sets.png")
-                          //       : FileImage(File('data/user/0/com.example.pos_system/files/assets/img/duitNow.jpg')),
-                          //   // NetworkImage(
-                          //   //                 "https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"),
-                          //   fit: BoxFit.cover,
-                          // ),
-                          // Ink.image(
-                          //   image: tableList[index].seats == '2'
-                          //       ? NetworkImage(
-                          //           "https://www.hometown.in/media/cms/icon/Two-Seater-Dining-Sets.png")
-                          //       : tableList[index].seats == '4'
-                          //           ? NetworkImage(
-                          //               "https://www.hometown.in/media/cms/icon/Four-Seater-Dining-Sets.png")
-                          //           : tableList[index].seats == '6'
-                          //               ? NetworkImage(
-                          //                   "https://www.hometown.in/media/cms/icon/Six-Seater-Dining-Sets.png")
-                          //               : NetworkImage(
-                          //                   "https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"),
-                          //   fit: BoxFit.cover,
-                          // ),
-                          Container(alignment: Alignment.center, child: Text("#${tableList[index].number!}")),
-                        ],
-                      ),
-                    ),
-                    // Container(
-                    //   child: Text(''),
-                    // )
-                    // tableList[index].status == 1
-                    //     ? Expanded(
-                    //       child: Container(
-                    //           alignment: Alignment.topCenter,
-                    //           child: Text(
-                    //             "RM ${tableList[index].total_Amount.toStringAsFixed(2)}",
-                    //             style: TextStyle(fontSize: 18),
-                    //           ),
-                    //         ),
-                    //     )
-                    //     : Expanded(child: Container(child: Text('')))
-                  ],
+                            Spacer(),
+                            Visibility(
+                                visible: tableList[index].isSelected  ? true : false,
+                                child: IconButton(
+                                  color: Colors.red,
+                                  icon: Icon(Icons.close, size: 18),
+                                  constraints: BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                  onPressed: () async {
+                                    // sameGroupTbList = [];
+                                    // for (int i = 0; i < tableList.length; i++) {
+                                    //   if (tableList[index].group == tableList[i].group) {
+                                    //     sameGroupTbList.add(tableList[i]);
+                                    //   }
+                                    // }
+                                    // if (sameGroupTbList.length > 1) {
+                                    //   await callRemoveTableQuery(tableList[index].table_sqlite_id!);
+                                    //   tableList[index].isSelected = false;
+                                    //   tableList[index].group = null;
+                                    //   cart.removeAllTable();
+                                    //   cart.removeAllCartItem();
+                                    // } else {
+                                    //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('cannot_remove_this_table'));
+                                    // }
+                                  },
+                                ))
+                          ])
+                          :
+                      SizedBox.shrink(),
+                    ],
+                  ),
                 ),
               ),
+              // Container(
+              //   margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.all(10) : null,
+              //   child: Column(
+              //     mainAxisAlignment: MainAxisAlignment.center,
+              //     children: [
+              //       tableList[index].group != null && MediaQuery.of(context).size.height > 500 ? Row(
+              //           children: [
+              //             Text("Group: ${tableList[index].group}",
+              //               style: TextStyle(fontSize: 18),
+              //             ),
+              //             Spacer(),
+              //             Visibility(
+              //                 visible: tableList[index].isSelected ? true : false,
+              //                 child: IconButton(
+              //                   icon: Icon(Icons.close, size: 18),
+              //                   constraints: BoxConstraints(),
+              //                   padding: EdgeInsets.zero,
+              //                   onPressed: () async {
+              //                     sameGroupTbList = [];
+              //                     for (int i = 0; i < tableList.length; i++) {
+              //                       if (tableList[index].group == tableList[i].group) {
+              //                         sameGroupTbList.add(tableList[i]);
+              //                       }
+              //                     }
+              //                     if (sameGroupTbList.length > 1) {
+              //                       //await callRemoveTableQuery(tableList[index].table_sqlite_id!);
+              //                       tableList[index].isSelected = false;
+              //                       tableList[index].group = null;
+              //                       cart.removeAllTable();
+              //                       cart.removeAllCartItem();
+              //                     } else {
+              //                       Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "Cannot remove this table");
+              //                     }
+              //                   },
+              //                 ))
+              //           ])
+              //           :
+              //       SizedBox.shrink(),
+              //       Container(
+              //         //margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.fromLTRB(0, 2, 0, 2) : null,
+              //         height: 100,
+              //         child: Stack(
+              //           children: [
+              //             tableList[index].seats == '2'
+              //                 ? Container(
+              //               decoration: BoxDecoration(
+              //                 image: DecorationImage(
+              //                   image: AssetImage("drawable/two-seat.jpg"),
+              //                   fit: BoxFit.cover,
+              //                 ),
+              //               ),
+              //             )
+              //                 : tableList[index].seats == '4'
+              //                 ? Container(
+              //               decoration: BoxDecoration(
+              //                 image: DecorationImage(
+              //                   image: AssetImage("drawable/four-seat.jpg"),
+              //                   fit: BoxFit.cover,
+              //                 ),
+              //               ),
+              //             )
+              //                 : tableList[index].seats == '6'
+              //                 ? Container(
+              //               decoration: BoxDecoration(
+              //                 image: DecorationImage(
+              //                   image: AssetImage("drawable/six-seat.jpg"),
+              //                   fit: BoxFit.cover,
+              //                 ),
+              //               ),
+              //             )
+              //                 : SizedBox.shrink(),
+              //             // Ink.image(
+              //             //   image: tableList[index].seats == '2'
+              //             //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/two-seat.jpg'))
+              //             //   // NetworkImage(
+              //             //   //         "https://www.hometown.in/media/cms/icon/Two-Seater-Dining-Sets.png")
+              //             //       : tableList[index].seats == '4'
+              //             //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/four-seat.jpg'))
+              //             //   // NetworkImage(
+              //             //   //             "https://www.hometown.in/media/cms/icon/Four-Seater-Dining-Sets.png")
+              //             //       : tableList[index].seats == '6'
+              //             //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/six-seat.jpg'))
+              //             //   // NetworkImage(
+              //             //   //                 "https://www.hometown.in/media/cms/icon/Six-Seater-Dining-Sets.png")
+              //             //       : FileImage(File('data/user/0/com.example.pos_system/files/assets/img/duitNow.jpg')),
+              //             //   // NetworkImage(
+              //             //   //                 "https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"),
+              //             //   fit: BoxFit.cover,
+              //             // ),
+              //             // Ink.image(
+              //             //   image: tableList[index].seats == '2'
+              //             //       ? NetworkImage(
+              //             //           "https://www.hometown.in/media/cms/icon/Two-Seater-Dining-Sets.png")
+              //             //       : tableList[index].seats == '4'
+              //             //           ? NetworkImage(
+              //             //               "https://www.hometown.in/media/cms/icon/Four-Seater-Dining-Sets.png")
+              //             //           : tableList[index].seats == '6'
+              //             //               ? NetworkImage(
+              //             //                   "https://www.hometown.in/media/cms/icon/Six-Seater-Dining-Sets.png")
+              //             //               : NetworkImage(
+              //             //                   "https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"),
+              //             //   fit: BoxFit.cover,
+              //             // ),
+              //             Container(alignment: Alignment.center, child: Text(tableList[index].number!)),
+              //           ],
+              //         ),
+              //       ),
+              //       // Container(
+              //       //   child: Text(''),
+              //       // )
+              //       // tableList[index].status == 1
+              //       //     ? Expanded(
+              //       //       child: Container(
+              //       //           alignment: Alignment.topCenter,
+              //       //           child: Text(
+              //       //             "RM ${tableList[index].total_Amount.toStringAsFixed(2)}",
+              //       //             style: TextStyle(fontSize: 18),
+              //       //           ),
+              //       //         ),
+              //       //     )
+              //       //     : Expanded(child: Container(child: Text('')))
+              //     ],
+              //   ),
+              // ),
             ),
           ),
         )
@@ -571,8 +663,8 @@ class _CartDialogState extends State<CartDialog> {
 
   readAllTable({isReset}) async {
     isLoad = false;
-    await clientAction.connectRequestPort(action: '7');
-    decodeData();
+    await clientAction.connectRequestPort(action: '7', callback: decodeData);
+    //decodeData();
 
     // List<PosTable> data = await PosDatabase.instance.readAllTable();
     //
@@ -593,9 +685,9 @@ class _CartDialogState extends State<CartDialog> {
     // await readAllPrinters();
   }
 
-  decodeData(){
+  decodeData(response){
     try{
-      var json = jsonDecode(clientAction.response!);
+      var json = jsonDecode(response);
       Iterable value1 = json['data']['table_list'];
       tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
       if (widget.selectedTableList.isNotEmpty) {

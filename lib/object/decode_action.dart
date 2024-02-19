@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/user.dart';
 
 import '../main.dart';
+import 'app_setting.dart';
 import 'branch_link_modifier.dart';
 import 'branch_link_product.dart';
 import 'categories.dart';
@@ -26,7 +28,9 @@ class DecodeAction {
   List<BranchLinkProduct>? decodedBranchLinkProductList = [];
   List<BranchLinkModifier>? decodedBranchLinkModifierList = [];
   List<ProductVariant>? decodedProductVariantList = [];
+  List<BranchLinkDining>? decodedBranchLinkDiningList = [];
   List<User>? decodedUserList = [];
+  AppSetting? decodedAppSetting;
 
   DecodeAction({
     this.decodedProductList,
@@ -50,6 +54,11 @@ class DecodeAction {
     decodedBranchLinkModifierList = List<BranchLinkModifier>.from(value5.map((json) => BranchLinkModifier.fromJson(json)));
     Iterable value6 = json['data']['tb_product_variant'];
     decodedProductVariantList = List<ProductVariant>.from(value6.map((json) => ProductVariant.fromJson(json)));
+    //Iterable value7 = json['data']['tb_app_setting'];
+    decodedAppSetting = AppSetting.fromJson(json['data']['tb_app_setting']);
+    Iterable value8 = json['data']['tb_branch_link_dining_option'];
+    decodedBranchLinkDiningList = List<BranchLinkDining>.from(value8.map((json) => BranchLinkDining.fromJson(json)));
+
     ///image part
     // Iterable value7 = json['data']['image_list'];
     // decodedBase64ImageList = List.from(value7);

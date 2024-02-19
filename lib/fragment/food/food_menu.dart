@@ -60,6 +60,12 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  getPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? user = prefs.getString('user');
+    imagePath = prefs.getString('local_path')!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
@@ -202,8 +208,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   //   });
   // }
 
-  readAllCategories() {
-    //await getPreferences();
+  readAllCategories() async {
+    await getPreferences();
     initCategory = decodeAction.decodedCategoryList!;
     initProduct = decodeAction.decodedProductList!;
 
@@ -231,8 +237,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
               return Card(
                 child: Container(
                   decoration: (data[index].graphic_type == '2'
-                      ? BoxDecoration(color: Colors.grey)
-                  //BoxDecoration(image: DecorationImage(image: FileImage(File(imagePath + '/' + data[index].image!)), fit: BoxFit.cover))
+                      ? //BoxDecoration(color: Colors.grey)
+                  BoxDecoration(image: DecorationImage(image: FileImage(File(imagePath + '/' + data[index].image!)), fit: BoxFit.cover))
                       : BoxDecoration(color: HexColor(data[index].color!))),
                   child: InkWell(
                     splashColor: Colors.blue.withAlpha(30),
@@ -276,8 +282,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
               return Card(
                 child: Container(
                   decoration: (data[index].graphic_type == '2'
-                      ? BoxDecoration(color: Colors.grey)
-                  //BoxDecoration(image: DecorationImage(image: FileImage(File(imagePath + '/' + data[index].image!)), fit: BoxFit.cover))
+                      ? //BoxDecoration(color: Colors.grey)
+                  BoxDecoration(image: DecorationImage(image: FileImage(File(imagePath + '/' + data[index].image!)), fit: BoxFit.cover))
                       : BoxDecoration(color: HexColor(data[index].color!))),
                   child: InkWell(
                     splashColor: Colors.blue.withAlpha(30),
@@ -316,8 +322,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         // });
       }
     }
-    refresh();
     _tabController = TabController(length: categoryTab.length, vsync: this);
+    refresh();
   }
 
   // getPreferences() async {

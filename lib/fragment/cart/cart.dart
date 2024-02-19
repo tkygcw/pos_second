@@ -4,12 +4,15 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:confirm_dialog/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/object/branch_link_tax.dart';
 import 'package:optimy_second_device/object/client_action.dart';
+import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:provider/provider.dart';
 
@@ -38,7 +41,6 @@ import '../../object/variant_group.dart';
 import '../../page/loading_dialog.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
-import '../logout_dialog.dart';
 import 'cart_dialog.dart';
 import 'cart_remove_dialog.dart';
 // import '../settlement/cash_dialog.dart';
@@ -54,6 +56,8 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  StreamController cartController = StreamController();
+  late Stream cartStream;
   final ClientAction cartClientAction = ClientAction(serverIp: clientAction.serverIp);
   final ScrollController _scrollController = ScrollController();
   //late StreamController controller;
@@ -62,6 +66,7 @@ class _CartPageState extends State<CartPage> {
   List<Printer> printerList = [];
   List<Promotion> promotionList = [], autoApplyPromotionList = [];
   List<BranchLinkDining> diningList = [];
+  List<TaxLinkDining> taxLinkDiningList = [], currentDiningTax = [];
   List<String>  branchLinkDiningIdList = [];
   List<cartProductItem> sameCategoryItemList = [];
   List<TableUse> tableUseList = [];
@@ -107,7 +112,7 @@ class _CartPageState extends State<CartPage> {
   bool hasPromo = false, hasSelectedPromo = false, _isSettlement = false, hasNewItem = false, timeOutDetected = false, isLogOut = false;
   Color font = Colors.black45;
   int myCount = 0;
-  bool isLoaded = false;
+  bool isLoaded = false, isFirstLoad = false;
 
   void _scrollDown() {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -116,7 +121,8 @@ class _CartPageState extends State<CartPage> {
   @override
   void initState() {
     //controller = StreamController();
-    preload();
+    cartStream = cartController.stream;
+    //preload();
     //calculateSubtotal();
     // readAllBranchLinkDiningOption();
     // getPromotionData();
@@ -132,37 +138,38 @@ class _CartPageState extends State<CartPage> {
 
   preload() async {
     print("cart preload called");
-    await cartClientAction.connectRequestPort(action: '6');
-    decodeData();
+    await cartClientAction.connectRequestPort(action: '6', callback: decodeData);
+    //decodeData();
     // clientAction.sendRequest(action: '6', param: '');
     // await Future.delayed(const Duration(milliseconds: 3000), () {
     //   decodeData();
     // });
   }
 
-  decodeData(){
+  decodeData(response){
     try{
-      var json = jsonDecode(cartClientAction.response!);
-      setState(() {
-        Iterable value1 = json['data']['dining_list'];
-        diningList = List<BranchLinkDining>.from(value1.map((json) => BranchLinkDining.fromJson(json)));
-        Iterable value2 = json['data']['branch_link_dining_id_list'];
-        branchLinkDiningIdList = List.from(value2);
-        Iterable value3 = json['data']['promotion_list'];
-        promotionList = List<Promotion>.from(value3.map((json) => Promotion.fromJson(json)));
-        //isLoaded = true;
-      });
+      var json = jsonDecode(response);
+      // Iterable value1 = json['data']['dining_list'];
+      // diningList = List<BranchLinkDining>.from(value1.map((json) => BranchLinkDining.fromJson(json)));
+      diningList = decodeAction.decodedBranchLinkDiningList!;
+      Iterable value2 = json['data']['branch_link_dining_id_list'];
+      branchLinkDiningIdList = List.from(value2);
+      Iterable value3 = json['data']['promotion_list'];
+      promotionList = List<Promotion>.from(value3.map((json) => Promotion.fromJson(json)));
+      print("promotion list: ${promotionList.length}");
+      Iterable value4 = json['data']['taxLinkDiningList'];
+      taxLinkDiningList = List<TaxLinkDining>.from(value4.map((json) => TaxLinkDining.fromJson(json)));
       // decodeAction.cartController.sink.add("refresh");
     }catch(e){
       print("cart decode data error: $e");
     }
   }
 
-  calculateSubtotal(){
-    decodeAction.cartStream.listen((cart) async {
-      await getSubTotal(cart);
-    });
-  }
+  // calculateSubtotal(){
+  //   decodeAction.cartStream.listen((cart) async {
+  //     await getSubTotal(cart);
+  //   });
+  // }
 
   Future showSecondDialog(BuildContext context, ThemeColor color, CartModel cart, BranchLinkDining branchLinkDining) {
     return showDialog(
@@ -249,36 +256,43 @@ class _CartPageState extends State<CartPage> {
           // widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'qr_order' || widget.currentPage == 'other_order'
           //     ? getSubTotal(cart)
           //     : getReceiptPaymentDetail(cart);
-          getSubTotal(cart);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            getSubTotal(cart);
+          });
           return Scaffold(
             resizeToAvoidBottomInset: false,
             appBar: AppBar(
               automaticallyImplyLeading: false,
               title: Row(
                 children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text('Table: ${getSelectedTable(cart)}'),
-                    ),
+                  Visibility(
+                    visible: widget.currentPage == 'table' ? true: false,
+                    child: Text('${getSelectedTable(cart)}'),
                   ),
                 ],
               ),
               backgroundColor: Colors.white,
               actions: [
                 Visibility(
-                  visible: cart.selectedOption == 'Dine in' && widget.currentPage == 'menu' ? true : false,
-                  child: IconButton(
-                    tooltip: 'table',
-                    icon: const Icon(
-                      Icons.table_restaurant,
+                  visible: cart.selectedOption == 'Dine in' && widget.currentPage == 'menu'
+                      ? true
+                      : false,
+                  child: Expanded(
+                    child: IconButton(
+                      tooltip: 'table',
+                      icon: Badge(
+                        isLabelVisible: cart.selectedTable.isEmpty ? false : true,
+                        label: Text("${cart.selectedTable.length}"),
+                        child: const Icon(
+                          Icons.table_restaurant,
+                        ),
+                      ),
+                      color: color.backgroundColor,
+                      onPressed: () {
+                        //tableDialog(context);
+                        openChooseTableDialog(cart);
+                      },
                     ),
-                    color: color.backgroundColor,
-                    onPressed: () {
-                      print('choose table');
-                      //tableDialog(context);
-                      openChooseTableDialog(cart);
-                    },
                   ),
                 ),
                 // Visibility(
@@ -299,18 +313,18 @@ class _CartPageState extends State<CartPage> {
                 // ),
                 Visibility(
                   visible: widget.currentPage == 'menu' ? true : false,
-                  child: IconButton(
-                    tooltip: 'clear cart',
-                    icon: const Icon(
-                      Icons.delete,
+                  child: Expanded(
+                    child: IconButton(
+                      tooltip: 'clear cart',
+                      icon: const Icon(
+                        Icons.delete,
+                      ),
+                      color: color.backgroundColor,
+                      onPressed: () {
+                        cart.removePartialCartItem();
+                        //cart.removeAllTable();
+                      },
                     ),
-                    color: color.backgroundColor,
-                    onPressed: () async {
-                      await connectToServer(action: 'abc');
-                      await connectToServer(action: 'def');
-                      // cart.removePartialCartItem();
-                      //cart.removeAllTable();
-                    },
                   ),
                 ),
                 // PopupMenuButton<Text>(
@@ -327,7 +341,7 @@ class _CartPageState extends State<CartPage> {
               ],
             ),
             body: StreamBuilder(
-                stream: decodeAction.cartStream,
+                stream: cartStream,
                 builder: (context, snapshot) {
                   if(snapshot.hasData){
                     print("cart rebuild call");
@@ -340,7 +354,6 @@ class _CartPageState extends State<CartPage> {
                         children: [
                           Container(
                             margin:  MediaQuery.of(context).size.height > 500 ? EdgeInsets.only(bottom: 10) : EdgeInsets.zero,
-                            height: MediaQuery.of(context).size.height > 500 ? 70 : 50,
                             child: GridView(
                                 physics: NeverScrollableScrollPhysics(),
                                 shrinkWrap: true,
@@ -504,6 +517,7 @@ class _CartPageState extends State<CartPage> {
                             //         : 25,
                             child: ListView(
                               physics: ClampingScrollPhysics(),
+                              shrinkWrap: true,
                               children: [
                                 ListTile(
                                   title: Text("Subtotal", style: TextStyle(fontSize: 14)),
@@ -579,11 +593,11 @@ class _CartPageState extends State<CartPage> {
                                   child: ListView.builder(
                                       shrinkWrap: true,
                                       physics: NeverScrollableScrollPhysics(),
-                                      itemCount: taxRateList.length,
+                                      itemCount: currentDiningTax.length,
                                       itemBuilder: (context, index) {
                                         return ListTile(
-                                          title: Text('${taxRateList[index].name}(${taxRateList[index].tax_rate}%)', style: TextStyle(fontSize: 14)),
-                                          trailing: Text('${taxRateList[index].tax_amount?.toStringAsFixed(2)}', style: TextStyle(fontSize: 14)),
+                                          title: Text('${currentDiningTax[index].tax_name}(${currentDiningTax[index].tax_rate}%)', style: TextStyle(fontSize: 14)),
+                                          trailing: Text('${currentDiningTax[index].tax_amount?.toStringAsFixed(2)}', style: TextStyle(fontSize: 14)),
                                           //Text(''),
                                           visualDensity: VisualDensity(vertical: -4),
                                           dense: true,
@@ -647,7 +661,6 @@ class _CartPageState extends State<CartPage> {
                                       ],
                                     ))
                               ],
-                              shrinkWrap: true,
                             ),
                           ),
                           SizedBox(height: 10),
@@ -1598,7 +1611,11 @@ class _CartPageState extends State<CartPage> {
 */
   getSubTotal(CartModel cart) async {
     try {
-      widget.currentPage == 'table' || widget.currentPage == 'qr_order' ? cart.selectedOption = 'Dine in' : null;
+      if(!isFirstLoad){
+        isFirstLoad = true;
+        await preload();
+      }
+      //widget.currentPage == 'table' || widget.currentPage == 'qr_order' ? cart.selectedOption = 'Dine in' : null;
       total = 0.0;
       newOrderSubtotal = 0.0;
       promo = 0.0;
@@ -1613,9 +1630,9 @@ class _CartPageState extends State<CartPage> {
       print('Sub Total Error: $e');
       total = 0.0;
     }
-    await getDiningTax(cart);
+    //await getDiningTax(cart);
     calPromotion(cart);
-    getTaxAmount();
+    getTaxAmount(cart);
     getRounding();
     getAllTotal();
     checkCartItem(cart);
@@ -1626,19 +1643,21 @@ class _CartPageState extends State<CartPage> {
       cart.myCount++;
     }
 
-    decodeAction.cartController.sink.add("refresh");
+    cartController.sink.add("refresh");
     // if (!controller.isClosed) {
     //   controller.sink.add('refresh');
     // }
   }
 
-  getTaxAmount() {
+  void getTaxAmount(CartModel cart) {
     try {
       discountPrice = total - promoAmount;
-      if (taxRateList.length > 0) {
-        for (int i = 0; i < taxRateList.length; i++) {
-          priceIncTaxes = discountPrice * (double.parse(taxRateList[i].tax_rate!) / 100);
-          taxRateList[i].tax_amount = priceIncTaxes;
+      currentDiningTax = taxLinkDiningList.where((tax) => tax.dining_id == cart.selectedOptionId).toList();
+      print("current dining tax: ${currentDiningTax.length}");
+      if (currentDiningTax.isNotEmpty) {
+        for (int i = 0; i < currentDiningTax.length; i++) {
+          priceIncTaxes = discountPrice * (double.parse(currentDiningTax[i].tax_rate!) / 100);
+          currentDiningTax[i].tax_amount = priceIncTaxes;
         }
       }
     } catch (e) {
@@ -1649,21 +1668,19 @@ class _CartPageState extends State<CartPage> {
     // }
   }
 
-  getAllTaxAmount() {
+  double sumAllTaxAmount() {
     double total = 0.0;
-    for (int i = 0; i < taxRateList.length; i++) {
-      total = total + taxRateList[i].tax_amount!;
+    for (int i = 0; i < currentDiningTax.length; i++) {
+      total = total + currentDiningTax[i].tax_amount!;
     }
-    priceIncAllTaxes = total;
-    return priceIncAllTaxes;
+    return total;
   }
 
-  getRounding() {
-    getAllTaxAmount();
+  void getRounding() {
     double _round = 0.0;
     totalAmount = 0.0;
     discountPrice = total - promoAmount;
-    totalAmount = discountPrice + priceIncAllTaxes;
+    totalAmount = discountPrice + sumAllTaxAmount();
     _round = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
     rounding = _round;
 

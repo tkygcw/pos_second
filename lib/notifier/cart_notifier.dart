@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/main.dart';
 
+import '../object/branch_link_dining_option.dart';
 import '../object/cart_payment.dart';
 import '../object/cart_product.dart';
 import '../object/promotion.dart';
@@ -18,13 +20,22 @@ class CartModel extends ChangeNotifier {
   int myCount = 0;
   bool isChange = false;
 
+  void initBranchLinkDiningOption() {
+    List<BranchLinkDining> data = decodeAction.decodedBranchLinkDiningList!;
+    if (data.length == 3) {
+      selectedOption = 'Dine in';
+    } else {
+      selectedOption = "Take Away";
+    }
+    selectedOptionId = data.firstWhere((e) => e.name == selectedOption).dining_id!;
+  }
+
   void initialLoad() {
     removeAllTable();
     removeAllCartItem();
     removePromotion();
     removePaymentDetail();
-    selectedOption = 'Dine in';
-    //selectedOptionId = '1';
+    initBranchLinkDiningOption();
     notifyListeners();
   }
 
@@ -33,8 +44,7 @@ class CartModel extends ChangeNotifier {
     removeAllCartItem();
     removePromotion();
     removePaymentDetail();
-    selectedOption = 'Take Away';
-    //selectedOptionId = '2';
+    initBranchLinkDiningOption();
     notifyListeners();
   }
 

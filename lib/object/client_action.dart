@@ -191,7 +191,7 @@ class ClientAction{
       final buffer = StringBuffer();
       String receivedData = '';
       //handle data
-      StreamSubscription streamSubscription = requestSocket.listen((data) async {
+      StreamSubscription streamSubscription = requestSocket.listen((data) {
         receivedData = utf8.decode(data);
         buffer.write(receivedData);
         if (receivedData.endsWith(messageDelimiter)) {
@@ -211,16 +211,16 @@ class ClientAction{
         }
 
       },
-          onDone: (){
-            print("client done");
-            socket.destroy();
-          },
-          onError: (error){
-            print("connection error");
-            socket.destroy();
-          },
+          // onDone: (){
+          //   print("client done");
+          //   socket.destroy();
+          // },
+          // onError: (error){
+          //   print("connection error");
+          //   socket.destroy();
+          // },
       );
-      await streamSubscription.asFuture("true");
+      await streamSubscription.asFuture<void>();
     } catch(e) {
       print("connect request port error: $e");
     }
