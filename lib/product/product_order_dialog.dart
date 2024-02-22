@@ -938,6 +938,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       checkedModifierLength = 0;
       checkedModItem = [];
     }
+
     var value = cartProductItem(
         branch_link_product_sqlite_id: branchLinkProduct.branch_link_product_sqlite_id.toString(),
         product_name: widget.productDetail!.name!,
@@ -954,6 +955,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         category_sqlite_id: widget.productDetail!.category_sqlite_id,
         base_price: basePrice,
         refColor: Colors.black,
+        unit: widget.productDetail!.unit!,
+        per_quantity_unit: widget.productDetail!.unit! != 'each' ? widget.productDetail!.per_quantity_unit! : ''
     );
     List<cartProductItem> item = [];
     if(cart.cartNotifierItem.isEmpty){

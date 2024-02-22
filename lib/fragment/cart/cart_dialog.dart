@@ -4,38 +4,23 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:intl/intl.dart';
 import 'package:optimy_second_device/main.dart';
-import 'package:optimy_second_device/utils/Utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:crypto/crypto.dart';
 
-import '../../database/domain.dart';
 import '../../notifier/cart_notifier.dart';
 import '../../notifier/theme_color.dart';
-import '../../object/branch_link_product.dart';
 import '../../object/cart_product.dart';
 import '../../object/modifier_group.dart';
-import '../../object/modifier_item.dart';
-import '../../object/modifier_link_product.dart';
 import '../../object/order_cache.dart';
 import '../../object/order_detail.dart';
-import '../../object/order_modifier_detail.dart';
-import '../../object/print_receipt.dart';
 import '../../object/printer.dart';
-import '../../object/product.dart';
-import '../../object/product_variant.dart';
-import '../../object/product_variant_detail.dart';
 import '../../object/table.dart';
 import '../../object/table_use_detail.dart';
 import '../../object/variant_group.dart';
-import '../../object/variant_item.dart';
 import '../../page/progress_bar.dart';
 import '../../translation/AppLocalizations.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
-import '../logout_dialog.dart';
 // import '../table/table_change_dialog.dart';
 
 class CartDialog extends StatefulWidget {
@@ -58,6 +43,7 @@ class _CartDialogState extends State<CartDialog> {
   List<PosTable> sameGroupTbList = [];
   List<Printer> printerList = [];
   late StreamController controller;
+  late CartModel cart;
   double priceSST = 0.0;
   double priceServeTax = 0.0;
   bool isLoad = false;
@@ -74,27 +60,11 @@ class _CartDialogState extends State<CartDialog> {
     readAllTable();
   }
 
-  // Future<Future<Object?>> openLogOutDialog() async {
-  //   return showGeneralDialog(
-  //       barrierColor: Colors.black.withOpacity(0.5),
-  //       transitionBuilder: (context, a1, a2, widget) {
-  //         final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
-  //         return Transform(
-  //           transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
-  //           child: Opacity(
-  //             opacity: a1.value,
-  //             child: LogoutConfirmDialog(),
-  //           ),
-  //         );
-  //       },
-  //       transitionDuration: Duration(milliseconds: 200),
-  //       barrierDismissible: false,
-  //       context: context,
-  //       pageBuilder: (context, animation1, animation2) {
-  //         // ignore: null_check_always_fails
-  //         return null!;
-  //       });
-  // }
+  disableButton(){
+    setState(() {
+      isButtonDisabled = true;
+    });
+  }
 
   showSecondDialog(BuildContext context, ThemeColor color, int dragIndex, int targetIndex, CartModel cart) {
     return showDialog(
@@ -138,6 +108,7 @@ class _CartDialogState extends State<CartDialog> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
+        this.cart = cart;
         return AlertDialog(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -158,12 +129,10 @@ class _CartDialogState extends State<CartDialog> {
                       style: TextStyle(color: Colors.white),
                     ),
                     onPressed: () {
-                      setState(() {
-                        for (int i = 0; i < tableList.length; i++) {
-                          tableList[i].isSelected = false;
-                        }
-                        cart.initialLoad();
-                      });
+                      for (int i = 0; i < tableList.length; i++) {
+                        tableList[i].isSelected = false;
+                      }
+                      cart.initialLoad();
                       //Navigator.of(context).pop();
                     },
                   ),
@@ -172,7 +141,7 @@ class _CartDialogState extends State<CartDialog> {
             ],
           ),
           content: isLoad ?
-          Container(
+          SizedBox(
               height: 650,
               width: MediaQuery.of(context).size.width / 2,
               child: Column(
@@ -205,10 +174,9 @@ class _CartDialogState extends State<CartDialog> {
                   'Close',
                   style: TextStyle(color: Colors.white),
                 ),
-                onPressed: isButtonDisabled
-                    ? null
-                    : () {
+                onPressed: isButtonDisabled ? null : () {
                   print('called');
+                  disableButton();
                   Navigator.of(context).pop();
                 },
               ),
@@ -224,11 +192,9 @@ class _CartDialogState extends State<CartDialog> {
                   'Select Table',
                   style: TextStyle(color: Colors.white),
                 ),
-                onPressed: !checkIsSelected()
-                    ? null
-                    : () async {
-                  cart.removeAllTable();
-                  cart.removeAllCartItem();
+                onPressed: !checkIsSelected() ? null : () async {
+                  cart. selectedTable.clear();
+                  cart.cartNotifierItem.clear();
                   for (int index = 0; index < tableList.length; index++) {
                     //if using table is selected
                     if (tableList[index].status == 1 && tableList[index].isSelected == true) {
@@ -246,8 +212,9 @@ class _CartDialogState extends State<CartDialog> {
                   }
                   print("orderDetailList: ${orderDetailList.length}");
                   if(orderDetailList.isNotEmpty){
-                    addToCart(cart);
+                    addToCart();
                   }
+                  if(!mounted) return;
                   Navigator.of(context).pop();
                 },
               ),
@@ -300,8 +267,8 @@ class _CartDialogState extends State<CartDialog> {
           child: Card(
             elevation: 5,
             shape: tableList[index].isSelected
-                ? new RoundedRectangleBorder(side: new BorderSide(color: color.backgroundColor, width: 3.0), borderRadius: BorderRadius.circular(4.0))
-                : new RoundedRectangleBorder(side: new BorderSide(color: Colors.white, width: 3.0), borderRadius: BorderRadius.circular(4.0)),
+                ? RoundedRectangleBorder(side: BorderSide(color: color.backgroundColor, width: 3.0), borderRadius: BorderRadius.circular(4.0))
+                : RoundedRectangleBorder(side: BorderSide(color: Colors.white, width: 3.0), borderRadius: BorderRadius.circular(4.0)),
             color: Colors.white,
             child: InkWell(
               splashColor: Colors.blue.withAlpha(30),
@@ -322,12 +289,18 @@ class _CartDialogState extends State<CartDialog> {
                     //check all group
                     if (tableList[index].group == tableList[i].group) {
                       if (tableList[i].isSelected == false) {
-                        tableList[i].isSelected = true;
+                        setState(() {
+                          tableList[i].isSelected = true;
+                        });
                       } else {
-                        tableList[i].isSelected = false;
+                        setState(() {
+                          tableList[i].isSelected = false;
+                        });
                       }
                     } else {
-                      tableList[i].isSelected = false;
+                      setState(() {
+                        tableList[i].isSelected = false;
+                      });
                     }
                   }
                 } else {
@@ -335,7 +308,9 @@ class _CartDialogState extends State<CartDialog> {
                   for (int j = 0; j < tableList.length; j++) {
                     //reset all using table to un-select (table status == 1)
                     if (tableList[j].status == 1) {
-                      tableList[j].isSelected = false;
+                      setState(() {
+                        tableList[j].isSelected = false;
+                      });
                     }
                   }
                   //for table not in use
@@ -352,7 +327,7 @@ class _CartDialogState extends State<CartDialog> {
               },
               child: Container(
                 margin: EdgeInsets.all(10),
-                child: Container(
+                child: SizedBox(
                   //margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.fromLTRB(0, 2, 0, 2) : null,
                   height: 100,
                   child: Stack(
@@ -415,21 +390,21 @@ class _CartDialogState extends State<CartDialog> {
                                   constraints: BoxConstraints(),
                                   padding: EdgeInsets.zero,
                                   onPressed: () async {
-                                    // sameGroupTbList = [];
+                                    sameGroupTbList = tableList.where((e) => e.group == tableList[index].group).toList();
                                     // for (int i = 0; i < tableList.length; i++) {
                                     //   if (tableList[index].group == tableList[i].group) {
                                     //     sameGroupTbList.add(tableList[i]);
                                     //   }
                                     // }
-                                    // if (sameGroupTbList.length > 1) {
-                                    //   await callRemoveTableQuery(tableList[index].table_sqlite_id!);
-                                    //   tableList[index].isSelected = false;
-                                    //   tableList[index].group = null;
-                                    //   cart.removeAllTable();
-                                    //   cart.removeAllCartItem();
-                                    // } else {
-                                    //   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('cannot_remove_this_table'));
-                                    // }
+                                    if (sameGroupTbList.length > 1) {
+                                      //await callRemoveTableQuery(tableList[index].table_sqlite_id!);
+                                      tableList[index].isSelected = false;
+                                      tableList[index].group = null;
+                                      cart.removeAllTable();
+                                      cart.removeAllCartItem();
+                                    } else {
+                                      Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('cannot_remove_this_table'));
+                                    }
                                   },
                                 ))
                           ])
@@ -664,25 +639,6 @@ class _CartDialogState extends State<CartDialog> {
   readAllTable({isReset}) async {
     isLoad = false;
     await clientAction.connectRequestPort(action: '7', callback: decodeData);
-    //decodeData();
-
-    // List<PosTable> data = await PosDatabase.instance.readAllTable();
-    //
-    // tableList = List.from(data);
-    // await readAllTableAmount();
-    // if (widget.selectedTableList.isNotEmpty) {
-    //   for (int i = 0; i < widget.selectedTableList.length; i++) {
-    //     for (int j = 0; j < tableList.length; j++) {
-    //       if (tableList[j].table_sqlite_id == widget.selectedTableList[i].table_sqlite_id) {
-    //         tableList[j].isSelected = true;
-    //       }
-    //     }
-    //   }
-    // }
-    // if (isReset == true) {
-    //   await resetAllTable();
-    // }
-    // await readAllPrinters();
   }
 
   decodeData(response){
@@ -744,100 +700,49 @@ class _CartDialogState extends State<CartDialog> {
 
   readSpecificTableDetail(PosTable posTable) async {
     try{
-      await clientAction.connectRequestPort(action: '8', param: jsonEncode(posTable));
-      decodeData2();
+      await clientAction.connectRequestPort(action: '10', param: jsonEncode(posTable), callback: decodeData2);
+      //addToCart(cart);
     } catch(e){
       print("response error: $e");
     }
   }
 
-  decodeData2() {
-    var json = jsonDecode(clientAction.response!);
+  decodeData2(response) {
+    var json = jsonDecode(response);
     Iterable value1 = json['data']['order_detail'];
     Iterable value2 = json['data']['order_cache'];
-    Iterable value3 = json['data']['pos_table'];
+    //Iterable value3 = json['data']['pos_table'];
     orderDetailList = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
     orderCacheList = value2.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
-    cartSelectedTableList = value3.map((tagJson) => PosTable.fromJson(tagJson)).toList();
+    //cartSelectedTableList = value3.map((tagJson) => PosTable.fromJson(tagJson)).toList();
     print("order detail list: ${orderDetailList}");
     print("order cache list: ${orderCacheList}");
   }
-  //
-  getModifierGroupItem(OrderDetail orderDetail) {
-    modifierGroup = [];
-    List<ModifierItem> temp = orderDetail.modifierItem!;
-    if(orderDetail.mod_group_id!.isNotEmpty){
-      for (int j = 0; j < orderDetail.mod_group_id!.length; j++) {
-        List<ModifierItem> modItemChild = [];
-        //check modifier group is existed or not
-        bool isModifierExisted = false;
-        int position = 0;
-        for (int g = 0; g < modifierGroup.length; g++) {
-          if (modifierGroup[g].mod_group_id == orderDetail.mod_group_id![j]) {
-            isModifierExisted = true;
-            position = g;
-            break;
-          }
-        }
-        //if new category
-        if (!isModifierExisted) {
-          modifierGroup.add(ModifierGroup(modifierChild: [], mod_group_id: int.parse(orderDetail.mod_group_id![j])));
-          position = modifierGroup.length - 1;
-        }
 
-        for (int k = 0; k < temp.length; k++) {
-          if (modifierGroup[position].mod_group_id.toString() == temp[k].mod_group_id) {
-            modItemChild.add(
-                ModifierItem(mod_group_id: orderDetail.mod_group_id![position], mod_item_id: temp[k].mod_item_id, name: temp[k].name, isChecked: true));
-            temp.removeAt(k);
-          }
-        }
-        modifierGroup[position].modifierChild = modItemChild;
-      }
-    }
-    return modifierGroup;
-  }
-  //
-  getVariantGroupItem(OrderDetail orderDetail) {
-    variantGroup = [];
-    //loop all order detail variant
-    if(orderDetail.variantItem!.isNotEmpty){
-      for (int i = 0; i < orderDetail.variantItem!.length; i++) {
-        variantGroup.add(VariantGroup(child: orderDetail.variantItem, variant_group_id: int.parse(orderDetail.variantItem![i].variant_group_id!)));
-      }
-    }
-    //print('variant group length: ${variantGroup.length}');
-    return variantGroup;
-  }
-  //
-  addToCart(CartModel cart) {
-    print("add to cart called");
-    var value;
-    List<TableUseDetail> tableUseDetailList = [];
-    cart.removeAllTable();
-    print('order detail length: ${orderDetailList.length}');
+  addToCart() {
+    getSelectedTable();
     for (int i = 0; i < orderDetailList.length; i++) {
-      value = cartProductItem(
+      cartProductItem value = cartProductItem(
         branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
         product_name: orderDetailList[i].productName!,
         category_id: orderDetailList[i].product_category_id!,
         price: orderDetailList[i].price!,
-        quantity: int.parse(orderDetailList[i].quantity!),
-        checkedModifierItem: [],
-        modifier: getModifierGroupItem(orderDetailList[i]),
-        variant: getVariantGroupItem(orderDetailList[i]),
+        quantity: int.tryParse(orderDetailList[i].quantity!) != null ? int.parse(orderDetailList[i].quantity!) : double.parse(orderDetailList[i].quantity!),
+        orderModifierDetail: orderDetailList[i].orderModifierDetail,
+        //modifier: getModifierGroupItem(orderDetailList[i]),
+        //variant: getVariantGroupItem(orderDetailList[i]),
+        productVariantName: orderDetailList[i].product_variant_name,
         remark: orderDetailList[i].remark!,
+        unit: orderDetailList[i].unit,
+        per_quantity_unit: orderDetailList[i].per_quantity_unit,
         status: 1,
         category_sqlite_id: orderDetailList[i].category_sqlite_id,
         first_cache_created_date_time: orderCacheList.last.created_at,  //orderCacheList[0].created_at,
         first_cache_batch: orderCacheList.last.batch_id,
         first_cache_order_by: orderCacheList.last.order_by,
-        refColor: Colors.black,
       );
-      print("order cache batch: ${value.first_cache_batch}");
       cart.addItem(value);
     }
-    cart.selectedTable = cartSelectedTableList;
     // for (int j = 0; j < orderCacheList.length; j++) {
     //   //Get specific table use detail
     //   List<TableUseDetail> tableUseDetailData = await PosDatabase.instance.readAllTableUseDetail(orderCacheList[j].table_use_sqlite_id!);
@@ -850,19 +755,17 @@ class _CartDialogState extends State<CartDialog> {
     // }
   }
 
-  /**
-   * concurrent here
-   */
-  // callRemoveTableQuery(int table_id) async {
-  //   await deleteCurrentTableUseDetail(table_id);
-  //   await updatePosTableStatus(table_id, 0, '');
-  //   await syncAllToCloud();
-  //   if (this.isLogOut == true) {
-  //     openLogOutDialog();
-  //     return;
-  //   }
-  //   await readAllTable(isReset: true);
+  void getSelectedTable(){
+    if(tableList.isNotEmpty){
+      List<PosTable> selectedTableList = tableList.where((e) => e.isSelected == true).toList();
+      cart.addAllTable(selectedTableList);
+    }
+  }
+
+  // removeMergedTable(int table_id) async {
+  //   await clientAction.connectRequestPort(action: '9', param: jsonEncode(posTable), callback: decodeData2);
   // }
+
 
   // deleteCurrentTableUseDetail(int currentTableId) async {
   //   print('current delete table local id: ${currentTableId}');

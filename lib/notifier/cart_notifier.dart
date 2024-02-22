@@ -16,9 +16,18 @@ class CartModel extends ChangeNotifier {
   List<PosTable> selectedTable = [];
   String selectedOption = 'Dine in';
   String selectedOptionId = '';
+  String? subtotal;
   bool isInit = false;
   int myCount = 0;
   bool isChange = false;
+
+  Map<String, Object?> toJson() => {
+    'selectedTable': this.selectedTable,
+    'cartNotifierItem': this.cartNotifierItem,
+    'selectedOption': this.selectedOption,
+    'selectedOptionId': this.selectedOptionId,
+    'subtotal': this.subtotal
+  };
 
   void initBranchLinkDiningOption() {
     List<BranchLinkDining> data = decodeAction.decodedBranchLinkDiningList!;
@@ -119,6 +128,10 @@ class CartModel extends ChangeNotifier {
   void addTable(PosTable posTable){
     selectedTable.add(posTable);
     notifyListeners();
+  }
+
+  void addAllTable(List<PosTable> tableList){
+    selectedTable.addAll(tableList);
   }
 
   void removeAllTable(){
