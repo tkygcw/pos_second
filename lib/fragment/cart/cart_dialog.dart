@@ -87,7 +87,7 @@ class _CartDialogState extends State<CartDialog> {
               Navigator.of(context).pop();
               if (tableList[dragIndex].table_sqlite_id != tableList[targetIndex].table_sqlite_id) {
                 if (tableList[targetIndex].status == 1 && tableList[dragIndex].status == 0) {
-                  //await callAddNewTableQuery(tableList[dragIndex].table_sqlite_id!, tableList[targetIndex].table_sqlite_id!);
+                  await mergeTable(dragTableId: tableList[dragIndex].table_sqlite_id!, targetTableId: tableList[targetIndex].table_sqlite_id!);
                   //await _printTableAddList(dragTable: tableList[dragIndex].number, targetTable: tableList[targetIndex].number);
                   cart.removeAllTable();
                   cart.removeAllCartItem();
@@ -148,6 +148,7 @@ class _CartDialogState extends State<CartDialog> {
                 children: [
                   Expanded(
                     child: ReorderableGridView.count(
+                      padding: EdgeInsets.zero,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
                       crossAxisCount: MediaQuery.of(context).size.height > 500 ? 4 : 3,
@@ -397,11 +398,11 @@ class _CartDialogState extends State<CartDialog> {
                                     //   }
                                     // }
                                     if (sameGroupTbList.length > 1) {
-                                      //await callRemoveTableQuery(tableList[index].table_sqlite_id!);
+                                      await removeMergedTable(tableList[index].table_sqlite_id!);
                                       tableList[index].isSelected = false;
                                       tableList[index].group = null;
-                                      cart.removeAllTable();
-                                      cart.removeAllCartItem();
+                                      cart.removeSpecificTable(tableList[index]);
+                                      //cart.removeAllCartItem();
                                     } else {
                                       Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('cannot_remove_this_table'));
                                     }
@@ -743,16 +744,6 @@ class _CartDialogState extends State<CartDialog> {
       );
       cart.addItem(value);
     }
-    // for (int j = 0; j < orderCacheList.length; j++) {
-    //   //Get specific table use detail
-    //   List<TableUseDetail> tableUseDetailData = await PosDatabase.instance.readAllTableUseDetail(orderCacheList[j].table_use_sqlite_id!);
-    //   tableUseDetailList = List.from(tableUseDetailData);
-    // }
-    //
-    // for (int k = 0; k < tableUseDetailList.length; k++) {
-    //   List<PosTable> tableData = await PosDatabase.instance.readSpecificTable(tableUseDetailList[k].table_sqlite_id!);
-    //   cart.addTable(tableData[0]);
-    // }
   }
 
   void getSelectedTable(){
@@ -762,9 +753,31 @@ class _CartDialogState extends State<CartDialog> {
     }
   }
 
-  // removeMergedTable(int table_id) async {
-  //   await clientAction.connectRequestPort(action: '9', param: jsonEncode(posTable), callback: decodeData2);
-  // }
+  Future<void> removeMergedTable(int table_sqlite_id) async {
+    await clientAction.connectRequestPort(action: '11', param: jsonEncode(table_sqlite_id), callback: decodeData3);
+  }
+
+  decodeData3(response) {
+    var json = jsonDecode(response);
+    print("status: ${json['status']}");
+  }
+
+  Future<void> mergeTable({required int dragTableId, required int targetTableId}) async {
+    Map<String, int> param = {
+      "dragTableId": dragTableId,
+      "targetTableId": targetTableId
+    };
+    await clientAction.connectRequestPort(action: '12', param: jsonEncode(param), callback: decodeData4);
+  }
+
+  decodeData4(response) async {
+    var json = jsonDecode(response);
+    if(json['status'] == '1'){
+      await readAllTable();
+    }
+  }
+
+
 
 
   // deleteCurrentTableUseDetail(int currentTableId) async {

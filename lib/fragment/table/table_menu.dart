@@ -83,25 +83,24 @@ class _TableMenuState extends State<TableMenu> {
       model.changeContent2(false);
     }
 
-    await clientAction.connectRequestPort(action: '13', param: '');
-    decodeData();
+    await clientAction.connectRequestPort(action: '13', param: '', callback: decodeData);
 
     // List<PosTable> data = await PosDatabase.instance.readAllTable();
     //
     // tableList = data;
     // await readAllTableGroup();
-    if (mounted) {
-      setState(() {
-        isLoaded = true;
-      });
-    }
   }
 
-  decodeData(){
+  decodeData(response){
     try{
       var json = jsonDecode(clientAction.response!);
       Iterable value1 = json['data']['table_list'];
       tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+      if (mounted) {
+        setState(() {
+          isLoaded = true;
+        });
+      }
     }catch(e){
       print('init table error: $e');
       //readAllTable();
@@ -357,7 +356,7 @@ class _TableMenuState extends State<TableMenu> {
                                           // ),
                                           Container(
                                               alignment: Alignment.center,
-                                              child: Text("#${tableList[index].number!}")),
+                                              child: Text(tableList[index].number!)),
                                           Visibility(
                                             visible: MediaQuery
                                                 .of(context)
@@ -366,7 +365,7 @@ class _TableMenuState extends State<TableMenu> {
                                             child: Container(
                                                 alignment: Alignment.bottomCenter,
                                                 child: Text(
-                                                    "RM ${tableList[index].total_Amount!.toStringAsFixed(2)}",
+                                                    "RM ${tableList[index].total_amount ?? '0.00'}",
                                                     style: TextStyle(fontSize: 18))),
                                           ),
 

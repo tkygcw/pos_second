@@ -89,13 +89,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   setScreenLayout() {
-    final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
-    if (screenWidth < 500) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    }
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
   // Future<Future<Object?>> openLogOutDialog() async {
@@ -225,11 +222,11 @@ class _HomePageState extends State<HomePage> {
         icon: Icons.table_restaurant,
         onPressed: () => setState(() => currentPage = 'table'),
       ),
-      CollapsibleItem(
-        text: 'Qr Order',
-        icon: Icons.qr_code_2,
-        onPressed: () => setState(() => currentPage = 'qr_order'),
-      ),
+      // CollapsibleItem(
+      //   text: 'Qr Order',
+      //   icon: Icons.qr_code_2,
+      //   onPressed: () => setState(() => currentPage = 'qr_order'),
+      // ),
       CollapsibleItem(
         text: 'Other Order',
         icon: Icons.delivery_dining,
@@ -271,8 +268,8 @@ class _HomePageState extends State<HomePage> {
       //   return ProductPage();
       case 'table':
         return TablePage();
-      case 'qr_order':
-        return QrOrderPage();
+      // case 'qr_order':
+      //   return QrOrderPage();
       // case 'bill':
       //   return BillPage();
       case 'other_order':

@@ -84,10 +84,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
       //     }
       //   });
       // }
-      return isLoading
-          ?
-      CustomProgressBar()
-          :
+      return isLoading ?
+      CustomProgressBar() :
       Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -232,7 +230,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         allProduct = data;
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
-            crossAxisCount: screenWidth > 500 ? 5 : 3,
+            crossAxisCount: MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height > 500 && MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width > 900 ? 5 : 3,
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(
@@ -277,7 +275,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
             padding: const EdgeInsets.all(10),
-            crossAxisCount: screenWidth > 500 ? 5 : 3,
+            crossAxisCount: MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height > 500 && MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width > 900 ? 5 : 3,
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(

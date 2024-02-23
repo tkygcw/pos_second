@@ -407,10 +407,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                         title: Row(
                           children: [
                             Container(
-                              constraints: BoxConstraints(maxWidth: MediaQuery
-                                  .of(context)
-                                  .size
-                                  .width / 2),
+                              constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width / 2),
                               child: Text(widget.productDetail!.name!,
                                   style: TextStyle(
                                     fontSize: 20,
@@ -418,37 +415,47 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                   )),
                             ),
                             Spacer(),
-                            // Text("RM ${Utils.convertTo2Dec(widget.productDetail!.price!)}",
-                            //     style: TextStyle(
-                            //       fontSize: 16,
-                            //       fontWeight: FontWeight.bold,
-                            //     )),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                widget.productDetail!.unit != 'each' ?
+                                Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.per_quantity_unit!}${widget.productDetail!.unit!}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    )) :
+                                Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.unit!}",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    )),
+                                Visibility(
+                                  visible: dialogStock != '' ? true : false,
+                                  child: Text("In stock: ${dialogStock}${widget.productDetail!.unit != 'each'? widget.productDetail!.unit : ''}",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: dialogStock == '0' ? Colors.red : Colors.black
+                                      )),
+                                )
+
+                              ],
+                            )
                           ],
                         ),
-                        content: this.isLoaded
-                            ? Container(
-                          height: MediaQuery
-                              .of(context)
-                              .size
-                              .height, // Change as per your requirement
-                          width: MediaQuery
-                              .of(context)
-                              .size
-                              .width / 1.5,
+                        content: Container(
+                          height: MediaQuery.of(context).size.height /2.5, // Change as per your requirement
+                          width: MediaQuery.of(context).size.width / 1.5,
                           child: SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                for (int i = 0; i < variantGroup.length; i++) variantGroupLayout(
-                                    variantGroup[i]),
+                                for (int i = 0; i < variantGroup.length; i++)
+                                  variantGroupLayout(variantGroup[i]),
                                 for (int j = 0; j < modifierGroup.length; j++)
                                   Visibility(
-                                    visible: modifierGroup[j].modifierChild!.isNotEmpty &&
-                                        modifierGroup[j].dining_id == "" ||
-                                        modifierGroup[j].dining_id == cart.selectedOptionId
-                                        ? true
-                                        : false,
+                                    visible: modifierGroup[j].modifierChild!.isNotEmpty && modifierGroup[j].dining_id == "" || modifierGroup[j].dining_id == cart.selectedOptionId ? true : false,
                                     child: modifierGroupLayout(modifierGroup[j], cart),
                                   ),
                                 Column(
@@ -459,27 +466,105 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           Text(
-                                            "Quantity",
+                                            AppLocalizations.of(context)!.translate('quantity'),
                                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    QuantityInput(
-                                        inputWidth: 273,
-                                        acceptsNegatives: false,
-                                        acceptsZero: false,
-                                        minValue: 1,
-                                        decoration: InputDecoration(
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(color: color.backgroundColor),
+                                    // quantity input
+                                    Container(
+                                      width: 400,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          // quantity input remove button
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: color.backgroundColor,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: IconButton(
+                                              icon: Icon(Icons.remove, color: Colors.white), // Set the icon color to white.
+                                              onPressed: () {
+                                                if(simpleIntInput >= 1){
+                                                  setState(() {
+                                                    simpleIntInput -= 1;
+                                                    quantityController.text = widget.productDetail!.unit != 'each' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
+                                                    simpleIntInput = widget.productDetail!.unit != 'each' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
+                                                  });
+                                                } else{
+                                                  setState(() {
+                                                    simpleIntInput = 0;
+                                                    quantityController.text =  widget.productDetail!.unit != 'each' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
+                                                    simpleIntInput = widget.productDetail!.unit != 'each' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
+                                                  });
+                                                }
+                                              },
+                                            ),
                                           ),
-                                        ),
-                                        buttonColor: color.backgroundColor,
-                                        value: simpleIntInput,
-                                        onChanged: (value) =>
-                                            setState(() =>
-                                            simpleIntInput = int.parse(value.replaceAll(',', ''))))
+                                          SizedBox(width: 10),
+                                          // quantity input text field
+                                          Container(
+                                            width: 273,
+                                            child: TextField(
+                                              autofocus: widget.productDetail!.unit != 'each' ? true : false,
+                                              controller: quantityController,
+                                              keyboardType: TextInputType.number,
+                                              inputFormatters: widget.productDetail!.unit != 'each' ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
+                                                  : <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                                              textAlign: TextAlign.center,
+                                              decoration: InputDecoration(
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderSide: BorderSide(color: color.backgroundColor),
+                                                ),
+                                              ),
+                                              onChanged: (value) {
+                                                if(value != ''){
+                                                  setState(() => simpleIntInput = widget.productDetail!.unit != 'each' ? double.parse(value.replaceAll(',', '')): int.parse(value.replaceAll(',', '')));
+                                                } else {
+                                                  simpleIntInput = 0;
+                                                }
+                                              },
+                                              onSubmitted: _onSubmitted,
+                                            ),
+                                          ),
+                                          SizedBox(width: 10),
+                                          // quantity input add button
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: color.backgroundColor,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: IconButton(
+                                              icon: Icon(Icons.add, color: Colors.white),
+                                              onPressed: () {
+                                                // stock disable or in stock
+                                                if(dialogStock == '' || simpleIntInput+1 < int.parse(dialogStock)) {
+                                                  print('stock_quantity: '+dialogStock);
+                                                  setState(() {
+                                                    simpleIntInput += 1;
+                                                    quantityController.text = simpleIntInput.toString();
+                                                    simpleIntInput =  int.parse(quantityController.text.replaceAll(',', ''));
+                                                  });
+                                                } else{
+                                                  print('stock_quantity: '+dialogStock);
+                                                  setState(() {
+                                                    simpleIntInput = int.parse(dialogStock);
+                                                    quantityController.text = simpleIntInput.toString();
+                                                    simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
+                                                  });
+                                                  if(dialogStock == '0'){
+                                                    print('stock_quantity: '+dialogStock);
+                                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
                                   ],
                                 ),
                                 Column(
@@ -490,7 +575,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           Text(
-                                            "Remark",
+                                            AppLocalizations.of(context)!.translate('remark'),
                                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                           ),
                                         ],
@@ -511,18 +596,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                               ],
                             ),
                           ),
-                        )
-                            : CustomProgressBar(),
+                        ),
                         actions: <Widget>[
                           SizedBox(
-                            width: MediaQuery
-                                .of(context)
-                                .size
-                                .width / 2.5,
-                            height: MediaQuery
-                                .of(context)
-                                .size
-                                .height / 10,
+                            width: MediaQuery.of(context).size.width / 2.5,
+                            height: MediaQuery.of(context).size.height / 10,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
                               child: Text('${AppLocalizations.of(context)?.translate('close')}'),
@@ -544,10 +622,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.buttonColor,
                               ),
-                              child: Text('${AppLocalizations.of(context)?.translate('add')}'),
-                              onPressed: isButtonDisabled ? null : () {
+                              onPressed: isButtonDisabled ? null : () async {
                                 _productStockStatusAction();
                               },
+                              child: Text('${AppLocalizations.of(context)?.translate('add')}'),
                             ),
                           ),
                         ],

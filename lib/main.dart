@@ -61,6 +61,8 @@ class MyApp extends StatelessWidget {
   final AppLanguage appLanguage;
   const MyApp({super.key, required this.appLanguage});
 
+  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -97,6 +99,7 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<AppLanguage>(builder: (context, model, child) {
         return MaterialApp(
+          navigatorKey: MyApp.navigatorKey,
           scaffoldMessengerKey: snackBarKey,
           locale: model.appLocal,
           supportedLocales: [
@@ -152,12 +155,14 @@ initLCDScreen() async {
 }
 
 deviceDetect() async {
-  final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
+  final double screenWidth = WidgetsBinding
+      .instance.platformDispatcher.views.first.physicalSize.width /
+      WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+  //final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
+  print('screen width: ${screenWidth}');
   if (screenWidth < 500) {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown
-    ]);
+    await SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   } else {
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -165,7 +170,6 @@ deviceDetect() async {
     ]);
   }
 }
-
 getSecondScreen() async {
   List<Display?> displays = [];
   final values = await displayManager.getDisplays();

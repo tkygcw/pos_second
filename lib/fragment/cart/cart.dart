@@ -975,6 +975,11 @@ class _CartPageState extends State<CartPage> {
   }
 
   checkCartItem(CartModel cart) {
+    if(cart.cartNotifierItem.isEmpty){
+      isButtonDisabled = true;
+    } else {
+      isButtonDisabled = false;
+    }
     for (int i = 0; i < cart.cartNotifierItem.length; i++) {
       if (cart.cartNotifierItem[i].status == 0) {
         hasNewItem = true;

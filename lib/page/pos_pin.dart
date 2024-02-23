@@ -239,7 +239,7 @@ class _PosPinPageState extends State<PosPinPage> {
                           onCompleted: (v) {
                             if (v.length == 6) {
                               //verifyUser(v);
-                              //userCheck(v);
+                              userCheck(v);
                             }
                           },
                           maxLength: 6,
