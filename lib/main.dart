@@ -29,7 +29,7 @@ import 'object/lcd_display.dart';
 
 final snackBarKey = GlobalKey<ScaffoldMessengerState>();
 final NotificationModel notificationModel = NotificationModel();
-final ClientAction clientAction = ClientAction();
+final ClientAction clientAction = ClientAction.instance;
 final LCDDisplay lcdDisplay = LCDDisplay();
 final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();

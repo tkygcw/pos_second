@@ -58,7 +58,7 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   StreamController cartController = StreamController();
   late Stream cartStream;
-  final ClientAction cartClientAction = ClientAction(serverIp: clientAction.serverIp);
+  //final ClientAction cartClientAction = ClientAction(serverIp: clientAction.serverIp);
   final ScrollController _scrollController = ScrollController();
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<Printer> printerList = [];
@@ -141,7 +141,7 @@ class _CartPageState extends State<CartPage> {
 
   preload() async {
     print("cart preload called");
-    await cartClientAction.connectRequestPort(action: '6', callback: decodeData);
+    await clientAction.connectRequestPort(action: '6', callback: decodeData);
     //decodeData();
     // clientAction.sendRequest(action: '6', param: '');
     // await Future.delayed(const Duration(milliseconds: 3000), () {

@@ -91,7 +91,7 @@ class _LoadingPageState extends State<LoadingPage> {
     final pathImg = Directory(path);
     pathImg.create();
     await prefs.setString('local_path', path);
-    downloadProductImage(pathImg.path);
+    await downloadProductImage(pathImg.path);
   }
 
   /*

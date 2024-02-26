@@ -928,6 +928,9 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
 
   void getProductDialogStock(Product product){
     if (product.has_variant == 0) {
+      print("no variant called!!!");
+      print("stock type: ${branchLinkProduct.stock_type}");
+      print("stock left: ${branchLinkProduct.daily_limit}");
       switch(branchLinkProduct.stock_type){
         case '1': {
           dialogStock = branchLinkProduct.daily_limit.toString();
@@ -940,6 +943,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         }
       }
     } else {
+      print("variant called!!!");
       switch(branchLinkProduct.stock_type){
         case '1': {
           dialogStock = branchLinkProduct.daily_limit.toString();

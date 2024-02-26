@@ -35,7 +35,7 @@ class AdjustStockDialog extends StatefulWidget {
 }
 
 class _AdjustStockDialogState extends State<AdjustStockDialog> {
-  final ClientAction adjustStockAction = ClientAction(serverIp: clientAction.serverIp);
+  final ClientAction adjustStockAction = clientAction;
   DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
   List<OrderDetail> orderDetailList = [], noStockOrderDetailList = [], removeDetailList = [];
   List<Printer> printerList = [];

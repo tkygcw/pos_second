@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
@@ -212,6 +213,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
     initProduct = decodeAction.decodedProductList!;
 
     List<Categories> data = initCategory;
+    sortCategory(data);
     categoryTab.add(Tab(
       text: 'All Category',
     ));
@@ -222,11 +224,10 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
       ));
       categoryList.add(data[i].name!);
     }
-
     for (int i = 0; i < categoryList.length; i++) {
       if (categoryList[i] == 'All Category') {
         List<Product> data = initProduct;
-        print('product data: ${initProduct.length}');
+        sortProduct(data);
         allProduct = data;
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
@@ -271,7 +272,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
             })));
       } else {
         List<Product> data = initProduct.where((item) => item.category_name == categoryList[i]).toList();//specificProduct;
-        print('category product: ${data.length}');
+        sortProduct(data);
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
             padding: const EdgeInsets.all(10),
@@ -322,6 +323,52 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
     }
     _tabController = TabController(length: categoryTab.length, vsync: this);
     refresh();
+  }
+
+  sortProduct(List<Product> list){
+    list.sort((a, b) {
+      final aNumber = a.sequence_number!;
+      final bNumber = b.sequence_number!;
+
+      bool isANumeric = int.tryParse(aNumber) != null;
+      bool isBNumeric = int.tryParse(bNumber) != null;
+
+      if (isANumeric && isBNumeric) {
+        return int.parse(aNumber).compareTo(int.parse(bNumber));
+      } else if (isANumeric) {
+        return -1; // Numeric before alphanumeric
+      } else if (isBNumeric) {
+        return 1; // Alphanumeric before numeric
+      } else {
+        // Custom alphanumeric sorting logic
+        return compareNatural(aNumber, bNumber);
+      }
+    });
+    return list;
+  }
+
+  sortCategory(List<Categories> list){
+    list.sort((a, b) {
+      final aNumber = a.sequence!;
+      final bNumber = b.sequence!;
+
+      bool isANumeric = int.tryParse(aNumber) != null;
+      bool isBNumeric = int.tryParse(bNumber) != null;
+
+      if (isANumeric && isBNumeric) {
+        return int.parse(aNumber).compareTo(int.parse(bNumber));
+      } else if (isANumeric) {
+        return -1; // Numeric before alphanumeric
+      } else if (isBNumeric) {
+        return 1; // Alphanumeric before numeric
+      } else if (!isANumeric && !isBNumeric) {
+        return compareNatural(a.name!, b.name!);
+      } else {
+        // Custom alphanumeric sorting logic
+        return compareNatural(aNumber, bNumber);
+      }
+    });
+    return list;
   }
 
   // getPreferences() async {

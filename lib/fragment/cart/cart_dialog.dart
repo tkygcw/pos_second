@@ -176,7 +176,6 @@ class _CartDialogState extends State<CartDialog> {
                   style: TextStyle(color: Colors.white),
                 ),
                 onPressed: isButtonDisabled ? null : () {
-                  print('called');
                   disableButton();
                   Navigator.of(context).pop();
                 },
@@ -193,8 +192,9 @@ class _CartDialogState extends State<CartDialog> {
                   'Select Table',
                   style: TextStyle(color: Colors.white),
                 ),
-                onPressed: !checkIsSelected() ? null : () async {
-                  cart. selectedTable.clear();
+                onPressed: !checkIsSelected() || isButtonDisabled ? null : () async {
+                  isButtonDisabled = true;
+                  cart.selectedTable.clear();
                   cart.cartNotifierItem.clear();
                   for (int index = 0; index < tableList.length; index++) {
                     //if using table is selected
@@ -757,8 +757,11 @@ class _CartDialogState extends State<CartDialog> {
     await clientAction.connectRequestPort(action: '11', param: jsonEncode(table_sqlite_id), callback: decodeData3);
   }
 
-  decodeData3(response) {
+  decodeData3(response) async {
     var json = jsonDecode(response);
+    if(json['status'] == '1'){
+      await readAllTable();
+    }
     print("status: ${json['status']}");
   }
 

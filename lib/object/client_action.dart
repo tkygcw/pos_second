@@ -2,10 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:another_flushbar/flushbar.dart';
+import 'package:flutter/material.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/cart_product.dart';
 
 class ClientAction{
+  String flushbarStatus = '';
+  BuildContext context = MyApp.navigatorKey.currentContext!;
+  static final ClientAction instance = ClientAction.init();
   late Socket socket;
   late Socket requestSocket;
   late String? serverIp;
@@ -14,10 +19,7 @@ class ClientAction{
   static const messageDelimiter = '\n';
   Timer? timer;
 
-
-  ClientAction({
-    this.serverIp
-  });
+  ClientAction.init();
 
   connectServer(String ips) async  {
     try{
@@ -36,6 +38,11 @@ class ClientAction{
         print("data chunk received: ${i+1}");
         // Track the received data
         String receivedData = utf8.decode(data);
+        print("received data: ${receivedData}");
+        if(receivedData == 'refresh'){
+          showRefresh();
+          return;
+        }
         buffer.write(receivedData);
         //split request call every 1 sec
         splitRequest(buffer: buffer, serverSocket: socket, response: response);
@@ -116,6 +123,36 @@ class ClientAction{
     }
   }
 
+  showRefresh(){
+    Flushbar(
+      icon: Icon(Icons.error, size: 32, color: Colors.white),
+      shouldIconPulse: false,
+      title: "New update from server",
+      message: "Click to get latest data",
+      duration: null,
+      backgroundColor: Colors.green,
+      messageColor: Colors.white,
+      flushbarPosition: FlushbarPosition.TOP,
+      maxWidth: 350,
+      margin: EdgeInsets.all(8),
+      borderRadius: BorderRadius.circular(8),
+      padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
+      onTap: (flushbar) {
+        Map<String, dynamic>? result = {'action': '1', 'param': ''};
+        socket.write('${jsonEncode(result)}\n');
+        flushbar.dismiss(true);
+      },
+      onStatusChanged: (status) {
+        flushbarStatus = status.toString();
+      },
+    )
+      .show(context);
+    // Future.delayed(Duration(seconds: 3), () {
+    //   print("status change: ${flushbarStatus}");
+    //   if (flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") playSound();
+    // });
+  }
+
   splitRequest({required StringBuffer buffer, required Socket serverSocket, response}) {
     if(loading == false && buffer.toString() != ''){
       print("if called!!!");
@@ -162,7 +199,8 @@ class ClientAction{
     if (message != '') {
       response = message;
       Future.delayed(const Duration(milliseconds: 1000), () {
-        decodeAction.checkAction();
+        //decodeAction.checkAction();
+        decodeAction.decodeAllFunction();
       });
     }
   }
@@ -209,7 +247,6 @@ class ClientAction{
           requestSocket.flush();
           requestSocket.destroy();
         }
-
       },
           // onDone: (){
           //   print("client done");

@@ -22,7 +22,7 @@ class QrMainPage extends StatefulWidget {
 }
 
 class _QrMainPageState extends State<QrMainPage> {
-  final ClientAction qrClientAction = ClientAction(serverIp: clientAction.serverIp);
+  final ClientAction qrClientAction = clientAction;
   late StreamController controller;
   List<OrderCache> qrOrderCacheList = [];
   List<OrderDetail> orderDetailList = [], noStockOrderDetailList = [];
