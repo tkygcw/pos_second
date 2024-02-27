@@ -8,8 +8,6 @@ import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/cart_product.dart';
 
 class ClientAction{
-  String flushbarStatus = '';
-  BuildContext context = MyApp.navigatorKey.currentContext!;
   static final ClientAction instance = ClientAction.init();
   late Socket socket;
   late Socket requestSocket;
@@ -21,7 +19,7 @@ class ClientAction{
 
   ClientAction.init();
 
-  connectServer(String ips) async  {
+  connectServer(String ips) async {
     try{
       int i = 0;
       Map<String, dynamic>? result;
@@ -124,29 +122,30 @@ class ClientAction{
   }
 
   showRefresh(){
-    Flushbar(
-      icon: Icon(Icons.error, size: 32, color: Colors.white),
-      shouldIconPulse: false,
-      title: "New update from server",
-      message: "Click to get latest data",
-      duration: null,
-      backgroundColor: Colors.green,
-      messageColor: Colors.white,
-      flushbarPosition: FlushbarPosition.TOP,
-      maxWidth: 350,
-      margin: EdgeInsets.all(8),
-      borderRadius: BorderRadius.circular(8),
-      padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
-      onTap: (flushbar) {
-        Map<String, dynamic>? result = {'action': '1', 'param': ''};
-        socket.write('${jsonEncode(result)}\n');
-        flushbar.dismiss(true);
-      },
-      onStatusChanged: (status) {
-        flushbarStatus = status.toString();
-      },
-    )
-      .show(context);
+    //call custom flush bar
+    // Flushbar(
+    //   icon: Icon(Icons.error, size: 32, color: Colors.white),
+    //   shouldIconPulse: false,
+    //   title: "New update from server",
+    //   message: "Click to get latest data",
+    //   duration: null,
+    //   backgroundColor: Colors.green,
+    //   messageColor: Colors.white,
+    //   flushbarPosition: FlushbarPosition.TOP,
+    //   maxWidth: 350,
+    //   margin: EdgeInsets.all(8),
+    //   borderRadius: BorderRadius.circular(8),
+    //   padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
+    //   onTap: (flushbar) {
+    //     Map<String, dynamic>? result = {'action': '1', 'param': ''};
+    //     socket.write('${jsonEncode(result)}\n');
+    //     flushbar.dismiss(true);
+    //   },
+    //   onStatusChanged: (status) {
+    //     flushbarStatus = status.toString();
+    //   },
+    // )
+    //   .show(context);
     // Future.delayed(Duration(seconds: 3), () {
     //   print("status change: ${flushbarStatus}");
     //   if (flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") playSound();

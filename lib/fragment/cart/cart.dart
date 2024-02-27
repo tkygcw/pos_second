@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/fragment/custom_flushbar.dart';
 import 'package:optimy_second_device/object/branch_link_tax.dart';
 import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
@@ -22,6 +23,7 @@ import '../../notifier/cart_notifier.dart';
 import '../../notifier/connectivity_change_notifier.dart';
 import '../../notifier/theme_color.dart';
 import '../../object/branch_link_dining_option.dart';
+import '../../object/branch_link_product.dart';
 import '../../object/branch_link_promotion.dart';
 import '../../object/cart_payment.dart';
 import '../../object/cart_product.dart';
@@ -58,7 +60,6 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   StreamController cartController = StreamController();
   late Stream cartStream;
-  //final ClientAction cartClientAction = ClientAction(serverIp: clientAction.serverIp);
   final ScrollController _scrollController = ScrollController();
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<Printer> printerList = [];
@@ -96,13 +97,6 @@ class _CartPageState extends State<CartPage> {
       allPromo = '',
       finalAmount = '',
       localOrderId = '';
-  String? table_use_value,
-      table_use_detail_value,
-      order_cache_value,
-      order_detail_value,
-      order_modifier_detail_value,
-      table_value,
-      branch_link_product_value;
   String? orderCacheKey;
   String? orderDetailKey;
   String? tableUseKey;
@@ -791,8 +785,8 @@ class _CartPageState extends State<CartPage> {
                                                       msg: "${AppLocalizations.of(context)?.translate('empty_cart')}");
                                                 }
                                               }
-                                              cart.initialLoad();
                                             }
+                                            cart.initialLoad();
                                             // if (_isSettlement == true) {
                                             //   //open cash in dialog
                                             //   showDialog(
@@ -2044,9 +2038,7 @@ class _CartPageState extends State<CartPage> {
   //   this.table_value = [].toString();
   // }
 
-/*
-  Not dine in call
-*/
+  ///place order
   callPlaceOrder(CartModel cart, String action) async {
     print("json cart model: ${jsonEncode(cart)}");
     await clientAction.connectRequestPort(action: action, param: jsonEncode(cart), callback: responseStatusCheck);
@@ -2071,771 +2063,47 @@ class _CartPageState extends State<CartPage> {
   void responseStatusCheck(response){
     var json = jsonDecode(response);
     if(json['status'] == '1'){
+      updateBranchLinkProductData(json['data']['tb_branch_link_product']);
       Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pop();
+      CustomFlushbar.instance.showFlushbar("Place order failed", json['exception'], Colors.red, duration: Duration(seconds: 3), (flushbar) async {
+        flushbar.dismiss(true);
+      });
     }
   }
 
-/*
-  dine in call
-*/
-  callCreateNewOrder(CartModel cart) async {
-    Map<String, dynamic>? objectData = {
-      'cartNotifierItem': cart.cartNotifierItem,
-      'selectedTable': cart.selectedTable,
-    };
-    await clientAction.connectRequestPort(action: '8', param: jsonEncode(objectData));
-    // await createTableUseID(connectivity);
-    // await createTableUseDetail(cart);
-    // await createOrderCache(cart, connectivity);
-    // await createOrderDetail(cart, connectivity);
-    // await updatePosTable(cart, connectivity);
-    // await syncAllToCloud();
-    // if(this.isLogOut == true){
-    //   openLogOutDialog();
-    //   return;
-    // }
-    // await printReceipt.printCheckList(printerList, int.parse(this.orderCacheId), context);
-    // await printReceipt.printKitchenList(printerList, context, cart, int.parse(this.orderCacheId));
+  ///add order
+  // callAddOrderCache(CartModel cart) async {
+  //   Map<String, dynamic>? objectData = {
+  //     'cartNotifierItem': cart.cartNotifierItem,
+  //     'selectedTable': cart.selectedTable,
+  //   };
+  //   await clientAction.connectRequestPort(action: '9', param: jsonEncode(objectData), callback: responseStatusCheck);
+  //   // await createOrderCache(cart, connectivity, isAddOrder: true);
+  //   // await createOrderDetail(cart, connectivity);
+  //   // await syncAllToCloud();
+  //   // if(this.isLogOut == true){
+  //   //   openLogOutDialog();
+  //   //   return;
+  //   // }
+  //   // await printReceipt.printCheckList(printerList, int.parse(this.orderCacheId), context);
+  //   // await printReceipt.printKitchenList(printerList, context, cart, int.parse(this.orderCacheId));
+  // }
+
+  // requestBranchLinkProductData(String action) async{
+  //   await clientAction.connectRequestPort(action: action, callback: updateBranchLinkProductData);
+  // }
+
+  updateBranchLinkProductData(response){
+    Iterable value4 = response;
+    List<BranchLinkProduct> product = List<BranchLinkProduct>.from(value4.map((json) => BranchLinkProduct.fromJson(json)));
+    for(int i = 0; i < product.length; i++){
+      decodeAction.decodedBranchLinkProductList?.removeWhere((e) => e.branch_link_product_sqlite_id == product[i].branch_link_product_sqlite_id);
+      decodeAction.decodedBranchLinkProductList?.add(product[i]);
+    }
+    //decodeAction.decodedBranchLinkProductList = List<BranchLinkProduct>.from(value4.map((json) => BranchLinkProduct.fromJson(json)));
   }
 
-/*
-  add-on call (dine in)
-*/
-  callAddOrderCache(CartModel cart) async {
-    Map<String, dynamic>? objectData = {
-      'cartNotifierItem': cart.cartNotifierItem,
-      'selectedTable': cart.selectedTable,
-    };
-    await clientAction.connectRequestPort(action: '9', param: jsonEncode(objectData));
-    // await createOrderCache(cart, connectivity, isAddOrder: true);
-    // await createOrderDetail(cart, connectivity);
-    // await syncAllToCloud();
-    // if(this.isLogOut == true){
-    //   openLogOutDialog();
-    //   return;
-    // }
-    // await printReceipt.printCheckList(printerList, int.parse(this.orderCacheId), context);
-    // await printReceipt.printKitchenList(printerList, context, cart, int.parse(this.orderCacheId));
-  }
 
-  randomColor() {
-    return Color(Random().nextInt(0xffffffff)).withAlpha(0xff);
-  }
-
-  colorToHex(Color color) {
-    String hex = '#${color.value.toRadixString(16).substring(2)}';
-    return hex;
-  }
-
-  hexToInteger(String hexCode) {
-    int temp = int.parse(hexCode, radix: 16);
-    return temp;
-  }
-
-  // colorChecking() async {
-  //   String? hexCode;
-  //   bool colorFound = false;
-  //   bool found = false;
-  //   int tempColor = 0;
-  //   int matchColor = 0;
-  //   int diff = 0;
-  //   int count = 0;
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? branch_id = prefs.getInt('branch_id');
-  //   List<TableUse> data = await PosDatabase.instance.readAllTableUseId(branch_id!);
-  //
-  //   while (colorFound == false) {
-  //     /* change color */
-  //     hexCode = colorToHex(randomColor());
-  //     if (data.length > 0) {
-  //       for (int i = 0; i < data.length; i++) {
-  //         if (hexCode == data[i].card_color) {
-  //           found = false;
-  //           break;
-  //         } else {
-  //           tempColor = hexToInteger(hexCode!.replaceAll('#', ''));
-  //           matchColor = hexToInteger(data[i].card_color!.replaceAll('#', ''));
-  //           diff = tempColor - matchColor;
-  //           if (diff.abs() < 160000) {
-  //             print('color too close or not yet loop finish');
-  //             print('diff: ${diff.abs()}');
-  //             found = false;
-  //             break;
-  //           } else {
-  //             print('color is ok');
-  //             print('diff: ${diff}');
-  //             if (i < data.length) {
-  //               continue;
-  //             }
-  //           }
-  //         }
-  //       }
-  //       found = true;
-  //     } else {
-  //       found = true;
-  //       break;
-  //     }
-  //     if (found == true) colorFound = true;
-  //   }
-  //   return hexCode;
-  // }
-
-  // randomBatch() {
-  //   return Random().nextInt(1000000) + 1;
-  // }
-  //
-  // batchChecking() async {
-  //   print('batch checking called!');
-  //   int tempBatch = 0;
-  //   bool batchFound = false;
-  //   bool founded = false;
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? branch_id = prefs.getInt('branch_id');
-  //
-  //   List<OrderCache> data = await PosDatabase.instance.readBranchOrderCache(branch_id!);
-  //   while (batchFound == false) {
-  //     tempBatch = randomBatch();
-  //     if (data.length > 0) {
-  //       for (int i = 0; i < data.length; i++) {
-  //         if (tempBatch.toString() == data[i].batch_id!.toString()) {
-  //           print('batch same!');
-  //           founded = false;
-  //           break;
-  //         } else {
-  //           if (i < data.length) {
-  //             print('not yet loop finish');
-  //             continue;
-  //           }
-  //         }
-  //       }
-  //       founded = true;
-  //     } else {
-  //       founded = true;
-  //       break;
-  //     }
-  //
-  //     if (founded == true) batchFound = true;
-  //   }
-  //   return tempBatch;
-  // }
-
-/*
-  ---------------Place Order part--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-  // createTableUseID(ConnectivityChangeNotifier connectivity) async {
-  //   List<String> _value = [];
-  //   DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-  //   String dateTime = dateFormat.format(DateTime.now());
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? branch_id = prefs.getInt('branch_id');
-  //   String? hexCode;
-  //   localTableUseId = '';
-  //   try {
-  //     hexCode = await colorChecking();
-  //     if (hexCode != null) {
-  //       TableUse data = TableUse(
-  //           table_use_id: 0,
-  //           branch_id: branch_id,
-  //           table_use_key: '',
-  //           order_cache_key: '',
-  //           card_color: hexCode.toString(),
-  //           status: 0,
-  //           sync_status: 0,
-  //           created_at: dateTime,
-  //           updated_at: '',
-  //           soft_delete: '');
-  //       //create table use data
-  //       TableUse tableUseData = await PosDatabase.instance.insertSqliteTableUse(data);
-  //       localTableUseId = tableUseData.table_use_sqlite_id.toString();
-  //       TableUse _updatedTableUseData = await insertTableUseKey(tableUseData, dateTime);
-  //       _value.add(jsonEncode(_updatedTableUseData));
-  //       //sync tot cloud
-  //       //await syncTableUseIdToCloud(_updatedTableUseData);
-  //     }
-  //   } catch (e) {
-  //     print(e);
-  //     Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "Create table id error: ${e}");
-  //   }
-  // }
-
-  // syncTableUseIdToCloud(TableUse updatedTableUseData) async {
-  //   List<String> _value = [];
-  //   //check is host reachable
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     _value.add(jsonEncode(updatedTableUseData));
-  //     Map response = await Domain().SyncTableUseToCloud(_value.toString());
-  //     if (response['status'] == '1') {
-  //       List responseJson = response['data'];
-  //       int syncData = await PosDatabase.instance.updateTableUseSyncStatusFromCloud(responseJson[0]['table_use_key']);
-  //     }
-  //   }
-  // }
-
-  // generateTableUseKey(TableUse tableUse) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? device_id = prefs.getInt('device_id');
-  //   var bytes = tableUse.created_at!.replaceAll(new RegExp(r'[^0-9]'), '') + tableUse.table_use_sqlite_id.toString() + device_id.toString();
-  //   return md5.convert(utf8.encode(bytes)).toString();
-  // }
-
-  // insertTableUseKey(TableUse tableUse, String dateTime) async {
-  //   TableUse? _tbUseList;
-  //   tableUseKey = await generateTableUseKey(tableUse);
-  //   if (tableUseKey != null) {
-  //     TableUse tableUseObject =
-  //         TableUse(table_use_key: tableUseKey, sync_status: 0, updated_at: dateTime, table_use_sqlite_id: tableUse.table_use_sqlite_id);
-  //     int tableUseData = await PosDatabase.instance.updateTableUseUniqueKey(tableUseObject);
-  //     if (tableUseData == 1) {
-  //       TableUse data = await PosDatabase.instance.readSpecificTableUseIdByLocalId(tableUseObject.table_use_sqlite_id!);
-  //       _tbUseList = data;
-  //     }
-  //   }
-  //   return _tbUseList;
-  // }
-
-  // generateTableUseDetailKey(TableUseDetail tableUseDetail) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? device_id = prefs.getInt('device_id');
-  //   var bytes = tableUseDetail.created_at!.replaceAll(new RegExp(r'[^0-9]'), '') +
-  //       tableUseDetail.table_use_detail_sqlite_id.toString() +
-  //       device_id.toString();
-  //   return md5.convert(utf8.encode(bytes)).toString();
-  // }
-
-  // insertTableUseDetailKey(TableUseDetail tableUseDetail, String dateTime) async {
-  //   TableUseDetail? _tableUseDetailData;
-  //   tableUseDetailKey = await generateTableUseDetailKey(tableUseDetail);
-  //   if (tableUseDetailKey != null) {
-  //     TableUseDetail tableUseDetailObject = TableUseDetail(
-  //         table_use_detail_key: tableUseDetailKey,
-  //         sync_status: 0,
-  //         updated_at: dateTime,
-  //         table_use_detail_sqlite_id: tableUseDetail.table_use_detail_sqlite_id);
-  //     int data = await PosDatabase.instance.updateTableUseDetailUniqueKey(tableUseDetailObject);
-  //     if (data == 1) {
-  //       TableUseDetail detailData = await PosDatabase.instance.readSpecificTableUseDetailByLocalId(tableUseDetailObject.table_use_detail_sqlite_id!);
-  //       _tableUseDetailData = detailData;
-  //     }
-  //   }
-  //   return _tableUseDetailData;
-  // }
-
-  // createTableUseDetail(CartModel cart) async {
-  //   DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-  //   String dateTime = dateFormat.format(DateTime.now());
-  //   List<String> _value = [];
-  //   try {
-  //     for (int i = 0; i < cart.selectedTable.length; i++) {
-  //       //create table use detail
-  //       TableUseDetail tableUseDetailData = await PosDatabase.instance.insertSqliteTableUseDetail(TableUseDetail(
-  //           table_use_detail_id: 0,
-  //           table_use_detail_key: '',
-  //           table_use_sqlite_id: localTableUseId,
-  //           table_use_key: tableUseKey,
-  //           table_sqlite_id: cart.selectedTable[i].table_sqlite_id.toString(),
-  //           table_id: cart.selectedTable[i].table_id.toString(),
-  //           status: 0,
-  //           sync_status: 0,
-  //           created_at: dateTime,
-  //           updated_at: '',
-  //           soft_delete: ''));
-  //       TableUseDetail updatedDetail = await insertTableUseDetailKey(tableUseDetailData, dateTime);
-  //       _value.add(jsonEncode(updatedDetail));
-  //     }
-  //     table_use_detail_value = _value.toString();
-  //     //sync to cloud
-  //     //syncTableUseDetailToCloud(_value.toString());
-  //   } catch (e) {
-  //     print(e);
-  //     Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "Create table detail error: ${e}");
-  //   }
-  // }
-
-  // syncTableUseDetailToCloud(String value) async {
-  //   //check is host reachable
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     Map response = await Domain().SyncTableUseDetailToCloud(value);
-  //     if (response['status'] == '1') {
-  //       List responseJson = response['data'];
-  //       for (int i = 0; i < responseJson.length; i++) {
-  //         int updateStatus = await PosDatabase.instance.updateTableUseDetailSyncStatusFromCloud(responseJson[i]['table_use_detail_key']);
-  //       }
-  //     }
-  //   }
-  // }
-
-  // createOrderCache(CartModel cart, ConnectivityChangeNotifier connectivity, {isAddOrder}) async {
-  //   DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-  //   String dateTime = dateFormat.format(DateTime.now());
-  //
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? branch_id = prefs.getInt('branch_id');
-  //   final String? user = prefs.getString('user');
-  //   List<TableUse> _tableUse = [];
-  //   List<String> _value = [];
-  //   Map userObject = json.decode(user!);
-  //   String _tableUseId = '';
-  //   int batch = 0;
-  //   try {
-  //     if(isAddOrder == true){
-  //       batch = int.parse(cart.cartNotifierItem[0].first_cache_batch!);
-  //     } else {
-  //       batch = await batchChecking();
-  //     }
-  //     //check selected table is in use or not
-  //     if (cart.selectedOption == 'Dine in') {
-  //       for (int i = 0; i < cart.selectedTable.length; i++) {
-  //         List<TableUseDetail> useDetail = await PosDatabase.instance.readSpecificTableUseDetail(cart.selectedTable[i].table_sqlite_id!);
-  //         if (useDetail.length > 0) {
-  //           _tableUseId = useDetail[0].table_use_sqlite_id!;
-  //         } else {
-  //           _tableUseId = this.localTableUseId;
-  //         }
-  //       }
-  //       List<TableUse> tableUseData = await PosDatabase.instance.readSpecificTableUseId(int.parse(_tableUseId));
-  //       _tableUse = tableUseData;
-  //     }
-  //     if (batch != 0) {
-  //       //create order cache
-  //       OrderCache data = await PosDatabase.instance.insertSqLiteOrderCache(OrderCache(
-  //           order_cache_id: 0,
-  //           order_cache_key: '',
-  //           company_id: userObject['company_id'].toString(),
-  //           branch_id: branch_id.toString(),
-  //           order_detail_id: '',
-  //           table_use_sqlite_id: cart.selectedOption == 'Dine in' ? _tableUseId : '',
-  //           table_use_key: cart.selectedOption == 'Dine in' ? _tableUse[0].table_use_key : '',
-  //           batch_id: batch.toString().padLeft(6, '0'),
-  //           dining_id: this.diningOptionID.toString(),
-  //           order_sqlite_id: '',
-  //           order_key: '',
-  //           order_by: userObject['name'].toString(),
-  //           order_by_user_id: userObject['user_id'].toString(),
-  //           cancel_by: '',
-  //           cancel_by_user_id: '',
-  //           customer_id: '0',
-  //           total_amount: newOrderSubtotal.toStringAsFixed(2),
-  //           qr_order: 0,
-  //           qr_order_table_sqlite_id: '',
-  //           qr_order_table_id: '',
-  //           accepted: 0,
-  //           sync_status: 0,
-  //           created_at: dateTime,
-  //           updated_at: '',
-  //           soft_delete: ''));
-  //       orderCacheId = data.order_cache_sqlite_id.toString();
-  //       OrderCache updatedCache = await insertOrderCacheKey(data, dateTime);
-  //       if (updatedCache.sync_status == 0) {
-  //         //sync updated table use (with order cache key)
-  //         await insertOrderCacheKeyIntoTableUse(cart, updatedCache, dateTime, connectivity);
-  //       }
-  //       _value.add(jsonEncode(updatedCache));
-  //       order_cache_value = _value.toString();
-  //       //sync to cloud
-  //       //syncOrderCacheToCloud(updatedCache);
-  //     }
-  //   } catch (e) {
-  //     print('error: ${e}');
-  //     Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "Create order cache error: ${e}");
-  //   }
-  // }
-
-  // syncOrderCacheToCloud(OrderCache updatedCache) async {
-  //   List<String> _orderCacheValue = [];
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     _orderCacheValue.add(jsonEncode(updatedCache));
-  //     Map response = await Domain().SyncOrderCacheToCloud(_orderCacheValue.toString());
-  //     if (response['status'] == '1') {
-  //       List responseJson = response['data'];
-  //       int orderCacheData = await PosDatabase.instance.updateOrderCacheSyncStatusFromCloud(responseJson[0]['order_cache_key']);
-  //     }
-  //   }
-  // }
-
-  // generateOrderCacheKey(OrderCache orderCache) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? device_id = prefs.getInt('device_id');
-  //   var bytes = orderCache.created_at!.replaceAll(new RegExp(r'[^0-9]'), '') + orderCache.order_cache_sqlite_id.toString() + device_id.toString();
-  //   return md5.convert(utf8.encode(bytes)).toString();
-  // }
-  //
-  // insertOrderCacheKey(OrderCache orderCache, String dateTime) async {
-  //   OrderCache? data;
-  //   orderCacheKey = await generateOrderCacheKey(orderCache);
-  //   if (orderCacheKey != null) {
-  //     OrderCache orderCacheObject =
-  //         OrderCache(order_cache_key: orderCacheKey, sync_status: 0, updated_at: dateTime, order_cache_sqlite_id: orderCache.order_cache_sqlite_id);
-  //     int cacheUniqueKey = await PosDatabase.instance.updateOrderCacheUniqueKey(orderCacheObject);
-  //     if (cacheUniqueKey == 1) {
-  //       OrderCache orderCacheData = await PosDatabase.instance.readSpecificOrderCacheByLocalId(orderCacheObject.order_cache_sqlite_id!);
-  //       if (orderCacheData.sync_status == 0) {
-  //         data = orderCacheData;
-  //       }
-  //     }
-  //   }
-  //   return data;
-  // }
-
-  // insertOrderCacheKeyIntoTableUse(CartModel cart, OrderCache orderCache, String dateTime, ConnectivityChangeNotifier connectivity) async {
-  //   List<String> _tableUseValue = [];
-  //   if (cart.selectedOption == "Dine in") {
-  //     List<TableUse> checkTableUse = await PosDatabase.instance.readSpecificTableUseId(int.parse(orderCache.table_use_sqlite_id!));
-  //     TableUse tableUseObject = TableUse(
-  //         order_cache_key: orderCacheKey,
-  //         sync_status: checkTableUse[0].sync_status == 0 ? 0 : 2,
-  //         updated_at: dateTime,
-  //         table_use_sqlite_id: int.parse(orderCache.table_use_sqlite_id!));
-  //     int tableUseCacheKey = await PosDatabase.instance.updateTableUseOrderCacheUniqueKey(tableUseObject);
-  //     if (tableUseCacheKey == 1 && connectivity.isConnect) {
-  //       List<TableUse> updatedTableUseRead = await PosDatabase.instance.readSpecificTableUseId(tableUseObject.table_use_sqlite_id!);
-  //       _tableUseValue.add(jsonEncode(updatedTableUseRead[0]));
-  //       table_use_value = _tableUseValue.toString();
-  //       //sync to cloud
-  //       //syncUpdatedTableUseIdToCloud(_tableUseValue.toString());
-  //     }
-  //   }
-  // }
-
-  // syncUpdatedTableUseIdToCloud(String tableUseValue) async {
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     var response = await Domain().SyncTableUseToCloud(tableUseValue);
-  //     if (response != null) {
-  //       if (response['status'] == '1') {
-  //         List responseJson = response['data'];
-  //         int updatedTableUse = await PosDatabase.instance.updateTableUseSyncStatusFromCloud(responseJson[0]['table_use_key']);
-  //       }
-  //     } else {
-  //       this.timeOutDetected = true;
-  //     }
-  //   }
-  // }
-
-  // createOrderDetail(CartModel cart, ConnectivityChangeNotifier connectivity) async {
-  //   DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-  //   String dateTime = dateFormat.format(DateTime.now());
-  //   List<String> _orderDetailValue = [];
-  //   List<String> _orderModifierValue = [];
-  //   List<String> _branchLinkProductValue = [];
-  //   bool _hasModifier = false;
-  //   //loop cart item & create order detail
-  //   for (int j = 0; j < cart.cartNotifierItem.length; j++) {
-  //     if (cart.cartNotifierItem[j].status == 0) {
-  //       OrderDetail object = OrderDetail(
-  //           order_detail_id: 0,
-  //           order_detail_key: '',
-  //           order_cache_sqlite_id: orderCacheId,
-  //           order_cache_key: orderCacheKey,
-  //           branch_link_product_sqlite_id: cart.cartNotifierItem[j].branch_link_product_sqlite_id,
-  //           category_sqlite_id: cart.cartNotifierItem[j].category_sqlite_id,
-  //           category_name: cart.cartNotifierItem[j].category_name,
-  //           productName: cart.cartNotifierItem[j].product_name,
-  //           has_variant: cart.cartNotifierItem[j].variant!.length == 0 ? '0' : '1',
-  //           product_variant_name: getVariant2(cart.cartNotifierItem[j]),
-  //           price: cart.cartNotifierItem[j].price,
-  //           original_price: cart.cartNotifierItem[j].base_price,
-  //           quantity: cart.cartNotifierItem[j].quantity.toString(),
-  //           remark: cart.cartNotifierItem[j].remark,
-  //           account: '',
-  //           cancel_by: '',
-  //           cancel_by_user_id: '',
-  //           status: 0,
-  //           sync_status: 0,
-  //           created_at: dateTime,
-  //           updated_at: '',
-  //           soft_delete: '');
-  //       OrderDetail orderDetailData = await PosDatabase.instance.insertSqliteOrderDetail(object);
-  //       BranchLinkProduct branchLinkProductData = await updateProductStock(orderDetailData.branch_link_product_sqlite_id.toString(), int.parse(orderDetailData.quantity!), dateTime);
-  //       _branchLinkProductValue.add(jsonEncode(branchLinkProductData.toJson()));
-  //       branch_link_product_value = _branchLinkProductValue.toString();
-  //       //insert order detail key
-  //       OrderDetail updatedOrderDetailData = await insertOrderDetailKey(orderDetailData, dateTime);
-  //       _orderDetailValue.add(jsonEncode(updatedOrderDetailData.syncJson()));
-  //       order_detail_value = _orderDetailValue.toString();
-  //       //insert order modifier detail
-  //       if (cart.cartNotifierItem[j].modifier!.isNotEmpty) {
-  //         for (int k = 0; k < cart.cartNotifierItem[j].modifier!.length; k++) {
-  //           ModifierGroup group = cart.cartNotifierItem[j].modifier![k];
-  //           for (int m = 0; m < group.modifierChild!.length; m++) {
-  //             if (group.modifierChild![m].isChecked!) {
-  //               _hasModifier = true;
-  //               OrderModifierDetail orderModifierDetailData = await PosDatabase.instance.insertSqliteOrderModifierDetail(OrderModifierDetail(
-  //                   order_modifier_detail_id: 0,
-  //                   order_modifier_detail_key: '',
-  //                   order_detail_sqlite_id: orderDetailData.order_detail_sqlite_id.toString(),
-  //                   order_detail_id: '0',
-  //                   order_detail_key: await orderDetailKey,
-  //                   mod_item_id: group.modifierChild![m].mod_item_id.toString(),
-  //                   mod_name: group.modifierChild![m].name,
-  //                   mod_price: group.modifierChild![m].price,
-  //                   mod_group_id: group.mod_group_id.toString(),
-  //                   sync_status: 0,
-  //                   created_at: dateTime,
-  //                   updated_at: '',
-  //                   soft_delete: ''));
-  //               //insert unique key
-  //               OrderModifierDetail updatedOrderModifierDetail = await insertOrderModifierDetailKey(orderModifierDetailData, dateTime);
-  //               if (updatedOrderModifierDetail.order_modifier_detail_key != '' && connectivity.isConnect) {
-  //                 _orderModifierValue.add(jsonEncode(updatedOrderModifierDetail));
-  //                 order_modifier_detail_value = _orderModifierValue.toString();
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  //   if (this.timeOutDetected == false) {
-  //     // syncOrderDetailToCloud(_orderDetailValue.toString());
-  //     // syncBranchLinkProductStock(_branchLinkProductValue.toString());
-  //     // if (_hasModifier) {
-  //     //   syncOrderModifierToCloud(_orderModifierValue.toString());
-  //     // }
-  //   }
-  // }
-
-  // updateProductStock(String branch_link_product_sqlite_id, int quantity, String dateTime) async {
-  //   int _totalStockQty = 0, updateStock = 0;
-  //   BranchLinkProduct? object;
-  //   List<BranchLinkProduct> checkData = await PosDatabase.instance.readSpecificBranchLinkProduct(branch_link_product_sqlite_id);
-  //   if (checkData[0].stock_type == '2') {
-  //     _totalStockQty = int.parse(checkData[0].stock_quantity!) - quantity;
-  //     object = BranchLinkProduct(
-  //         updated_at: dateTime,
-  //         sync_status: 2,
-  //         stock_quantity: _totalStockQty.toString(),
-  //         branch_link_product_sqlite_id: int.parse(branch_link_product_sqlite_id));
-  //     updateStock = await PosDatabase.instance.updateBranchLinkProductStock(object);
-  //   } else {
-  //     _totalStockQty = int.parse(checkData[0].daily_limit_amount!) - quantity;
-  //     object = BranchLinkProduct(
-  //         updated_at: dateTime,
-  //         sync_status: 2,
-  //         daily_limit_amount: _totalStockQty.toString(),
-  //         branch_link_product_sqlite_id: int.parse(branch_link_product_sqlite_id));
-  //     updateStock = await PosDatabase.instance.updateBranchLinkProductDailyLimitAmount(object);
-  //   }
-  //   //return updated value
-  //   if (updateStock == 1) {
-  //     List<BranchLinkProduct> updatedData = await PosDatabase.instance.readSpecificBranchLinkProduct(branch_link_product_sqlite_id);
-  //     return updatedData[0];
-  //   }
-  // }
-
-  // syncBranchLinkProductStock(String value) async {
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     Map orderDetailResponse = await Domain().SyncBranchLinkProductToCloud(value);
-  //     if (orderDetailResponse['status'] == '1') {
-  //       List responseJson = orderDetailResponse['data'];
-  //       for (int i = 0; i < responseJson.length; i++) {
-  //         int syncUpdated = await PosDatabase.instance.updateBranchLinkProductSyncStatusFromCloud(responseJson[i]['branch_link_product_id']);
-  //       }
-  //     }
-  //   }
-  // }
-
-  // syncOrderDetailToCloud(String orderDetailValue) async {
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     Map orderDetailResponse = await Domain().SyncOrderDetailToCloud(orderDetailValue);
-  //     if (orderDetailResponse['status'] == '1') {
-  //       List responseJson = orderDetailResponse['data'];
-  //       for (int i = 0; i < responseJson.length; i++) {
-  //         int syncUpdated = await PosDatabase.instance.updateOrderDetailSyncStatusFromCloud(responseJson[i]['order_detail_key']);
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // syncOrderModifierToCloud(String orderModifierValue) async {
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     Map orderModifierResponse = await Domain().SyncOrderModifierDetailToCloud(orderModifierValue);
-  //     if (orderModifierResponse['status'] == '1') {
-  //       List responseJson = orderModifierResponse['data'];
-  //       for (int i = 0; i < responseJson.length; i++) {
-  //         int syncUpdated = await PosDatabase.instance.updateOrderModifierDetailSyncStatusFromCloud(responseJson[i]['order_modifier_detail_key']);
-  //       }
-  //     }
-  //   }
-  // }
-
-  // insertOrderModifierDetailKey(OrderModifierDetail orderModifierDetail, String dateTime) async {
-  //   OrderModifierDetail? detailData;
-  //   orderModifierDetailKey = await generateOrderModifierDetailKey(orderModifierDetail);
-  //   if (orderModifierDetailKey != null) {
-  //     OrderModifierDetail orderModifierDetailData = OrderModifierDetail(
-  //         order_modifier_detail_key: orderModifierDetailKey,
-  //         updated_at: dateTime,
-  //         sync_status: orderModifierDetail.sync_status == 0 ? 0 : 2,
-  //         order_modifier_detail_sqlite_id: orderModifierDetail.order_modifier_detail_sqlite_id);
-  //     int updateUniqueKey = await PosDatabase.instance.updateOrderModifierDetailUniqueKey(orderModifierDetailData);
-  //     if (updateUniqueKey == 1) {
-  //       OrderModifierDetail data =
-  //           await PosDatabase.instance.readSpecificOrderModifierDetailByLocalId(orderModifierDetailData.order_modifier_detail_sqlite_id!);
-  //       detailData = data;
-  //     }
-  //   }
-  //   return detailData;
-  // }
-
-  // insertOrderDetailKey(OrderDetail orderDetail, String dateTime) async {
-  //   OrderDetail? detailData;
-  //   try {
-  //     orderDetailKey = await generateOrderDetailKey(orderDetail);
-  //     if (orderDetailKey != null) {
-  //       OrderDetail orderDetailObject = OrderDetail(
-  //           order_detail_key: orderDetailKey, sync_status: 0, updated_at: dateTime, order_detail_sqlite_id: orderDetail.order_detail_sqlite_id);
-  //       int updateUniqueKey = await PosDatabase.instance.updateOrderDetailUniqueKey(orderDetailObject);
-  //       if (updateUniqueKey == 1) {
-  //         OrderDetail data = await PosDatabase.instance.readSpecificOrderDetailByLocalId(orderDetailObject.order_detail_sqlite_id!);
-  //         detailData = data;
-  //       }
-  //     }
-  //     return detailData;
-  //   } catch (e) {
-  //     print('insert order detail key error: ${e}');
-  //     return;
-  //   }
-  // }
-
-  // generateOrderDetailKey(OrderDetail orderDetail) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? device_id = prefs.getInt('device_id');
-  //   var bytes = orderDetail.created_at!.replaceAll(new RegExp(r'[^0-9]'), '') + orderDetail.order_detail_sqlite_id.toString() + device_id.toString();
-  //   return md5.convert(utf8.encode(bytes)).toString();
-  // }
-
-  // generateOrderModifierDetailKey(OrderModifierDetail orderModifierDetail) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final int? device_id = prefs.getInt('device_id');
-  //   var bytes = orderModifierDetail.created_at!.replaceAll(new RegExp(r'[^0-9]'), '') +
-  //       orderModifierDetail.order_modifier_detail_sqlite_id.toString() +
-  //       device_id.toString();
-  //   return md5.convert(utf8.encode(bytes)).toString();
-  // }
-
-  // updatePosTable(CartModel cart, ConnectivityChangeNotifier connectivity) async {
-  //   try {
-  //     List<String> _value = [];
-  //     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-  //     String dateTime = dateFormat.format(DateTime.now());
-  //
-  //     for (int i = 0; i < cart.selectedTable.length; i++) {
-  //       List<PosTable> result = await PosDatabase.instance.checkPosTableStatus(cart.selectedTable[i].table_sqlite_id!);
-  //       List<TableUseDetail> tableUseDetail = await PosDatabase.instance.readSpecificTableUseDetail(cart.selectedTable[i].table_sqlite_id!);
-  //       if (result[0].status == 0) {
-  //         PosTable posTableData = PosTable(
-  //             table_sqlite_id: cart.selectedTable[i].table_sqlite_id,
-  //             table_use_detail_key: tableUseDetail[0].table_use_detail_key,
-  //             table_use_key: tableUseKey,
-  //             status: 1,
-  //             updated_at: dateTime);
-  //         int data = await PosDatabase.instance.updateCartPosTableStatus(posTableData);
-  //         if (data == 1 && connectivity.isConnect) {
-  //           List<PosTable> posTable = await PosDatabase.instance.readSpecificTable(posTableData.table_sqlite_id.toString());
-  //           if (posTable[0].sync_status == 2) {
-  //             _value.add(jsonEncode(posTable[0]));
-  //           }
-  //         }
-  //       }
-  //     }
-  //     table_value = _value.toString();
-  //     if (this.timeOutDetected == false) {
-  //       //syncUpdatedTableToCloud(_value.toString());
-  //     }
-  //   } catch (e) {
-  //     Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "update table error: ${e}");
-  //     print("update table error: $e");
-  //   }
-  // }
-
-  // syncUpdatedTableToCloud(String value) async {
-  //   bool _hasInternetAccess = await Domain().isHostReachable();
-  //   if (_hasInternetAccess) {
-  //     Map data = await Domain().SyncUpdatedPosTableToCloud(value);
-  //     if (data['status'] == '1') {
-  //       List responseJson = data['data'];
-  //       for (var i = 0; i < responseJson.length; i++) {
-  //         int syncData = await PosDatabase.instance.updatePosTableSyncStatusFromCloud(responseJson[i]['table_id']);
-  //       }
-  //     }
-  //   }
-  // }
-
-  // syncAllToCloud() async {
-  //   if(mainSyncToCloud.count == 0){
-  //     mainSyncToCloud.count = 1;
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final int? device_id = prefs.getInt('device_id');
-  //     final String? login_value = prefs.getString('login_value');
-  //     bool _hasInternetAccess = await Domain().isHostReachable();
-  //     if (_hasInternetAccess) {
-  //       Map data = await Domain().syncLocalUpdateToCloud(
-  //           device_id: device_id.toString(),
-  //           value: login_value,
-  //           table_use_value: this.table_use_value,
-  //           table_use_detail_value: this.table_use_detail_value,
-  //           order_cache_value: this.order_cache_value,
-  //           order_detail_value: this.order_detail_value,
-  //           branch_link_product_value: this.branch_link_product_value,
-  //           order_modifier_value: this.order_modifier_detail_value,
-  //           table_value: this.table_value);
-  //       if (data['status'] == '1') {
-  //         print('success');
-  //         List responseJson = data['data'];
-  //         for (int i = 0; i < responseJson.length; i++) {
-  //           switch (responseJson[i]['table_name']) {
-  //             case 'tb_table_use':
-  //               {
-  //                 await PosDatabase.instance.updateTableUseSyncStatusFromCloud(responseJson[i]['table_use_key']);
-  //               }
-  //               break;
-  //             case 'tb_table_use_detail':
-  //               {
-  //                 await PosDatabase.instance.updateTableUseDetailSyncStatusFromCloud(responseJson[i]['table_use_detail_key']);
-  //               }
-  //               break;
-  //             case 'tb_order_cache':
-  //               {
-  //                 await PosDatabase.instance.updateOrderCacheSyncStatusFromCloud(responseJson[i]['order_cache_key']);
-  //               }
-  //               break;
-  //             case 'tb_order_detail':
-  //               {
-  //                 await PosDatabase.instance.updateOrderDetailSyncStatusFromCloud(responseJson[i]['order_detail_key']);
-  //               }
-  //               break;
-  //             case 'tb_order_modifier_detail':
-  //               {
-  //                 await PosDatabase.instance.updateOrderModifierDetailSyncStatusFromCloud(responseJson[i]['order_modifier_detail_key']);
-  //               }
-  //               break;
-  //             case 'tb_branch_link_product':
-  //               {
-  //                 await PosDatabase.instance.updateBranchLinkProductSyncStatusFromCloud(responseJson[i]['branch_link_product_id']);
-  //               }
-  //               break;
-  //             case 'tb_table':
-  //               {
-  //                 await PosDatabase.instance.updatePosTableSyncStatusFromCloud(responseJson[i]['table_id']);
-  //               }
-  //               break;
-  //             default:
-  //               {
-  //                 return;
-  //               }
-  //           }
-  //         }
-  //       }else if(data['status'] == '7'){
-  //         this.isLogOut = true;
-  //       }
-  //     }
-  //     mainSyncToCloud.count = 0;
-  //   }
-  // }
 }
