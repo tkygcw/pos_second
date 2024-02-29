@@ -21,6 +21,8 @@ import '../../page/progress_bar.dart';
 import '../../translation/AppLocalizations.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
+import '../custom_flushbar.dart';
+
 // import '../table/table_change_dialog.dart';
 
 class CartDialog extends StatefulWidget {
@@ -761,6 +763,11 @@ class _CartDialogState extends State<CartDialog> {
     var json = jsonDecode(response);
     if(json['status'] == '1'){
       await readAllTable();
+    } else {
+      Navigator.of(context).pop();
+      CustomFlushbar.instance.showFlushbar("Remove merged table error", json['exception'], Colors.red, duration: Duration(seconds: 3), (flushbar) async {
+        flushbar.dismiss(true);
+      });
     }
     print("status: ${json['status']}");
   }
@@ -777,6 +784,11 @@ class _CartDialogState extends State<CartDialog> {
     var json = jsonDecode(response);
     if(json['status'] == '1'){
       await readAllTable();
+    } else {
+      Navigator.of(context).pop();
+      CustomFlushbar.instance.showFlushbar("Merged table error", json['exception'], Colors.red, duration: Duration(seconds: 3), (flushbar) async {
+        flushbar.dismiss(true);
+      });
     }
   }
 

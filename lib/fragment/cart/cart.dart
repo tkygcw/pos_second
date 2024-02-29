@@ -60,6 +60,7 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   StreamController cartController = StreamController();
   late Stream cartStream;
+  late CartModel cart;
   final ScrollController _scrollController = ScrollController();
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<Printer> printerList = [];
@@ -255,6 +256,7 @@ class _CartPageState extends State<CartPage> {
           // widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'qr_order' || widget.currentPage == 'other_order'
           //     ? getSubTotal(cart)
           //     : getReceiptPaymentDetail(cart);
+          this.cart = cart;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             getSubTotal(cart);
           });
@@ -786,7 +788,6 @@ class _CartPageState extends State<CartPage> {
                                                 }
                                               }
                                             }
-                                            cart.initialLoad();
                                             // if (_isSettlement == true) {
                                             //   //open cash in dialog
                                             //   showDialog(
@@ -2065,7 +2066,15 @@ class _CartPageState extends State<CartPage> {
     if(json['status'] == '1'){
       updateBranchLinkProductData(json['data']['tb_branch_link_product']);
       Navigator.of(context).pop();
+      cart.initialLoad();
+    } else if (json['status'] == '2'){
+      Navigator.of(context).pop();
+      updateBranchLinkProductData(json['data']['tb_branch_link_product']);
+      CustomFlushbar.instance.showFlushbar("Place order failed", "Contain out of stock product", Colors.red, duration: Duration(seconds: 3), (flushbar) async {
+        flushbar.dismiss(true);
+      });
     } else {
+      cart.initialLoad();
       Navigator.of(context).pop();
       CustomFlushbar.instance.showFlushbar("Place order failed", json['exception'], Colors.red, duration: Duration(seconds: 3), (flushbar) async {
         flushbar.dismiss(true);
