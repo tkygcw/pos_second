@@ -2070,9 +2070,10 @@ class _CartPageState extends State<CartPage> {
     } else if (json['status'] == '2'){
       Navigator.of(context).pop();
       updateBranchLinkProductData(json['data']['tb_branch_link_product']);
-      CustomFlushbar.instance.showFlushbar("Place order failed", "Contain out of stock product", Colors.red, duration: Duration(seconds: 3), (flushbar) async {
-        flushbar.dismiss(true);
-      });
+      showOutOfStockDialog(json['data']['cartItem']);
+      // CustomFlushbar.instance.showFlushbar("Place order failed", "Contain out of stock product", Colors.red, duration: Duration(seconds: 3), (flushbar) async {
+      //   flushbar.dismiss(true);
+      // });
     } else {
       cart.initialLoad();
       Navigator.of(context).pop();
@@ -2080,6 +2081,37 @@ class _CartPageState extends State<CartPage> {
         flushbar.dismiss(true);
       });
     }
+  }
+
+  Future<void> showOutOfStockDialog(response) async {
+    List<cartProductItem> item = List<cartProductItem>.from(response.map((json) => cartProductItem.fromJson(json)));
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context){
+          return AlertDialog(
+            title: Text("Product out of stock!!!"),
+            content: SizedBox(
+              width: 300,
+              child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: item.length,
+                  itemBuilder: (context, index) {
+                    return SizedBox(
+                      height: 40,
+                      child: Text("${(index + 1).toString()}. ${item[index].product_name}"),
+                    );
+                  }),
+            ),
+            actions: [
+              ElevatedButton(
+                  onPressed: (){
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Close"))
+            ],
+          );
+        });
   }
 
   ///add order

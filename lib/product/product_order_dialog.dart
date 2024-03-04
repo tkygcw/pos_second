@@ -41,7 +41,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   late Stream actionStream;
   late StreamSubscription actionSubscription;
   late CartModel cart;
-  List<BranchLinkProduct> branchLinkProductList = decodeAction.decodedBranchLinkProductList!;
+  List<BranchLinkProduct> branchLinkProductList = [];
   List<ProductVariant> productVariantList = decodeAction.decodedProductVariantList!;
   List<BranchLinkModifier> branchLinkModifierList = decodeAction.decodedBranchLinkModifierList!;
   AppSetting appSetting = decodeAction.decodedAppSetting!;
@@ -657,6 +657,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     variantGroup = List<VariantGroup>.from(value1.map((json) => VariantGroup.fromJson(json)));
     Iterable value2 = json['data']['modifier'];
     modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
+    Iterable value3 = json['data']['branch_link_product'];
+    branchLinkProductList = List<BranchLinkProduct>.from(value3.map((json) => BranchLinkProduct.fromJson(json)));
   }
 
   Future<Future<Object?>> openChooseTableDialog(CartModel cartModel) async {
