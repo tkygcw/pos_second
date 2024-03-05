@@ -275,6 +275,26 @@ class _CartPageState extends State<CartPage> {
                 backgroundColor: Colors.white,
                 actions: [
                   Visibility(
+                    visible: widget.currentPage == 'menu' ? true : false,
+                    child: Expanded(
+                      child: IconButton(
+                        tooltip: 'kitchen print',
+                        icon: Badge(
+                          // isLabelVisible: failPrintModel.failedPrintOrderDetail.isEmpty ? false : true,
+                          // label: Text(failPrintModel.failedPrintOrderDetail.length.toString()),
+                          child: const Icon(
+                            Icons.print,
+                          ),
+                        ),
+                        color: color.backgroundColor,
+                        onPressed: () {
+                          //tableDialog(context);
+                          //openReprintKitchenDialog();
+                        },
+                      ),
+                    ),
+                  ),
+                  Visibility(
                     visible: cart.selectedOption == 'Dine in' && widget.currentPage == 'menu'
                         ? true
                         : false,
@@ -480,45 +500,49 @@ class _CartPageState extends State<CartPage> {
                                                       hoverColor: Colors.transparent,
                                                       icon: Icon(Icons.remove),
                                                       onPressed: () {
-                                                        cart.cartNotifierItem[index].quantity !=
-                                                            1 &&
-                                                            cart.cartNotifierItem[index].status ==
-                                                                0
-                                                            ? setState(() =>
-                                                        cart.cartNotifierItem[index].quantity =
-                                                            cart.cartNotifierItem[index]
-                                                                .quantity! - 1)
-                                                            : cart.cartNotifierItem[index]
-                                                            .status != 0
-                                                            ? Fluttertoast.showToast(
+                                                        if (cart.cartNotifierItem[index].status == 0) {
+                                                          if (cart.cartNotifierItem[index].quantity! > 1) {
+                                                            if (cart.cartNotifierItem[index].unit != 'each') {
+                                                              setState(() {
+                                                                cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1).ceilToDouble();
+                                                              });
+                                                            } else {
+                                                              setState(() {
+                                                                cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1);
+                                                              });
+                                                            }
+                                                          } else {
+                                                            cart.removeItem(cart.cartNotifierItem[index]);
+                                                          }
+                                                        } else {
+                                                          Fluttertoast.showToast(
                                                             backgroundColor: Colors.red,
-                                                            msg: "order already placed!")
-                                                            : cart.removeItem(
-                                                            cart.cartNotifierItem[index]);
+                                                            msg: AppLocalizations.of(context)!.translate('order_already_placed'),
+                                                          );
+                                                        }
                                                       }),
                                                 ),
                                                 Text(
-                                                  cart.cartNotifierItem[index].quantity
-                                                      .toString(),
-                                                  style: TextStyle(color: cart
-                                                      .cartNotifierItem[index].refColor),
+                                                  cart.cartNotifierItem[index].quantity.toString(),
+                                                  style: TextStyle(color: cart.cartNotifierItem[index].refColor),
                                                 ),
-                                                widget.currentPage == 'menu'
-                                                    ? IconButton(
+                                                widget.currentPage == 'menu' ?
+                                                IconButton(
                                                     hoverColor: Colors.transparent,
                                                     icon: Icon(Icons.add),
-                                                    onPressed: () {
-                                                      if (cart.cartNotifierItem[index].status ==
-                                                          0) {
-                                                        setState(() {
-                                                          cart.cartNotifierItem[index].quantity =
-                                                              cart.cartNotifierItem[index]
-                                                                  .quantity! + 1;
-                                                        });
+                                                    onPressed: () async {
+                                                      if (cart.cartNotifierItem[index].status == 0) {
+                                                        if (checkProductStock(cart, cart.cartNotifierItem[index]) == true) {
+                                                          setState(() {
+                                                            cart.cartNotifierItem[index].quantity = cart.cartNotifierItem[index].quantity! + 1;
+                                                          });
+                                                        } else {
+                                                          Fluttertoast.showToast(
+                                                              backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('product_out_of_stock'));
+                                                        }
                                                       } else {
                                                         Fluttertoast.showToast(
-                                                            backgroundColor: Colors.red,
-                                                            msg: "order already placed!");
+                                                            backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('order_already_placed'));
                                                       }
                                                       //controller.add('refresh');
                                                     })
@@ -956,6 +980,65 @@ class _CartPageState extends State<CartPage> {
         }),
       );
     });
+  }
+
+  checkProductStock(CartModel cart, cartProductItem cartItem) {
+    bool hasStock = true;
+    List<BranchLinkProduct> data = decodeAction.decodedBranchLinkProductList!;
+    if (data.isNotEmpty) {
+      BranchLinkProduct product = data.firstWhere((e) => e.branch_link_product_sqlite_id.toString() == cartItem.branch_link_product_sqlite_id);
+      switch (product.stock_type) {
+        case '1':
+          {
+            if (int.parse(product.daily_limit!) > 0 && simpleIntInput <= int.parse(product.daily_limit!)) {
+              num stockLeft = int.parse(product.daily_limit!) - checkCartProductQuantity(cart, product);
+              print('stock left: ${stockLeft}');
+              if (stockLeft > 0) {
+                hasStock = true;
+              } else {
+                hasStock = false;
+              }
+            } else {
+              hasStock = false;
+            }
+          }
+          break;
+        case '2':
+          {
+            num stockQuantity = int.parse(product.stock_quantity!);
+            if (stockQuantity > 0 && simpleIntInput <= stockQuantity) {
+              num stockLeft = stockQuantity - checkCartProductQuantity(cart, product);
+              if (stockLeft > 0) {
+                hasStock = true;
+              } else {
+                hasStock = false;
+              }
+            } else {
+              hasStock = false;
+            }
+          }
+          break;
+        default:
+          {
+            hasStock = true;
+          }
+      }
+    }
+
+    return hasStock;
+  }
+
+  num checkCartProductQuantity(CartModel cart, BranchLinkProduct branchLinkProduct) {
+    ///get all same item in cart
+    List<cartProductItem> sameProductList =
+    cart.cartNotifierItem.where((item) => item.branch_link_product_sqlite_id == branchLinkProduct.branch_link_product_sqlite_id.toString() && item.status == 0).toList();
+    if (sameProductList.isNotEmpty) {
+      /// sum all quantity
+      num totalQuantity = sameProductList.fold(0, (sum, product) => sum + product.quantity!);
+      return totalQuantity;
+    } else {
+      return 0;
+    }
   }
 
   paymentAddToCart(CartModel cart) {
@@ -2085,23 +2168,26 @@ class _CartPageState extends State<CartPage> {
 
   Future<void> showOutOfStockDialog(response) async {
     List<cartProductItem> item = List<cartProductItem>.from(response.map((json) => cartProductItem.fromJson(json)));
+
     return showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context){
           return AlertDialog(
-            title: Text("Product out of stock!!!"),
+            title: Text("Product out of stock"),
             content: SizedBox(
               width: 300,
-              child: ListView.builder(
+              child: ListView.separated(
                   shrinkWrap: true,
-                  itemCount: item.length,
+                  itemCount: item.where((e) => e.status == 0).toList().length,
                   itemBuilder: (context, index) {
-                    return SizedBox(
-                      height: 40,
-                      child: Text("${(index + 1).toString()}. ${item[index].product_name}"),
+                    return ListTile(
+                      title: Text(item[index].product_name!),
+                      subtitle: Text(getCartVariant(item[index]) + getCartModifier(item[index])),
+                      trailing: Text("x${item[index].quantity}\nStock left: ${getStockLeft(item[index])}", textAlign: TextAlign.right),
                     );
-                  }),
+                  },
+                  separatorBuilder: (BuildContext context, int index) => const Divider()),
             ),
             actions: [
               ElevatedButton(
@@ -2113,6 +2199,57 @@ class _CartPageState extends State<CartPage> {
           );
         });
   }
+
+  String getCartVariant(cartProductItem object){
+    List<String?> variant = [];
+    String result = '';
+    if (object.variant != null) {
+      var length = object.variant!.length;
+      for (int i = 0; i < length; i++) {
+        VariantGroup group = object.variant![i];
+        for (int j = 0; j < group.child!.length; j++) {
+          if (group.child![j].isSelected!) {
+            variant.add('${group.child![j].name!}\n');
+            result = variant.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceAll('|', '\n+').replaceFirst('', '+ ');
+          }
+        }
+      }
+    } else {
+      if (object.productVariantName != null && object.productVariantName != '') {
+        result = "${object.productVariantName!.replaceAll('|', '\n+').replaceFirst('', '+ ')}\n";
+      }
+    }
+    return result;
+  }
+
+  String getCartModifier(cartProductItem cartItem){
+    List<String?> modifier = [];
+    String result = '';
+    for(int i = 0; i < cartItem.modifier!.length; i++){
+      ModifierGroup group =  cartItem.modifier![i];
+      for(int j = 0; j < group.modifierChild!.length; j++){
+        if (group.modifierChild![j].isChecked!) {
+          modifier.add('${group.modifierChild![j].name!}\n');
+          result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
+        }
+      }
+    }
+    return result;
+  }
+
+
+  String getStockLeft(cartProductItem cartItem){
+    String stockLeft = '';
+    BranchLinkProduct product = decodeAction.decodedBranchLinkProductList!.firstWhere((e) => e.branch_link_product_sqlite_id.toString() == cartItem.branch_link_product_sqlite_id);
+    switch (product.stock_type) {
+      case '1':
+        return stockLeft = product.daily_limit!;
+      case '2':
+        return stockLeft = product.stock_quantity!;
+    }
+    return stockLeft;
+  }
+
 
   ///add order
   // callAddOrderCache(CartModel cart) async {
