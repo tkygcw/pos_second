@@ -19,6 +19,7 @@ import 'package:provider/provider.dart';
 
 import 'notifier/cart_notifier.dart';
 import 'notifier/connectivity_change_notifier.dart';
+import 'notifier/fail_print_notifier.dart';
 import 'notifier/notification_notifier.dart';
 import 'notifier/printer_notifier.dart';
 import 'notifier/report_notifier.dart';
@@ -95,6 +96,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => ReportModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => FailPrintModel.instance,
         ),
       ],
       child: Consumer<AppLanguage>(builder: (context, model, child) {

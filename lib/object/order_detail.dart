@@ -120,7 +120,7 @@ class OrderDetail{
   String? item_cancel;
   List<OrderDetail> categoryOrderDetailList = [];
   bool isSelected = true;
-  List<String> tableNumber = [];
+  List<String>? tableNumber = [];
   String? orderQueue = '';
   String? order_number = '';
   String? branch_id = '';
@@ -171,7 +171,8 @@ class OrderDetail{
         this.branch_id,
         this.order_created_at,
         this.product_category_id,
-        this.orderModifierDetail
+        this.orderModifierDetail,
+        this.tableNumber
       });
 
   OrderDetail copy({
@@ -234,7 +235,9 @@ class OrderDetail{
 
   static OrderDetail fromJson(Map<String, Object?> json) {
     var orderModDetailJson = json['order_modifier_detail'] as List?;
+    var tableNumberJson = json['table_number'] as List?;
     List<OrderModifierDetail>? orderModifierDetailList = orderModDetailJson?.map((tagJson) => OrderModifierDetail.fromJson(tagJson)).toList();
+    List<String> tableNumber = List<String>.from(tableNumberJson as Iterable);
     return OrderDetail(
       order_detail_sqlite_id: json[OrderDetailFields.order_detail_sqlite_id] as int?,
       order_detail_id: json[OrderDetailFields.order_detail_id] as int?,
@@ -278,7 +281,8 @@ class OrderDetail{
       branch_id: json['branch_id'] as String?,
       order_created_at: json['order_created_at'] as String?,
       product_category_id: json['product_category_id'] as String?,
-      orderModifierDetail: orderModifierDetailList
+      orderModifierDetail: orderModifierDetailList,
+      tableNumber: tableNumber
     );
   }
 

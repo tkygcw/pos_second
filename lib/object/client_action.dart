@@ -199,6 +199,10 @@ class ClientAction{
       response = message;
       Future.delayed(const Duration(milliseconds: 1000), () {
         //decodeAction.checkAction();
+        var json = jsonDecode(response!);
+        if(json['action'] == '0'){
+          return decodeAction.checkAction();
+        }
         decodeAction.decodeAllFunction();
       });
     }

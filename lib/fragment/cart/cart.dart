@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
 import 'package:optimy_second_device/fragment/custom_flushbar.dart';
+import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_tax.dart';
 import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
@@ -277,21 +279,23 @@ class _CartPageState extends State<CartPage> {
                   Visibility(
                     visible: widget.currentPage == 'menu' ? true : false,
                     child: Expanded(
-                      child: IconButton(
-                        tooltip: 'kitchen print',
-                        icon: Badge(
-                          // isLabelVisible: failPrintModel.failedPrintOrderDetail.isEmpty ? false : true,
-                          // label: Text(failPrintModel.failedPrintOrderDetail.length.toString()),
-                          child: const Icon(
-                            Icons.print,
+                      child: Consumer<FailPrintModel>(builder: (context, FailPrintModel failPrint, child) {
+                        return IconButton(
+                          tooltip: 'kitchen print',
+                          icon: Badge(
+                            isLabelVisible: FailPrintModel.instance.failPrintOrderDetails.isEmpty ? false : true,
+                            label: Text(FailPrintModel.instance.failPrintOrderDetails.length.toString()),
+                            child: const Icon(
+                              Icons.print,
+                            ),
                           ),
-                        ),
-                        color: color.backgroundColor,
-                        onPressed: () {
-                          //tableDialog(context);
-                          //openReprintKitchenDialog();
-                        },
-                      ),
+                          color: color.backgroundColor,
+                          onPressed: () {
+                            //tableDialog(context);
+                            openReprintKitchenDialog();
+                          },
+                        );
+                      }),
                     ),
                   ),
                   Visibility(
@@ -1128,6 +1132,7 @@ class _CartPageState extends State<CartPage> {
     }
     return result;
   }
+
   getVariant2(cartProductItem object) {
     List<String?> variant = [];
     String result = '';
@@ -1938,6 +1943,37 @@ class _CartPageState extends State<CartPage> {
   //       });
   // }
 
+  openReprintKitchenDialog() {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context){
+          return ReprintKitchenListDialog();
+        }
+    );
+  }
+
+  // openReprintKitchenDialog() async {
+  //   return showGeneralDialog(
+  //       barrierColor: Colors.black.withOpacity(0.5),
+  //       transitionBuilder: (context, a1, a2, widget) {
+  //         final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+  //         return Transform(
+  //           transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+  //           child: Opacity(
+  //             opacity: a1.value,
+  //             child: ReprintKitchenListDialog(),
+  //           ),
+  //         );
+  //       },
+  //       transitionDuration: Duration(milliseconds: 200),
+  //       barrierDismissible: false,
+  //       context: context,
+  //       pageBuilder: (context, animation1, animation2) {
+  //         // ignore: null_check_always_fails
+  //         return null!;
+  //       });
+  // }
+
   Future<Future<Object?>> openChooseTableDialog(CartModel cartModel) async {
     return showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
@@ -2146,6 +2182,7 @@ class _CartPageState extends State<CartPage> {
 
   void responseStatusCheck(response){
     var json = jsonDecode(response);
+    print("status: ${json['status']}");
     if(json['status'] == '1'){
       updateBranchLinkProductData(json['data']['tb_branch_link_product']);
       Navigator.of(context).pop();

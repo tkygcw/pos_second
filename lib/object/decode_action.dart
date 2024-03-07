@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
+import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/user.dart';
@@ -69,6 +71,12 @@ class DecodeAction {
     if(json['action'] != null){
       String action = json['action'];
       switch(action){
+        case '0': {
+          Iterable value1 = json['failedPrintOrderDetail'];
+          List<OrderDetail> failOrderDetail = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
+          FailPrintModel.instance.addAllFailedOrderDetail(failOrderDetail);
+        }
+        break;
         // case'17': {
         //   Map<String, dynamic>? objectData;
         //   Map<String, dynamic>? result;
