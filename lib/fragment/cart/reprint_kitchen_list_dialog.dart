@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:confirm_dialog/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_function.dart';
+import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:provider/provider.dart';
 
+import '../../main.dart';
 import '../../notifier/fail_print_notifier.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
@@ -18,6 +22,7 @@ class ReprintKitchenListDialog extends StatefulWidget {
 class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   ReprintKitchenListFunction reprintFunc = ReprintKitchenListFunction();
   late FailPrintModel model;
+  late ThemeColor color;
   //List<OrderDetail> orderDetail = [];
   bool isButtonDisable = false, closeButtonDisable = false;
   // Set<String> selectedOrder = {};
@@ -33,6 +38,7 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   Widget build(BuildContext context) {
     print("Upper rebuild called!!!");
     model = context.watch<FailPrintModel>();
+    color = context.watch<ThemeColor>();
     return AlertDialog(
       title: buildTitle(context),
       content: buildContent(context),
@@ -79,7 +85,6 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   }
 
   Widget buildContent(BuildContext context){
-    // bool isOrderSelected = true;
     return Container(
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height / 2),
         width: 500,
@@ -217,7 +222,7 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
         child: ElevatedButton(
             onPressed: isButtonDisable || model.failPrintOrderDetails.isEmpty  ? null : () async {
               //disableButton();
-              //await callPrinter();
+              await callPrinter();
             },
             child: Text(AppLocalizations.of(context)!.translate('reprint'))),
       ),
@@ -229,14 +234,39 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
                 setState(() {
                   closeButtonDisable = true;
                 });
-                model.setAllAsSelected();
-                Navigator.of(context).pop();
+                closeDialog();
               },
-              // style: ElevatedButton.styleFrom(
-              //   backgroundColor: color.backgroundColor,
-              // ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color.backgroundColor,
+              ),
               child: Text(AppLocalizations.of(context)!.translate('close')))
       ),
     ];
+  }
+
+  callPrinter() async {
+    List<OrderDetail> selectedList = model.failPrintOrderDetails.where((e) => e.isSelected == true).toList();
+    List<OrderDetail> batchOrderDetailList= reprintFunc.updateBatch(selectedList);
+    print("order detail batch: ${batchOrderDetailList[0].failPrintBatch}");
+    //await clientAction.connectRequestPort(action: '14', param: jsonEncode(batchOrderDetailList), callback: responseStatusCheck);
+  }
+
+  void responseStatusCheck(response){
+    var json = jsonDecode(response);
+    print("status: ${json['status']}");
+    if(json['status'] == '1'){
+      print("fail print still exist: ${json['order_detail']}");
+      // model.addAllFailedOrderDetail({json['status'])
+      // Navigator.of(context).pop();
+      // cart.initialLoad();
+    } else if (json['status'] == '2'){
+      model.removeAllFailedOrderDetail();
+      Navigator.of(context).pop();
+    }
+  }
+
+  closeDialog(){
+    reprintFunc.resetOrderDetail();
+    Navigator.of(context).pop();
   }
 }

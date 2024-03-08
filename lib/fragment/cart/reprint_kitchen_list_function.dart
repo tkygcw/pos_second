@@ -1,8 +1,18 @@
+import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 
 import '../../object/order_detail.dart';
 
 class ReprintKitchenListFunction {
+
+  List<OrderDetail> updateBatch(List<OrderDetail> orderDetail){
+    List<OrderDetail> updatedList = [];
+    for(int i = 0; i < orderDetail.length; i++){
+      orderDetail[i].failPrintBatch = '${DateTime.now().toString().replaceAll(RegExp(r'[^0-9]'), '')}-${clientAction.serverIp!}';
+    }
+    updatedList.addAll(orderDetail);
+    return updatedList;
+  }
 
   Map<String, List<OrderDetail>> groupOrder() {
     Map<String, List<OrderDetail>> groupedOrderDetails = {};
@@ -33,7 +43,7 @@ class ReprintKitchenListFunction {
       //disableButton();
     } else {
       resetOrderDetail();
-      FailPrintModel.instance.setAllAsSelected();
+      //FailPrintModel.instance.setAllAsSelected();
       //enableButton();
     }
   }
@@ -46,9 +56,12 @@ class ReprintKitchenListFunction {
   }
 
   resetOrderDetail(){
-    for(int i = 0; i < FailPrintModel.instance.failPrintOrderDetails.length; i++){
-      FailPrintModel.instance.failPrintOrderDetails[i].isSelected = true;
+    if(FailPrintModel.instance.failPrintOrderDetails.isNotEmpty){
+      for(int i = 0; i < FailPrintModel.instance.failPrintOrderDetails.length; i++){
+        FailPrintModel.instance.failPrintOrderDetails[i].isSelected = true;
+      }
     }
+    FailPrintModel.instance.setAllAsSelected();
   }
 
   checkIsLastItem(items, String cardID){
@@ -155,7 +168,6 @@ class ReprintKitchenListFunction {
   }
 
   String getTableNumber(OrderDetail orderDetail){
-    print("order detail table number: ${orderDetail.tableNumber}");
     String tableNumber = "";
     try{
       tableNumber = orderDetail.tableNumber.toString().replaceAll("[", "").replaceAll("]", "");
