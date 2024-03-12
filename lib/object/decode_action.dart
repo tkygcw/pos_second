@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -43,6 +45,7 @@ class DecodeAction {
   });
 
   decodeAllFunction(){
+    print("decode all action called!!!");
     var json = jsonDecode(clientAction.response!);
     Iterable value1 = json['data']['tb_categories'];
     decodedCategoryList = List<Categories>.from(value1.map((json) => Categories.fromJson(json)));
@@ -74,7 +77,12 @@ class DecodeAction {
         case '0': {
           Iterable value1 = json['failedPrintOrderDetail'];
           List<OrderDetail> failOrderDetail = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
-          FailPrintModel.instance.addAllFailedOrderDetail(failOrderDetail);
+          if( FailPrintModel.instance.failPrintOrderDetails.isEmpty){
+            FailPrintModel.instance.addAllFailedOrderDetail(failOrderDetail);
+          } else {
+            checkFailOrderDetailListBatch(failOrderDetail);
+          }
+
         }
         break;
         // case'17': {
@@ -99,6 +107,46 @@ class DecodeAction {
           qrOrderController.sink.add(qrOrderCacheList);
         }
         break;
+      }
+    }
+  }
+
+  Map<String, List<OrderDetail>> groupOrder(List<OrderDetail> returnData) {
+    Map<String, List<OrderDetail>> groupedOrderDetails = {};
+    for (OrderDetail orderItem in returnData) {
+      String cardID = '';
+      // if(getOrderNumber(orderItem) != '') {
+      //   cardID = getOrderNumber(orderItem);
+      // } else
+      // if(getTableNumber(orderItem) != '') {
+      //   cardID = getTableNumber(orderItem);
+      // }
+      // else {
+      //   cardID = orderItem.order_cache_key.toString().replaceAll("[", "").replaceAll("]", "");
+      // }
+      cardID = orderItem.failPrintBatch!;
+      if (groupedOrderDetails.containsKey(cardID)) {
+        groupedOrderDetails[cardID]!.add(orderItem);
+      } else {
+        groupedOrderDetails[cardID] = [orderItem];
+      }
+    }
+    return groupedOrderDetails;
+  }
+
+  void checkFailOrderDetailListBatch(List<OrderDetail> orderDetail){
+    Map<String, List<OrderDetail>> requestOrder = groupOrder(orderDetail);
+    List<String> localOrderKey = groupOrder(FailPrintModel.instance.failPrintOrderDetails).keys.toList();
+    print("local order length: ${localOrderKey.length}");
+    print("request order length: ${requestOrder.length}");
+    for(int i = 0 ; i < localOrderKey.length; i++){
+      if(requestOrder.containsKey(localOrderKey[i]) == true){
+        requestOrder.remove(localOrderKey[i]);
+      }
+    }
+    if(requestOrder.isNotEmpty){
+      for(int i = 0; i < requestOrder.values.length; i++){
+        FailPrintModel.instance.addAllFailedOrderDetail(requestOrder.values.elementAt(i));
       }
     }
   }

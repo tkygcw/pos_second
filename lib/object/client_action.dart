@@ -2,22 +2,29 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:another_flushbar/flushbar.dart';
-import 'package:flutter/material.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
-import 'package:optimy_second_device/object/cart_product.dart';
 
-class ClientAction{
+class ClientAction {
+  final NetworkInfo networkInfo = NetworkInfo();
   static final ClientAction instance = ClientAction.init();
   late Socket socket;
   late Socket requestSocket;
   late String? serverIp;
+  static String? _deviceIp;
   String? response;
   bool status = false, loading = false;
   static const messageDelimiter = '\n';
   Timer? timer;
 
   ClientAction.init();
+
+  get deviceIp  => _deviceIp;
+
+  Future<String?> getDeviceIp() async {
+    _deviceIp = await networkInfo.getWifiIP();
+    return _deviceIp;
+  }
 
   connectServer(String ips) async {
     try{

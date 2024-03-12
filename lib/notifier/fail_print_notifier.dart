@@ -24,9 +24,11 @@ class FailPrintModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeAllFailedOrderDetail() {
+  void removeAllFailedOrderDetail({bool? notifyListener}) {
     _failedPrintOrderDetail.clear();
-    notifyListeners();
+    if(notifyListener == null){
+      notifyListeners();
+    }
   }
 
   void setAllAsSelected() {

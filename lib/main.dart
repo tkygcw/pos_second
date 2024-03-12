@@ -38,6 +38,9 @@ DisplayManager displayManager = DisplayManager();
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
 
+  //get device ip
+  getDeviceIp();
+
   //init lcd screen
   initLCDScreen();
 
@@ -174,6 +177,7 @@ deviceDetect() async {
     ]);
   }
 }
+
 getSecondScreen() async {
   List<Display?> displays = [];
   final values = await displayManager.getDisplays();
@@ -193,6 +197,10 @@ statusBarColor() {
     statusBarBrightness: Brightness.dark, //status bar brightness
     statusBarIconBrightness: Brightness.dark,
   ));
+}
+
+getDeviceIp() async {
+  await clientAction.getDeviceIp();
 }
 
 // class MyHomePage extends StatefulWidget {

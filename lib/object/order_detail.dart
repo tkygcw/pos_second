@@ -174,8 +174,11 @@ class OrderDetail{
         this.product_category_id,
         this.orderModifierDetail,
         this.tableNumber,
-        this.failPrintBatch
-      });
+        this.failPrintBatch,
+        bool? isSelected
+      }) {
+    this.isSelected = isSelected ?? true;
+  }
 
   OrderDetail copy({
     int? order_detail_sqlite_id,
@@ -285,7 +288,8 @@ class OrderDetail{
         product_category_id: json['product_category_id'] as String?,
         orderModifierDetail: orderModifierDetailList,
         tableNumber: tableNumber,
-        failPrintBatch: json['failPrintBatch'] as String?
+        failPrintBatch: json['failPrintBatch'] as String?,
+        isSelected: json['isSelected'] as bool?
     );
   }
 
@@ -321,6 +325,7 @@ class OrderDetail{
     'order_modifier_detail': orderModifierDetail,
     'tableNumber': tableNumber,
     'failPrintBatch': failPrintBatch,
+    'isSelected': isSelected
   };
 
   Map<String, Object?> toInsertJson() => {

@@ -8,7 +8,7 @@ class ReprintKitchenListFunction {
   List<OrderDetail> updateBatch(List<OrderDetail> orderDetail){
     List<OrderDetail> updatedList = [];
     for(int i = 0; i < orderDetail.length; i++){
-      orderDetail[i].failPrintBatch = '${DateTime.now().toString().replaceAll(RegExp(r'[^0-9]'), '')}-${clientAction.serverIp!}';
+      orderDetail[i].failPrintBatch = '${DateTime.now().toString().replaceAll(RegExp(r'[^0-9]'), '')}-${clientAction.deviceIp!}';
     }
     updatedList.addAll(orderDetail);
     return updatedList;

@@ -9,6 +9,7 @@ import 'package:optimy_second_device/fragment/network_dialog.dart';
 import 'package:optimy_second_device/fragment/qr_order/qr_main_page.dart';
 import 'package:optimy_second_device/fragment/qr_order/qr_order_page.dart';
 import 'package:optimy_second_device/fragment/reconnect_dialog.dart';
+import 'package:optimy_second_device/fragment/setting/device_setting.dart';
 import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -232,11 +233,11 @@ class _HomePageState extends State<HomePage> {
         icon: Icons.delivery_dining,
         onPressed: () => setState(() => currentPage = 'other_order'),
       ),
-      // CollapsibleItem(
-      //   text: 'Bill',
-      //   icon: Icons.receipt_long,
-      //   onPressed: () => setState(() => currentPage = 'bill'),
-      // ),
+      CollapsibleItem(
+        text: 'Device setting',
+        icon: Icons.devices,
+        onPressed: () => setState(() => currentPage = 'device_setting'),
+      ),
       // CollapsibleItem(
       //   text: 'Counter',
       //   icon: Icons.point_of_sale,
@@ -274,6 +275,8 @@ class _HomePageState extends State<HomePage> {
       //   return BillPage();
       case 'other_order':
         return OtherOrderPage();
+      case 'device_setting':
+        return DeviceSetting();
       // case 'report':
       //   return InitReportPage();
       // case 'settlement':
