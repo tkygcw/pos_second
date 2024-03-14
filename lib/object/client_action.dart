@@ -12,7 +12,7 @@ class ClientAction {
   late Socket requestSocket;
   late String? serverIp;
   static String? _deviceIp;
-  String? response;
+  String? response, serverResponse;
   bool status = false, loading = false;
   static const messageDelimiter = '\n';
   Timer? timer;
@@ -50,7 +50,7 @@ class ClientAction {
         }
         buffer.write(receivedData);
         //split request call every 1 sec
-        splitRequest(buffer: buffer, serverSocket: socket, response: response);
+        splitRequest(buffer: buffer, serverSocket: socket);
       },onError: (err){
         print('listen error: $err');
         timer?.cancel();
@@ -159,7 +159,7 @@ class ClientAction {
     // });
   }
 
-  splitRequest({required StringBuffer buffer, required Socket serverSocket, response}) {
+  splitRequest({required StringBuffer buffer, required Socket serverSocket}) {
     if(loading == false && buffer.toString() != ''){
       print("if called!!!");
       loading = true;
@@ -203,10 +203,10 @@ class ClientAction {
   processData({required Socket serverSocket, message}){
     print("process data message: ${message}");
     if (message != '') {
-      response = message;
+      serverResponse = message;
       Future.delayed(const Duration(milliseconds: 1000), () {
         //decodeAction.checkAction();
-        var json = jsonDecode(response!);
+        var json = jsonDecode(serverResponse!);
         if(json['action'] == '0'){
           return decodeAction.checkAction();
         }

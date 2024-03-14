@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:another_flushbar/flushbar.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -12,6 +15,7 @@ import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/user.dart';
 
 import '../main.dart';
+import '../translation/AppLocalizations.dart';
 import 'app_setting.dart';
 import 'branch_link_modifier.dart';
 import 'branch_link_product.dart';
@@ -35,6 +39,8 @@ class DecodeAction {
   List<BranchLinkDining>? decodedBranchLinkDiningList = [];
   List<User>? decodedUserList = [];
   AppSetting? decodedAppSetting;
+  final BuildContext _context = MyApp.navigatorKey.currentContext!;
+  String flushbarStatus = '';
 
   DecodeAction({
     this.decodedProductList,
@@ -46,7 +52,7 @@ class DecodeAction {
 
   decodeAllFunction(){
     print("decode all action called!!!");
-    var json = jsonDecode(clientAction.response!);
+    var json = jsonDecode(clientAction.serverResponse!);
     Iterable value1 = json['data']['tb_categories'];
     decodedCategoryList = List<Categories>.from(value1.map((json) => Categories.fromJson(json)));
     Iterable value2 = json['data']['tb_product'];
@@ -70,7 +76,7 @@ class DecodeAction {
   }
 
   checkAction() {
-    var json = jsonDecode(clientAction.response!);
+    var json = jsonDecode(clientAction.serverResponse!);
     if(json['action'] != null){
       String action = json['action'];
       switch(action){
@@ -79,6 +85,7 @@ class DecodeAction {
           List<OrderDetail> failOrderDetail = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
           if( FailPrintModel.instance.failPrintOrderDetails.isEmpty){
             FailPrintModel.instance.addAllFailedOrderDetail(failOrderDetail);
+            showFlushBarAndPlaySound();
           } else {
             checkFailOrderDetailListBatch(failOrderDetail);
           }
@@ -148,6 +155,48 @@ class DecodeAction {
       for(int i = 0; i < requestOrder.values.length; i++){
         FailPrintModel.instance.addAllFailedOrderDetail(requestOrder.values.elementAt(i));
       }
+      showFlushBarAndPlaySound();
+    }
+  }
+
+  showFlushBarAndPlaySound(){
+    Flushbar(
+      icon: Icon(Icons.error, size: 32, color: Colors.white),
+      shouldIconPulse: false,
+      title: "${AppLocalizations.of(_context)?.translate('error')}${AppLocalizations.of(_context)?.translate('kitchen_printer_timeout')}",
+      message: "${AppLocalizations.of(_context)?.translate('please_try_again_later')}",
+      duration: Duration(seconds: 5),
+      backgroundColor: Colors.red,
+      messageColor: Colors.white,
+      flushbarPosition: FlushbarPosition.TOP,
+      maxWidth: 350,
+      margin: EdgeInsets.all(8),
+      borderRadius: BorderRadius.circular(8),
+      padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
+      onTap: (flushbar) {
+        flushbar.dismiss(true);
+      },
+      onStatusChanged: (status) {
+        flushbarStatus = status.toString();
+        print("onStatusChanged: ${status}");
+      },
+    ).show(_context);
+    playSound();
+    Future.delayed(Duration(seconds: 3), () {
+      if(flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") {
+        playSound();
+      }
+    });
+  }
+
+  playSound() {
+    try {
+      final assetsAudioPlayer = AssetsAudioPlayer();
+      assetsAudioPlayer.open(
+        Audio("audio/review.mp3"),
+      );
+    } catch (e) {
+      print("Play Sound Error: ${e}");
     }
   }
 }

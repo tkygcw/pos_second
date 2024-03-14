@@ -264,12 +264,7 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   void responseStatusCheck(response){
     var json = jsonDecode(response);
     print("status: ${json['status']}");
-    if(json['status'] == '1'){
-      print("fail print still exist: ${json['order_detail']}");
-      // model.addAllFailedOrderDetail({json['status'])
-      // Navigator.of(context).pop();
-      // cart.initialLoad();
-    } else if (json['status'] == '2'){
+     if (json['status'] == '2'){
       model.removeAllFailedOrderDetail();
       Navigator.of(context).pop();
     }
