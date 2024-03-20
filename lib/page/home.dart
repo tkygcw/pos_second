@@ -218,21 +218,21 @@ class _HomePageState extends State<HomePage> {
         onPressed: () => setState(() => currentPage = 'menu'),
         isSelected: true,
       ),
-      CollapsibleItem(
-        text: 'Table',
-        icon: Icons.table_restaurant,
-        onPressed: () => setState(() => currentPage = 'table'),
-      ),
+      // CollapsibleItem(
+      //   text: 'Table',
+      //   icon: Icons.table_restaurant,
+      //   onPressed: () => setState(() => currentPage = 'table'),
+      // ),
       // CollapsibleItem(
       //   text: 'Qr Order',
       //   icon: Icons.qr_code_2,
       //   onPressed: () => setState(() => currentPage = 'qr_order'),
       // ),
-      CollapsibleItem(
-        text: 'Other Order',
-        icon: Icons.delivery_dining,
-        onPressed: () => setState(() => currentPage = 'other_order'),
-      ),
+      // CollapsibleItem(
+      //   text: 'Other Order',
+      //   icon: Icons.delivery_dining,
+      //   onPressed: () => setState(() => currentPage = 'other_order'),
+      // ),
       CollapsibleItem(
         text: 'Device setting',
         icon: Icons.devices,

@@ -69,7 +69,7 @@ class _QrMainPageState extends State<QrMainPage> {
           primary: false,
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: ElevatedButton(onPressed: () async { await clientAction.connectServer("192.168.0.223");}, child: Text("Qr order", style: TextStyle(fontSize: 25))),
+          //title: ElevatedButton(onPressed: () async { await clientAction.connectServer("192.168.0.223");}, child: Text("Qr order", style: TextStyle(fontSize: 25))),
         ),
         body: StreamBuilder(
             stream: decodeAction.qrStream,

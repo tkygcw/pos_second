@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/server_ip_dialog.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../main.dart';
+import '../page/login.dart';
 
 class ReconnectDialog extends StatefulWidget {
   const ReconnectDialog({Key? key}) : super(key: key);
@@ -11,6 +17,23 @@ class ReconnectDialog extends StatefulWidget {
 }
 
 class _ReconnectDialogState extends State<ReconnectDialog> {
+
+  late Map branchObject;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getPreferences();
+  }
+
+  getPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? branch = prefs.getString('branch');
+    branchObject = json.decode(branch!);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -42,11 +65,11 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
               const SizedBox(width: 20),
               ElevatedButton(
                   onPressed: () async {
-                    bool reconnectStatus = await clientAction.connectServer(clientAction.serverIp!);
-                    if(reconnectStatus == true){
-                      notificationModel.showReconnectDialog = false;
-                      Navigator.of(context).pop();
-                    }
+                    await clientAction.connectServer(clientAction.serverIp!, branchObject['branchID'].toString(), callback: checkStatus);
+                    // if(reconnectStatus == true){
+                    //   notificationModel.showReconnectDialog = false;
+                    //   Navigator.of(context).pop();
+                    // }
                   },
                   child: const Text('Quick connect')
               ),
@@ -55,5 +78,47 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
         ],
       ),
     );
+  }
+
+  checkStatus(response) async {
+    var json = jsonDecode(response);
+    print('status: ${json['status']}');
+    switch(json['status']){
+      case '1': {
+        notificationModel.showReconnectDialog = false;
+        Navigator.of(context).pop();
+      }break;
+      case '2': {
+        await logout();
+      }break;
+    }
+  }
+
+  logout() async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    deleteDirectory();
+    displayManager.transferDataToPresentation("refresh_img");
+    //deleteFile2();
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => LoginPage()));
+  }
+
+  Future<Directory> get _localDirectory async {
+    final directory = await getApplicationSupportDirectory();
+    final path = directory.path;
+    return Directory('$path/assets');
+  }
+
+  Future<int> deleteDirectory() async {
+    try {
+      final folder = await _localDirectory;
+      folder.delete(recursive: true);
+      print("delete successful");
+      return 1;
+    } catch (e) {
+      print(e);
+      return 0;
+    }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/page/pos_pin.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
@@ -58,10 +59,21 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   startLoad() async  {
-    await Future.delayed(Duration(seconds: 3), () {
-      decodeAction.decodeAllFunction();
-    });
-    await _createProductImgFolder();
+    await clientAction.connectRequestPort(action: '1', callback: decodeAction.decodeAllFunction);
+    // await Future.delayed(Duration(seconds: 3), () {
+    //   decodeAction.decodeAllFunction();
+    // });
+    if(decodeAction.decodedProductList != null && decodeAction.decodedProductList!.isNotEmpty){
+      await _createProductImgFolder();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (BuildContext context) => LoginPage(),
+        ),
+            (Route route) => false,
+      );
+    }
+
     controller.sink.add("done");
 
   }

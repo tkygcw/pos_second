@@ -50,9 +50,9 @@ class DecodeAction {
     this.decodedUserList,
   });
 
-  decodeAllFunction(){
+  decodeAllFunction(response){
     print("decode all action called!!!");
-    var json = jsonDecode(clientAction.serverResponse!);
+    var json = jsonDecode(response);
     Iterable value1 = json['data']['tb_categories'];
     decodedCategoryList = List<Categories>.from(value1.map((json) => Categories.fromJson(json)));
     Iterable value2 = json['data']['tb_product'];

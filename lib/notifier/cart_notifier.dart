@@ -86,10 +86,12 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addItem(cartProductItem object) {
+  void addItem(cartProductItem object, {bool? notifyListener}) {
     print('add item called');
     cartNotifierItem.add(object);
-    //notifyListeners();
+    if(notifyListener == null){
+      notifyListeners();
+    }
   }
 
   void removeItem(cartProductItem object) {
@@ -161,7 +163,7 @@ class CartModel extends ChangeNotifier {
 
   void addAutoApplyPromo(Promotion promo){
     autoPromotion.add(promo);
-    notifyListeners();
+    //notifyListeners();
   }
 
   void removeAutoPromotion(){

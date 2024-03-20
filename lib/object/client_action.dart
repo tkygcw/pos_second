@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ClientAction {
   final NetworkInfo networkInfo = NetworkInfo();
@@ -12,6 +14,7 @@ class ClientAction {
   late Socket requestSocket;
   late String? serverIp;
   static String? _deviceIp;
+  Function? serverCallBack;
   String? response, serverResponse;
   bool status = false, loading = false;
   static const messageDelimiter = '\n';
@@ -26,21 +29,28 @@ class ClientAction {
     return _deviceIp;
   }
 
-  connectServer(String ips) async {
+  connectServer(String ips, String branchId, {Function? callback}) async {
+    int i = 0;
+    Map<String, dynamic>? result;
+    final buffer = StringBuffer();
+    serverCallBack = callback;
     try{
-      int i = 0;
-      Map<String, dynamic>? result;
-      final buffer = StringBuffer();
-
       socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
+    }catch(e){
+      print('connect server error: $e');
+      Map<String, dynamic> result = {'status': '0'};
+      serverCallBack!(jsonEncode(result));
+      return;
+    }
+    try{
       serverIp = ips;
       //send first request to server side
-      result = {'action': '1', 'param': ''};
+      result = {'action': '-1', 'param': branchId};
       socket.write('${jsonEncode(result)}\n');
 
       //socket stream listen for data
-      socket.listen( (data) {
-        print("data chunk received: ${i+1}");
+      socket.listen( (data) async  {
+        //print("data chunk received: ${i+1}");
         // Track the received data
         String receivedData = utf8.decode(data);
         print("received data: ${receivedData}");
@@ -49,8 +59,17 @@ class ClientAction {
           return;
         }
         buffer.write(receivedData);
+        final messages = buffer.toString().split('\n');
+        String firstRequest = messages[0];
+        for(int i = 0; i < messages.length; i++){
+          if(i != 0){
+            buffer.clear();
+            buffer.write(messages[i]);
+          }
+        }
+        processData(message: firstRequest);
         //split request call every 1 sec
-        splitRequest(buffer: buffer, serverSocket: socket);
+        //splitRequest(buffer: buffer, serverSocket: socket);
       },onError: (err){
         print('listen error: $err');
         timer?.cancel();
@@ -63,9 +82,6 @@ class ClientAction {
         socket.destroy();
         notificationModel.enableReconnectDialog();
       });
-
-      return true;
-
       // Socket.connect(ips, 9999, timeout: const Duration(seconds: 3)).then((socket) {
       //   connectStatus = true;
       //   print('client connected : ${socket.remoteAddress.address}:${socket.remotePort}');
@@ -124,7 +140,7 @@ class ClientAction {
       // });
     }catch(e){
       print('connect error2: $e');
-      return false;
+      socket.destroy();
     }
   }
 
@@ -171,7 +187,7 @@ class ClientAction {
           buffer.write(messages[i]);
         }
       }
-      processData(message: firstRequest, serverSocket: serverSocket);
+      //processData(message: firstRequest, serverSocket: serverSocket);
       loading = false;
     } else {
       print("else called");
@@ -200,18 +216,22 @@ class ClientAction {
     // });
   }
 
-  processData({required Socket serverSocket, message}){
+  processData({message}) {
     print("process data message: ${message}");
-    if (message != '') {
+    if (message != '' && message != 'null') {
       serverResponse = message;
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        //decodeAction.checkAction();
-        var json = jsonDecode(serverResponse!);
+      var json = jsonDecode(serverResponse!);
+      if(json['action'] != null){
         if(json['action'] == '0'){
           return decodeAction.checkAction();
         }
-        decodeAction.decodeAllFunction();
-      });
+      } else {
+        serverCallBack!(message);
+      }
+    } else {
+      Map<String, dynamic> result = {'status': '-1'};
+      serverCallBack!(jsonEncode(result));
+      socket.destroy();
     }
   }
 
@@ -232,7 +252,12 @@ class ClientAction {
       } else {
         result = {'action': action, 'param': ''};
       }
-      requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
+      try{
+        requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
+      }catch(e){
+        print("connect server error: $e");
+        return;
+      }
       print("encode request ${jsonEncode(result)}");
       requestSocket.write('${jsonEncode(result)}\n');
 
@@ -270,6 +295,7 @@ class ClientAction {
       await streamSubscription.asFuture<void>();
     } catch(e) {
       print("connect request port error: $e");
+      notificationModel.enableReconnectDialog();
     }
   }
 

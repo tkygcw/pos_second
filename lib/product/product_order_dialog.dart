@@ -645,10 +645,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
 
   productChecking() async {
     await clientAction.connectRequestPort(action: '2', param: jsonEncode(widget.productDetail!), callback: decodeData);
-    getBranchLinkProductId(widget.productDetail!);
-    getProductPrice(widget.productDetail!.product_sqlite_id.toString());
-    getProductDialogStock(widget.productDetail!);
-    controller.sink.add("refresh");
   }
 
   decodeData(response){
@@ -659,6 +655,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
     Iterable value3 = json['data']['branch_link_product'];
     branchLinkProductList = List<BranchLinkProduct>.from(value3.map((json) => BranchLinkProduct.fromJson(json)));
+
+    getBranchLinkProductId(widget.productDetail!);
+    getProductPrice(widget.productDetail!.product_sqlite_id.toString());
+    getProductDialogStock(widget.productDetail!);
+    controller.sink.add("refresh");
   }
 
   Future<Future<Object?>> openChooseTableDialog(CartModel cartModel) async {

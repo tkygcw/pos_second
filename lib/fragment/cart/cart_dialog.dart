@@ -647,6 +647,7 @@ class _CartDialogState extends State<CartDialog> {
   decodeData(response){
     try{
       var json = jsonDecode(response);
+
       Iterable value1 = json['data']['table_list'];
       tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
       if (widget.selectedTableList.isNotEmpty) {
