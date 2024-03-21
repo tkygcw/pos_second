@@ -129,11 +129,15 @@ class _HomePageState extends State<HomePage> {
       }
       return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
         this.themeColor = color;
-        return WillPopScope(
-          onWillPop: () async {
+        return PopScope(
+          canPop: willPop,
+          onPopInvoked: (didPop){
             showSecondDialog(context, color);
-            return willPop;
           },
+          // onWillPop: () async {
+          //   showSecondDialog(context, color);
+          //   return willPop;
+          // },
           child: Scaffold(
               resizeToAvoidBottomInset: false,
               body: SafeArea(

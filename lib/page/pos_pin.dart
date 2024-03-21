@@ -158,8 +158,8 @@ class _PosPinPageState extends State<PosPinPage> {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return LayoutBuilder(builder: (context, constraints) {
         if (constraints.maxWidth > 800) {
-          return WillPopScope(
-            onWillPop: () async => false,
+          return PopScope(
+            canPop: false,
             child: Scaffold(
               body: Container(
                 decoration: BoxDecoration(

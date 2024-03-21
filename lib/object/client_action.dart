@@ -231,7 +231,7 @@ class ClientAction {
     } else {
       Map<String, dynamic> result = {'status': '-1'};
       serverCallBack!(jsonEncode(result));
-      socket.destroy();
+      // socket.destroy();
     }
   }
 
@@ -255,7 +255,7 @@ class ClientAction {
       try{
         requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
       }catch(e){
-        print("connect server error: $e");
+        print("connect request port error: $e");
         return;
       }
       print("encode request ${jsonEncode(result)}");
