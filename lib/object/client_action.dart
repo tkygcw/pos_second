@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../fragment/reconnect_dialog.dart';
 
 class ClientAction {
   final NetworkInfo networkInfo = NetworkInfo();
@@ -30,6 +33,7 @@ class ClientAction {
   }
 
   connectServer(String ips, String branchId, {Function? callback}) async {
+    notificationModel.showReconnectDialog = false;
     int i = 0;
     Map<String, dynamic>? result;
     final buffer = StringBuffer();
@@ -70,12 +74,12 @@ class ClientAction {
         processData(message: firstRequest);
         //split request call every 1 sec
         //splitRequest(buffer: buffer, serverSocket: socket);
-      },onError: (err){
+      }, cancelOnError: true
+      ,onError: (err){
         print('listen error: $err');
         timer?.cancel();
         socket.destroy();
         notificationModel.enableReconnectDialog();
-        throw "listen error";
       },onDone: (){
         print('client done');
         timer?.cancel();
@@ -139,7 +143,7 @@ class ClientAction {
       //   connectStatus = false;
       // });
     }catch(e){
-      print('connect error2: $e');
+      print('connect server error2: $e');
       socket.destroy();
     }
   }
@@ -245,6 +249,7 @@ class ClientAction {
 
   connectRequestPort({required String action, String? param, Function? callback}) async {
     try{
+      notificationModel.showReconnectDialog = false;
       print("request port called!");
       Map<String, dynamic>? result;
       if(param != null){
@@ -256,6 +261,8 @@ class ClientAction {
         requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
       }catch(e){
         print("connect request port error: $e");
+        openDialog(action: action, param: param, callback: callback);
+        // notificationModel.enableReconnectDialog();
         return;
       }
       print("encode request ${jsonEncode(result)}");
@@ -292,11 +299,38 @@ class ClientAction {
           //   socket.destroy();
           // },
       );
-      await streamSubscription.asFuture<void>();
+      await streamSubscription.asFuture<void>().timeout(Duration(seconds: 5));
     } catch(e) {
       print("connect request port error: $e");
       notificationModel.enableReconnectDialog();
     }
+  }
+
+  Future<Future<Object?>> openDialog({required String action, String? param, Function? callback}) async {
+    print("open dialog called");
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: ReconnectDialog(
+                action: action,
+                param: param,
+                callback: callback,
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: MyApp.navigatorKey.currentContext!,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
   }
 
   sendRequest({required String action, String? param}){

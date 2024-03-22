@@ -203,7 +203,6 @@ class _CartDialogState extends State<CartDialog> {
                     if (tableList[index].status == 1 && tableList[index].isSelected == true) {
                       this.isLoad = false;
                       await readSpecificTableDetail(tableList[index]);
-                      this.isLoad = true;
                     }
                     //if non-using table is selected
                     else if (tableList[index].status == 0 && tableList[index].isSelected == true) {
@@ -214,11 +213,6 @@ class _CartDialogState extends State<CartDialog> {
                     }
                   }
                   print("orderDetailList: ${orderDetailList.length}");
-                  if(orderDetailList.isNotEmpty){
-                    addToCart();
-                  }
-                  if(!mounted) return;
-                  Navigator.of(context).pop();
                 },
               ),
             ),
@@ -719,6 +713,12 @@ class _CartDialogState extends State<CartDialog> {
     orderDetailList = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
     orderCacheList = value2.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
     //cartSelectedTableList = value3.map((tagJson) => PosTable.fromJson(tagJson)).toList();
+    this.isLoad = true;
+    if(orderDetailList.isNotEmpty){
+      addToCart();
+    }
+    if(!mounted) return;
+    Navigator.of(context).pop();
     print("order detail list: ${orderDetailList}");
     print("order cache list: ${orderCacheList}");
   }

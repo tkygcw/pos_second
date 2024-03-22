@@ -10,7 +10,10 @@ import '../main.dart';
 import '../page/login.dart';
 
 class ReconnectDialog extends StatefulWidget {
-  const ReconnectDialog({Key? key}) : super(key: key);
+  final String? action;
+  final String? param;
+  final Function? callback;
+  const ReconnectDialog({Key? key, this.action, this.param, this.callback}) : super(key: key);
 
   @override
   State<ReconnectDialog> createState() => _ReconnectDialogState();
@@ -36,8 +39,8 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: AlertDialog(
         title: const Text('Lost connection from server'),
         content: const Text('Server Connection failed. Please check your devices wireless or mobile network setting and reconnect'),
@@ -65,7 +68,11 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
               const SizedBox(width: 20),
               ElevatedButton(
                   onPressed: () async {
+                    Navigator.of(context).pop();
                     await clientAction.connectServer(clientAction.serverIp!, branchObject['branchID'].toString(), callback: checkStatus);
+                    if(widget.action != null){
+                      await clientAction.connectRequestPort(action: widget.action!, param: widget.param, callback: widget.callback);
+                    }
                     // if(reconnectStatus == true){
                     //   notificationModel.showReconnectDialog = false;
                     //   Navigator.of(context).pop();
@@ -86,7 +93,6 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
     switch(json['status']){
       case '1': {
         notificationModel.showReconnectDialog = false;
-        Navigator.of(context).pop();
       }break;
       case '2': {
         await logout();
