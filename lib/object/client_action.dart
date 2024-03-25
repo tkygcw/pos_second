@@ -226,9 +226,7 @@ class ClientAction {
       serverResponse = message;
       var json = jsonDecode(serverResponse!);
       if(json['action'] != null){
-        if(json['action'] == '0'){
-          return decodeAction.checkAction();
-        }
+        return decodeAction.checkAction();
       } else {
         serverCallBack!(message);
       }

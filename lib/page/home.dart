@@ -173,6 +173,7 @@ class _HomePageState extends State<HomePage> {
                               currentPage != 'setting' &&
                               currentPage != 'settlement' &&
                               currentPage != 'qr_order' &&
+                              currentPage != 'device_setting' &&
                               currentPage != 'report'
                               ? true
                               : false,
