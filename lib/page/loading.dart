@@ -26,7 +26,7 @@ class LoadingPage extends StatefulWidget {
 class _LoadingPageState extends State<LoadingPage> {
   StreamController controller = StreamController();
   List<String> decodedBase64ImageList = [];
-  late Uint8List decodedByte;
+  Uint8List? decodedByte;
   bool isDecodeComplete = false;
 
   @override
@@ -101,8 +101,10 @@ class _LoadingPageState extends State<LoadingPage> {
     final directory = await _localPath;
     final path = '$directory/assets/$folderName';
     final pathImg = Directory(path);
-    pathImg.create();
-    await prefs.setString('local_path', path);
+    if(await pathImg.exists() == false){
+      pathImg.create();
+      await prefs.setString('local_path', path);
+    }
     await downloadProductImage(pathImg.path);
   }
 
@@ -114,9 +116,11 @@ class _LoadingPageState extends State<LoadingPage> {
     for(int i = 0; i < productList.length; i++){
       if(productList[i].graphic_type == '2'){
         await clientAction.connectRequestPort(action: '0', param: productList[i].image, callback: decodeBase64Image);
-        var localPath = '$path/${productList[i].image}';
-        final imageFile = File(localPath);
-        await imageFile.writeAsBytes(decodedByte);
+        if(decodedByte != null){
+          var localPath = '$path/${productList[i].image}';
+          final imageFile = File(localPath);
+          await imageFile.writeAsBytes(decodedByte!);
+        }
       }
     }
   }

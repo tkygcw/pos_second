@@ -55,10 +55,7 @@ void main() async  {
 
   AppLanguage appLanguage = AppLanguage();
   await appLanguage.fetchLocale();
-  runApp(ChangeNotifierProvider.value(
-    value: notificationModel,
-    child: MyApp(appLanguage: appLanguage),
-  ));
+  runApp(MyApp(appLanguage: appLanguage));
 }
 
 class MyApp extends StatelessWidget {

@@ -12,9 +12,11 @@ import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/product_variant.dart';
+import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/object/user.dart';
 
 import '../main.dart';
+import '../notifier/notification_notifier.dart';
 import '../translation/AppLocalizations.dart';
 import 'app_setting.dart';
 import 'branch_link_modifier.dart';
@@ -37,6 +39,7 @@ class DecodeAction {
   List<BranchLinkModifier>? decodedBranchLinkModifierList = [];
   List<ProductVariant>? decodedProductVariantList = [];
   List<BranchLinkDining>? decodedBranchLinkDiningList = [];
+  List<TaxLinkDining> decodedTaxLinkDiningList = [];
   List<User>? decodedUserList = [];
   AppSetting? decodedAppSetting;
   final BuildContext _context = MyApp.navigatorKey.currentContext!;
@@ -69,6 +72,9 @@ class DecodeAction {
     decodedAppSetting = AppSetting.fromJson(json['data']['tb_app_setting']);
     Iterable value8 = json['data']['tb_branch_link_dining_option'];
     decodedBranchLinkDiningList = List<BranchLinkDining>.from(value8.map((json) => BranchLinkDining.fromJson(json)));
+    Iterable value9 = json['data']['taxLinkDiningList'];
+    decodedTaxLinkDiningList = List<TaxLinkDining>.from(value9.map((json) => TaxLinkDining.fromJson(json)));
+    print("decodedTaxLinkDiningList length: ${decodedTaxLinkDiningList.length}");
 
     ///image part
     // Iterable value7 = json['data']['image_list'];
@@ -90,6 +96,11 @@ class DecodeAction {
             checkFailOrderDetailListBatch(failOrderDetail);
           }
 
+        }
+        break;
+        case '1': {
+          decodeAllFunction(clientAction.serverResponse);
+          NotificationModel.instance.setNotification(true);
         }
         break;
         // case'17': {

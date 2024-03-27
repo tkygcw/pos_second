@@ -19,6 +19,7 @@ import '../fragment/order/order.dart';
 import '../fragment/other_order/other_order.dart';
 import '../fragment/table/table_page.dart';
 import '../main.dart';
+import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
 import '../object/app_setting.dart';
 import '../object/user.dart';
@@ -120,74 +121,68 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print("home rebuild!!!");
     var size = MediaQuery.of(context).size;
-    return Consumer<NotificationModel>(builder: (context, notificationModel, child) {
-      if(notificationModel.showReconnectDialog == true){
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          openDialog();
-        });
-      }
-      return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-        this.themeColor = color;
-        return PopScope(
-          canPop: willPop,
-          onPopInvoked: (didPop){
-            showSecondDialog(context, color);
-          },
-          // onWillPop: () async {
-          //   showSecondDialog(context, color);
-          //   return willPop;
-          // },
-          child: Scaffold(
-              resizeToAvoidBottomInset: false,
-              body: SafeArea(
-                //side nav bar
-                child: CollapsibleSidebar(
-                    sidebarBoxShadow: [
-                      BoxShadow(
-                        color: Colors.transparent,
+    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
+      this.themeColor = color;
+      return PopScope(
+        canPop: willPop,
+        onPopInvoked: (didPop){
+          showSecondDialog(context, color);
+        },
+        // onWillPop: () async {
+        //   showSecondDialog(context, color);
+        //   return willPop;
+        // },
+        child: Scaffold(
+            resizeToAvoidBottomInset: false,
+            body: SafeArea(
+              //side nav bar
+              child: CollapsibleSidebar(
+                  sidebarBoxShadow: [
+                    BoxShadow(
+                      color: Colors.transparent,
+                    ),
+                  ],
+                  // maxWidth: 80,
+                  isCollapsed: true,
+                  items: _items,
+                  avatarImg: AssetImage("drawable/logo.png"),
+                  title: widget.user!.name! + "\n" + (branchName ?? '') + " - " + role,
+                  backgroundColor: color.backgroundColor,
+                  selectedTextColor: color.iconColor,
+                  textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                  titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                  toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  selectedIconColor: color.iconColor,
+                  selectedIconBox: color.buttonColor,
+                  unselectedIconColor: Colors.white,
+                  body: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: _body(size, context),
                       ),
+                      //cart page
+                      Visibility(
+                        visible: currentPage != 'product' &&
+                            currentPage != 'setting' &&
+                            currentPage != 'settlement' &&
+                            currentPage != 'qr_order' &&
+                            currentPage != 'device_setting' &&
+                            currentPage != 'report'
+                            ? true
+                            : false,
+                        child: Expanded(
+                            flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                            child: CartPage(
+                              currentPage: currentPage,
+                            )),
+                      )
                     ],
-                    // maxWidth: 80,
-                    isCollapsed: true,
-                    items: _items,
-                    avatarImg: AssetImage("drawable/logo.png"),
-                    title: widget.user!.name! + "\n" + (branchName ?? '') + " - " + role,
-                    backgroundColor: color.backgroundColor,
-                    selectedTextColor: color.iconColor,
-                    textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                    titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                    toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    selectedIconColor: color.iconColor,
-                    selectedIconBox: color.buttonColor,
-                    unselectedIconColor: Colors.white,
-                    body: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: _body(size, context),
-                        ),
-                        //cart page
-                        Visibility(
-                          visible: currentPage != 'product' &&
-                              currentPage != 'setting' &&
-                              currentPage != 'settlement' &&
-                              currentPage != 'qr_order' &&
-                              currentPage != 'device_setting' &&
-                              currentPage != 'report'
-                              ? true
-                              : false,
-                          child: Expanded(
-                              flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                              child: CartPage(
-                                currentPage: currentPage,
-                              )),
-                        )
-                      ],
-                    )),
-              )),
-        );
-      });
+                  )),
+            )),
+      );
     });
 
   }
@@ -216,11 +211,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<CollapsibleItem> get _generateItems {
+    CartModel cart = Provider.of<CartModel>(context, listen: false);
     return [
       CollapsibleItem(
         text: 'Menu',
         icon: Icons.add_shopping_cart,
-        onPressed: () => setState(() => currentPage = 'menu'),
+        onPressed: () => setState(() {
+          currentPage = 'menu';
+          cart.initialLoad();
+        }),
         isSelected: true,
       ),
       // CollapsibleItem(

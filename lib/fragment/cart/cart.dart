@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
 import 'package:optimy_second_device/fragment/custom_flushbar.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
+import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_tax.dart';
 import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
@@ -67,8 +68,8 @@ class _CartPageState extends State<CartPage> {
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<Printer> printerList = [];
   List<Promotion> promotionList = [], autoApplyPromotionList = [];
-  List<BranchLinkDining> diningList = [];
-  List<TaxLinkDining> taxLinkDiningList = [], currentDiningTax = [];
+  List<BranchLinkDining> diningList = decodeAction.decodedBranchLinkDiningList!;
+  List<TaxLinkDining> taxLinkDiningList = decodeAction.decodedTaxLinkDiningList, currentDiningTax = [];
   List<String> branchLinkDiningIdList = [];
   List<cartProductItem> sameCategoryItemList = [];
   List<TableUse> tableUseList = [];
@@ -122,7 +123,9 @@ class _CartPageState extends State<CartPage> {
   void initState() {
     //controller = StreamController();
     cartStream = cartController.stream;
-    //preload();
+    preload();
+    cart = context.read<CartModel>();
+    cart.initBranchLinkDiningOption();
     //calculateSubtotal();
     // readAllBranchLinkDiningOption();
     // getPromotionData();
@@ -137,7 +140,6 @@ class _CartPageState extends State<CartPage> {
   }
 
   preload() async {
-    print("cart preload called");
     await clientAction.connectRequestPort(action: '6', callback: decodeData);
     //decodeData();
     // clientAction.sendRequest(action: '6', param: '');
@@ -151,15 +153,15 @@ class _CartPageState extends State<CartPage> {
       var json = jsonDecode(response);
       // Iterable value1 = json['data']['dining_list'];
       // diningList = List<BranchLinkDining>.from(value1.map((json) => BranchLinkDining.fromJson(json)));
-      diningList = decodeAction.decodedBranchLinkDiningList!;
-      Iterable value2 = json['data']['branch_link_dining_id_list'];
-      branchLinkDiningIdList = List.from(value2);
+      //diningList = decodeAction.decodedBranchLinkDiningList!;
+      // Iterable value2 = json['data']['branch_link_dining_id_list'];
+      // branchLinkDiningIdList = List.from(value2);
       Iterable value3 = json['data']['promotion_list'];
       promotionList = List<Promotion>.from(value3.map((json) => Promotion.fromJson(json)));
       print("promotion list: ${promotionList.length}");
-      Iterable value4 = json['data']['taxLinkDiningList'];
-      taxLinkDiningList =
-      List<TaxLinkDining>.from(value4.map((json) => TaxLinkDining.fromJson(json)));
+      // Iterable value4 = json['data']['taxLinkDiningList'];
+      // taxLinkDiningList =
+      // List<TaxLinkDining>.from(value4.map((json) => TaxLinkDining.fromJson(json)));
       // decodeAction.cartController.sink.add("refresh");
     } catch (e) {
       print("cart decode data error: $e");
@@ -210,59 +212,37 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Future<void> connectToServer({action}) async {
-    Socket? socket;
-    try {
-      socket = await Socket.connect('192.168.0.223', 8888, timeout: const Duration(seconds: 3));
-      print('Connected to server.');
-      Map result = {'action': action, 'param': ''};
-      socket.write('${jsonEncode(result)}\n');
-
-      // Start listening for data from the server
-      socket.listen(_handleData);
-      socket.close();
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
-
-  // Method to handle data received from the server
-  void _handleData(Uint8List data) {
-    String message = utf8.decode(data);
-    print('Received: $message');
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Consumer<CartModel>(builder: (context, CartModel cart, child) {
-          // if(notificationModel.cartContentLoaded == true){
-          //   print('cart refresh!');
-          //   notificationModel.resetCartContentLoaded();
-          //   Future.delayed(const Duration(seconds: 1), () {
-          //     print('cart delay refresh!');
-          //     if(mounted){
-          //       setState(() {
-          //         readAllBranchLinkDiningOption();
-          //         getPromotionData();
-          //         getSubTotal(cart);
-          //         getReceiptPaymentDetail(cart);
-          //       });
-          //     }
-          //   });
-          // }
-          //print("method in here will keep calling");
-          // widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'qr_order' || widget.currentPage == 'other_order'
-          //     ? getSubTotal(cart)
-          //     : getReceiptPaymentDetail(cart);
-          this.cart = cart;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            getSubTotal(cart);
-          });
-          return Scaffold(
+      return Consumer<CartModel>(builder: (context, CartModel cart, child) {
+        print("cart rebuild call");
+        // if(notificationModel.cartContentLoaded == true){
+        //   print('cart refresh!');
+        //   notificationModel.resetCartContentLoaded();
+        //   Future.delayed(const Duration(seconds: 1), () {
+        //     print('cart delay refresh!');
+        //     if(mounted){
+        //       setState(() {
+        //         readAllBranchLinkDiningOption();
+        //         getPromotionData();
+        //         getSubTotal(cart);
+        //         getReceiptPaymentDetail(cart);
+        //       });
+        //     }
+        //   });
+        // }
+        //print("method in here will keep calling");
+        // widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'qr_order' || widget.currentPage == 'other_order'
+        //     ? getSubTotal(cart)
+        //     : getReceiptPaymentDetail(cart);
+        //this.cart = cart;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          getSubTotal();
+        });
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Scaffold(
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
                 automaticallyImplyLeading: false,
@@ -368,8 +348,7 @@ class _CartPageState extends State<CartPage> {
               body: StreamBuilder(
                   stream: cartStream,
                   builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      print("cart rebuild call");
+                    if (snapshot.hasData && snapshot.data != null) {
                       return Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -378,10 +357,7 @@ class _CartPageState extends State<CartPage> {
                         child: Column(
                           children: [
                             Container(
-                              margin: MediaQuery
-                                  .of(context)
-                                  .size
-                                  .height > 500 ? EdgeInsets.only(bottom: 10) : EdgeInsets.zero,
+                              margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.only(bottom: 10) : EdgeInsets.zero,
                               child: GridView(
                                   physics: NeverScrollableScrollPhysics(),
                                   shrinkWrap: true,
@@ -669,13 +645,10 @@ class _CartPageState extends State<CartPage> {
                                         itemCount: currentDiningTax.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text('${currentDiningTax[index]
-                                                .tax_name}(${currentDiningTax[index].tax_rate}%)',
+                                            title: Text('${currentDiningTax[index].tax_name}(${currentDiningTax[index].tax_rate}%)',
                                                 style: TextStyle(fontSize: 14)),
-                                            trailing: Text('${currentDiningTax[index].tax_amount
-                                                ?.toStringAsFixed(2)}',
+                                            trailing: Text('${currentDiningTax[index].tax_amount?.toStringAsFixed(2)}',
                                                 style: TextStyle(fontSize: 14)),
-                                            //Text(''),
                                             visualDensity: VisualDensity(vertical: -4),
                                             dense: true,
                                           );
@@ -762,140 +735,140 @@ class _CartPageState extends State<CartPage> {
                               child: Row(
                                 children: [
                                   Expanded(
-                                      child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: color.backgroundColor,
-                                            minimumSize: const Size.fromHeight(50), // NEW
-                                          ),
-                                        onPressed: isButtonDisabled ? null : () async {
-                                          setState(() {
-                                            isButtonDisabled = false;
-                                            placingOrder = true;
-                                          });
-                                          // await checkCashRecord();
-                                          if (widget.currentPage == 'menu') {
-                                            //disableButton();
-                                            if(cart.cartNotifierItem.isNotEmpty){
-                                              openLoadingDialogBox();
-                                              if (cart.selectedOption == 'Dine in') {
-                                                if (cart.selectedTable.isNotEmpty) {
-                                                  print('has new item ${hasNewItem}');
-                                                  if (cart.cartNotifierItem[0].status == 1 && hasNewItem == true) {
-                                                    await callPlaceOrder(cart, '9');
-                                                  } else {
-                                                    if (cart.cartNotifierItem[0].status == 0) {
-                                                      await callPlaceOrder(cart, '8');
-                                                    } else {
-                                                      Fluttertoast.showToast(
-                                                          backgroundColor: Colors.red,
-                                                          msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
-                                                      Navigator.of(context).pop();
-                                                    }
-                                                  }
-                                                  // cart.removeAllCartItem();
-                                                  // cart.removeAllTable();
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: color.backgroundColor,
+                                        minimumSize: const Size.fromHeight(50), // NEW
+                                      ),
+                                      onPressed: isButtonDisabled ? null : () async {
+                                        setState(() {
+                                          isButtonDisabled = false;
+                                          placingOrder = true;
+                                        });
+                                        // await checkCashRecord();
+                                        if (widget.currentPage == 'menu') {
+                                          //disableButton();
+                                          if(cart.cartNotifierItem.isNotEmpty){
+                                            openLoadingDialogBox();
+                                            if (cart.selectedOption == 'Dine in') {
+                                              if (cart.selectedTable.isNotEmpty) {
+                                                print('has new item ${hasNewItem}');
+                                                if (cart.cartNotifierItem[0].status == 1 && hasNewItem == true) {
+                                                  await callPlaceOrder(cart, '9');
                                                 } else {
-                                                  if(mounted){
+                                                  if (cart.cartNotifierItem[0].status == 0) {
+                                                    await callPlaceOrder(cart, '8');
+                                                  } else {
                                                     Fluttertoast.showToast(
                                                         backgroundColor: Colors.red,
-                                                        msg: AppLocalizations.of(context)!
-                                                            .translate(
-                                                            'make_sure_cart_is_not_empty_and_table_is_selected'));
+                                                        msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
+                                                    Navigator.of(context).pop();
                                                   }
                                                 }
+                                                // cart.removeAllCartItem();
+                                                // cart.removeAllTable();
                                               } else {
-                                                // not dine in call
-                                                print("Not dine in called");
-                                                cart.removeAllTable();
-                                                if (cart.cartNotifierItem.isNotEmpty) {
-                                                  await callPlaceOrder(cart, '8');
-                                                } else {
+                                                if(mounted){
                                                   Fluttertoast.showToast(
                                                       backgroundColor: Colors.red,
-                                                      msg: "${AppLocalizations.of(context)?.translate('empty_cart')}");
+                                                      msg: AppLocalizations.of(context)!
+                                                          .translate(
+                                                          'make_sure_cart_is_not_empty_and_table_is_selected'));
                                                 }
                                               }
+                                            } else {
+                                              // not dine in call
+                                              print("Not dine in called");
+                                              cart.removeAllTable();
+                                              if (cart.cartNotifierItem.isNotEmpty) {
+                                                await callPlaceOrder(cart, '8');
+                                              } else {
+                                                Fluttertoast.showToast(
+                                                    backgroundColor: Colors.red,
+                                                    msg: "${AppLocalizations.of(context)?.translate('empty_cart')}");
+                                              }
                                             }
-                                            // if (_isSettlement == true) {
-                                            //   //open cash in dialog
-                                            //   showDialog(
-                                            //       barrierDismissible: false,
-                                            //       context: context,
-                                            //       builder: (BuildContext context) {
-                                            //         return WillPopScope(
-                                            //             child: CashDialog(isCashIn: true, callBack: () {}, isCashOut: false, isNewDay: true), onWillPop: () async => false);
-                                            //       });
-                                            //   _isSettlement = false;
-                                            // } else {
-                                            // }
                                           }
-                                          // else if (widget.currentPage == 'table') {
-                                          //   if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
-                                          //     if (total == 0.0 && double.parse(finalAmount) == 0.0 || total != 0.0 && double.parse(finalAmount) != 0.0) {
-                                          //       if (cart.selectedTable.length > 1 && mounted) {
-                                          //         if (await confirm(
-                                          //           context,
-                                          //           title: Text('${AppLocalizations.of(context)
-                                          //               ?.translate('confirm_merge_bill')}'),
-                                          //           content: Text('${AppLocalizations.of(context)
-                                          //               ?.translate('to_merge_bill')}'),
-                                          //           textOK: Text('${AppLocalizations.of(context)
-                                          //               ?.translate('yes')}'),
-                                          //           textCancel: Text('${AppLocalizations.of(
-                                          //               context)?.translate('no')}'),
-                                          //         )) {
-                                          //           paymentAddToCart(cart);
-                                          //           return openPaymentSelect(cart);
-                                          //         }
-                                          //       } else {
-                                          //         paymentAddToCart(cart);
-                                          //         openPaymentSelect(cart);
-                                          //       }
-                                          //     } else {
-                                          //       Fluttertoast.showToast(
-                                          //           backgroundColor: Colors.red,
-                                          //           msg: "Payment not match");
-                                          //     }
-                                          //   } else {
-                                          //     Fluttertoast.showToast(backgroundColor: Colors.red,
-                                          //         msg: "${AppLocalizations.of(context)?.translate(
-                                          //             'empty_cart')}");
-                                          //   }
+                                          // if (_isSettlement == true) {
+                                          //   //open cash in dialog
+                                          //   showDialog(
+                                          //       barrierDismissible: false,
+                                          //       context: context,
+                                          //       builder: (BuildContext context) {
+                                          //         return WillPopScope(
+                                          //             child: CashDialog(isCashIn: true, callBack: () {}, isCashOut: false, isNewDay: true), onWillPop: () async => false);
+                                          //       });
+                                          //   _isSettlement = false;
+                                          // } else {
                                           // }
-                                          // else {
-                                          //   if (cart.cartNotifierItem.isNotEmpty) {
-                                          //     if (total == 0.0 && double.parse(finalAmount) == 0.0 || total != 0.0 && double.parse(finalAmount) != 0.0) {
-                                          //       paymentAddToCart(cart);
-                                          //       //openPaymentSelect(cart);
-                                          //     } else {
-                                          //       Fluttertoast.showToast(
-                                          //           backgroundColor: Colors.red,
-                                          //           msg: "Payment not match");
-                                          //     }
-                                          //   } else {
-                                          //     Fluttertoast.showToast(backgroundColor: Colors.red,
-                                          //         msg: "${AppLocalizations.of(context)?.translate(
-                                          //             'empty_cart')}");
-                                          //   }
-                                          // }
-                                          // else {
-                                          //   if (cart.cartNotifierItem.isNotEmpty) {
-                                          //     int printStatus = await printReceipt.printCartReceiptList(printerList, cart, localOrderId);
-                                          //     checkPrinterStatus(printStatus);
-                                          //     cart.initialLoad();
-                                          //     cart.changInit(true);
-                                          //   } else {
-                                          //     Fluttertoast.showToast(backgroundColor: Colors.red,
-                                          //         msg: "${AppLocalizations.of(context)?.translate(
-                                          //             'empty_cart')}");
-                                          //   }
-                                          // }
-                                          //enableButton();
-                                        },
-                                        child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
-                                        Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM $finalAmount)') :
-                                        Text(AppLocalizations.of(context)!.translate('place_order')),
-                                      ),
+                                        }
+                                        // else if (widget.currentPage == 'table') {
+                                        //   if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
+                                        //     if (total == 0.0 && double.parse(finalAmount) == 0.0 || total != 0.0 && double.parse(finalAmount) != 0.0) {
+                                        //       if (cart.selectedTable.length > 1 && mounted) {
+                                        //         if (await confirm(
+                                        //           context,
+                                        //           title: Text('${AppLocalizations.of(context)
+                                        //               ?.translate('confirm_merge_bill')}'),
+                                        //           content: Text('${AppLocalizations.of(context)
+                                        //               ?.translate('to_merge_bill')}'),
+                                        //           textOK: Text('${AppLocalizations.of(context)
+                                        //               ?.translate('yes')}'),
+                                        //           textCancel: Text('${AppLocalizations.of(
+                                        //               context)?.translate('no')}'),
+                                        //         )) {
+                                        //           paymentAddToCart(cart);
+                                        //           return openPaymentSelect(cart);
+                                        //         }
+                                        //       } else {
+                                        //         paymentAddToCart(cart);
+                                        //         openPaymentSelect(cart);
+                                        //       }
+                                        //     } else {
+                                        //       Fluttertoast.showToast(
+                                        //           backgroundColor: Colors.red,
+                                        //           msg: "Payment not match");
+                                        //     }
+                                        //   } else {
+                                        //     Fluttertoast.showToast(backgroundColor: Colors.red,
+                                        //         msg: "${AppLocalizations.of(context)?.translate(
+                                        //             'empty_cart')}");
+                                        //   }
+                                        // }
+                                        // else {
+                                        //   if (cart.cartNotifierItem.isNotEmpty) {
+                                        //     if (total == 0.0 && double.parse(finalAmount) == 0.0 || total != 0.0 && double.parse(finalAmount) != 0.0) {
+                                        //       paymentAddToCart(cart);
+                                        //       //openPaymentSelect(cart);
+                                        //     } else {
+                                        //       Fluttertoast.showToast(
+                                        //           backgroundColor: Colors.red,
+                                        //           msg: "Payment not match");
+                                        //     }
+                                        //   } else {
+                                        //     Fluttertoast.showToast(backgroundColor: Colors.red,
+                                        //         msg: "${AppLocalizations.of(context)?.translate(
+                                        //             'empty_cart')}");
+                                        //   }
+                                        // }
+                                        // else {
+                                        //   if (cart.cartNotifierItem.isNotEmpty) {
+                                        //     int printStatus = await printReceipt.printCartReceiptList(printerList, cart, localOrderId);
+                                        //     checkPrinterStatus(printStatus);
+                                        //     cart.initialLoad();
+                                        //     cart.changInit(true);
+                                        //   } else {
+                                        //     Fluttertoast.showToast(backgroundColor: Colors.red,
+                                        //         msg: "${AppLocalizations.of(context)?.translate(
+                                        //             'empty_cart')}");
+                                        //   }
+                                        // }
+                                        //enableButton();
+                                      },
+                                      child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
+                                      Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM $finalAmount)') :
+                                      Text(AppLocalizations.of(context)!.translate('place_order')),
+                                    ),
                                   ),
                                   //some spacing for second button
                                   // Visibility(
@@ -980,9 +953,9 @@ class _CartPageState extends State<CartPage> {
                       return CustomProgressBar();
                     }
                   })
-          );
-        }),
-      );
+          ),
+        );
+      });
     });
   }
 
@@ -1822,12 +1795,12 @@ class _CartPageState extends State<CartPage> {
 /*
   Cart Ordering initial called
 */
-  getSubTotal(CartModel cart) async {
+  getSubTotal() {
     try {
-      if(!isFirstLoad){
-        isFirstLoad = true;
-        await preload();
-      }
+      // if(!isFirstLoad){
+      //   isFirstLoad = true;
+      //   await preload();
+      // }
       //widget.currentPage == 'table' || widget.currentPage == 'qr_order' ? cart.selectedOption = 'Dine in' : null;
       total = 0.0;
       newOrderSubtotal = 0.0;
@@ -1846,7 +1819,7 @@ class _CartPageState extends State<CartPage> {
     }
     //await getDiningTax(cart);
     calPromotion(cart);
-    getTaxAmount(cart);
+    getTaxAmount();
     getRounding();
     getAllTotal();
     checkCartItem(cart);
@@ -1856,18 +1829,16 @@ class _CartPageState extends State<CartPage> {
       });
       cart.myCount++;
     }
-
-    cartController.sink.add("refresh");
+    cartController.sink.add('refresh');
     // if (!controller.isClosed) {
     //   controller.sink.add('refresh');
     // }
   }
 
-  void getTaxAmount(CartModel cart) {
+  void getTaxAmount() {
     try {
       discountPrice = total - promoAmount;
       currentDiningTax = taxLinkDiningList.where((tax) => tax.dining_id == cart.selectedOptionId).toList();
-      print("current dining tax: ${currentDiningTax.length}");
       if (currentDiningTax.isNotEmpty) {
         for (int i = 0; i < currentDiningTax.length; i++) {
           priceIncTaxes = discountPrice * (double.parse(currentDiningTax[i].tax_rate!) / 100);
@@ -1891,12 +1862,10 @@ class _CartPageState extends State<CartPage> {
   }
 
   void getRounding() {
-    double round = 0.0;
     totalAmount = 0.0;
     discountPrice = total - promoAmount;
     totalAmount = discountPrice + sumAllTaxAmount();
-    round = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
-    rounding = round;
+    rounding = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
 
     // if (!controller.isClosed) {
     //   controller.sink.add('refresh');

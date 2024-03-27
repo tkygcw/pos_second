@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/object/client_action.dart';
+import 'package:optimy_second_device/page/loading.dart';
 
 class DeviceSetting extends StatefulWidget {
   const DeviceSetting({Key? key}) : super(key: key);
@@ -27,17 +28,17 @@ class _DeviceSettingState extends State<DeviceSetting> {
               indent: 20,
               endIndent: 20,
             ),
-            // Consumer<Server>(
-            //     builder: (context, server, child) {
-            //       return ListTile(
-            //         title: Text("Connection management"),
-            //         subtitle: Text('Connected device: ${server.clientList.length}'),
-            //         trailing: Visibility(child: Icon(Icons.navigate_next), visible: server.clientList.isEmpty ? false : true),
-            //         onTap: server.clientList.isEmpty ? null : (){
-            //           openDeviceDialog(clientSocket: server.clientList);
-            //         },
-            //       );
-            //     }),
+            ListTile(
+              title: Text("Sync data"),
+              onTap: () async{
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (BuildContext context) => LoadingPage(),
+                  ),
+                      (Route route) => false,
+                );
+              },
+            ),
           ],
         )
     );

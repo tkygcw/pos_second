@@ -213,6 +213,8 @@ class _CartDialogState extends State<CartDialog> {
                     }
                   }
                   print("orderDetailList: ${orderDetailList.length}");
+                  if(!mounted) return;
+                  Navigator.of(context).pop();
                 },
               ),
             ),
@@ -640,23 +642,26 @@ class _CartDialogState extends State<CartDialog> {
 
   decodeData(response){
     try{
-      var json = jsonDecode(response);
-
-      Iterable value1 = json['data']['table_list'];
-      tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
-      if (widget.selectedTableList.isNotEmpty) {
-        for (int i = 0; i < widget.selectedTableList.length; i++) {
-          for (int j = 0; j < tableList.length; j++) {
-            if (tableList[j].table_sqlite_id == widget.selectedTableList[i].table_sqlite_id) {
-              tableList[j].isSelected = true;
+      if(response != null){
+        var json = jsonDecode(response);
+        Iterable value1 = json['data']['table_list'];
+        tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+        if (widget.selectedTableList.isNotEmpty) {
+          for (int i = 0; i < widget.selectedTableList.length; i++) {
+            for (int j = 0; j < tableList.length; j++) {
+              if (tableList[j].table_sqlite_id == widget.selectedTableList[i].table_sqlite_id) {
+                tableList[j].isSelected = true;
+              }
             }
           }
         }
-      }
-      if (mounted) {
-        setState(() {
-          isLoad = true;
-        });
+        if (mounted) {
+          setState(() {
+            isLoad = true;
+          });
+        }
+      } else {
+        clientAction.openDialog(action: "7", callback: decodeData);
       }
     }catch(e){
       print('inti table error: $e');
@@ -717,8 +722,8 @@ class _CartDialogState extends State<CartDialog> {
     if(orderDetailList.isNotEmpty){
       addToCart();
     }
-    if(!mounted) return;
-    Navigator.of(context).pop();
+    // if(!mounted) return;
+    // Navigator.of(context).pop();
     print("order detail list: ${orderDetailList}");
     print("order cache list: ${orderCacheList}");
   }

@@ -36,7 +36,8 @@ class ClientAction {
     notificationModel.showReconnectDialog = false;
     int i = 0;
     Map<String, dynamic>? result;
-    final buffer = StringBuffer();
+    StringBuffer buffer = StringBuffer();
+    String? receivedData;
     serverCallBack = callback;
     try{
       socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
@@ -46,106 +47,99 @@ class ClientAction {
       serverCallBack!(jsonEncode(result));
       return;
     }
-    try{
-      serverIp = ips;
-      //send first request to server side
-      result = {'action': '-1', 'param': branchId};
-      socket.write('${jsonEncode(result)}\n');
+    serverIp = ips;
+    //send first request to server side
+    result = {'action': '-1', 'param': branchId};
+    socket.write('${jsonEncode(result)}\n');
 
-      //socket stream listen for data
-      socket.listen( (data) async  {
-        //print("data chunk received: ${i+1}");
-        // Track the received data
-        String receivedData = utf8.decode(data);
-        print("received data: ${receivedData}");
-        if(receivedData == 'refresh'){
-          showRefresh();
-          return;
-        }
+    //socket stream listen for data
+    socket.cast<List<int>>().transform(utf8.decoder).listen( (data) async  {
+      // Track the received data
+      receivedData = data;
+      if(receivedData != null){
         buffer.write(receivedData);
-        final messages = buffer.toString().split('\n');
-        String firstRequest = messages[0];
-        for(int i = 0; i < messages.length; i++){
-          if(i != 0){
-            buffer.clear();
-            buffer.write(messages[i]);
+        if(receivedData!.contains(messageDelimiter)){
+          final messages = buffer.toString().split('\n');
+          String firstRequest = messages[0];
+          for(int i = 0; i < messages.length; i++){
+            if(i != 0){
+              buffer.clear();
+              buffer.write(messages[i]);
+            }
           }
+          processData(message: firstRequest);
         }
-        processData(message: firstRequest);
-        //split request call every 1 sec
-        //splitRequest(buffer: buffer, serverSocket: socket);
-      }, cancelOnError: true
-      ,onError: (err){
-        print('listen error: $err');
-        timer?.cancel();
-        socket.destroy();
-        notificationModel.enableReconnectDialog();
-      },onDone: (){
-        print('client done');
-        timer?.cancel();
-        socket.destroy();
-        notificationModel.enableReconnectDialog();
-      });
-      // Socket.connect(ips, 9999, timeout: const Duration(seconds: 3)).then((socket) {
-      //   connectStatus = true;
-      //   print('client connected : ${socket.remoteAddress.address}:${socket.remotePort}');
-      //   this.socket = socket;
-      //   serverIp = ips;
-      //   result = {'action': '1', 'param': ''};
-      //   socket.write('${jsonEncode(result)}\n');
-      //
-      //   //List<int> receivedData = [];
-      //   final buffer = StringBuffer();
-      //   splitRequest(buffer: buffer, serverSocket: socket, response: response);
-      //
-      //   socket.listen( (data) {
-      //     /// Track the received data
-      //     String receivedData = utf8.decode(data);
-      //     buffer.write(receivedData);
-      //     // if(buffer.toString() != ''){
-      //     //   qrOrderController.sink.add("rebuild");
-      //     // }
-      //
-      //     // if (receivedData.endsWith(messageDelimiter)) {
-      //     //   final messages = buffer.toString().split('\n');
-      //     //   for(int i = 0; i < messages.length; i++){
-      //     //     final message = messages[i];
-      //     //     if(message.isNotEmpty){
-      //     //       response = message;
-      //     //     }
-      //     //   }
-      //     //   // Update the buffer with the remaining incomplete message
-      //     //   buffer.clear();
-      //     //   buffer.write(messages.last);
-      //     // }
-      //     // if (receivedData.endsWith('\n')) {
-      //     //   /// Process the complete response
-      //     //   //response = utf8.decode(receivedData);
-      //     //   // Remove the end-of-message marker before processing the data
-      //     //   receivedData = receivedData.substring(0, receivedData.length - 1);
-      //     //   response = receivedData;
-      //     //   print('Received response: $response');
-      //     //   notificationModel.setContentLoaded();
-      //     //   //reset data
-      //     //   receivedData = '';
-      //     // }
-      //     //socket.close();
-      //   },onError: (err){
-      //     print('listen error: $err');
-      //     //socket.destroy();
-      //   },onDone: (){
-      //     print('client done');
-      //     timer?.cancel();
-      //     socket.destroy();
-      //   });
-      // }).catchError((error){
-      //   print("socket connect error: ${error}");
-      //   connectStatus = false;
-      // });
-    }catch(e){
-      print('connect server error2: $e');
-      socket.destroy();
-    }
+      }
+      //split request call every 1 sec
+      //splitRequest(buffer: buffer, serverSocket: socket);
+    }, cancelOnError: true
+        ,onError: (err){
+          print('listen error: $err');
+          timer?.cancel();
+          socket.destroy();
+          notificationModel.enableReconnectDialog();
+        },onDone: (){
+          print('client done');
+          timer?.cancel();
+          socket.destroy();
+          notificationModel.enableReconnectDialog();
+        });
+    // Socket.connect(ips, 9999, timeout: const Duration(seconds: 3)).then((socket) {
+    //   connectStatus = true;
+    //   print('client connected : ${socket.remoteAddress.address}:${socket.remotePort}');
+    //   this.socket = socket;
+    //   serverIp = ips;
+    //   result = {'action': '1', 'param': ''};
+    //   socket.write('${jsonEncode(result)}\n');
+    //
+    //   //List<int> receivedData = [];
+    //   final buffer = StringBuffer();
+    //   splitRequest(buffer: buffer, serverSocket: socket, response: response);
+    //
+    //   socket.listen( (data) {
+    //     /// Track the received data
+    //     String receivedData = utf8.decode(data);
+    //     buffer.write(receivedData);
+    //     // if(buffer.toString() != ''){
+    //     //   qrOrderController.sink.add("rebuild");
+    //     // }
+    //
+    //     // if (receivedData.endsWith(messageDelimiter)) {
+    //     //   final messages = buffer.toString().split('\n');
+    //     //   for(int i = 0; i < messages.length; i++){
+    //     //     final message = messages[i];
+    //     //     if(message.isNotEmpty){
+    //     //       response = message;
+    //     //     }
+    //     //   }
+    //     //   // Update the buffer with the remaining incomplete message
+    //     //   buffer.clear();
+    //     //   buffer.write(messages.last);
+    //     // }
+    //     // if (receivedData.endsWith('\n')) {
+    //     //   /// Process the complete response
+    //     //   //response = utf8.decode(receivedData);
+    //     //   // Remove the end-of-message marker before processing the data
+    //     //   receivedData = receivedData.substring(0, receivedData.length - 1);
+    //     //   response = receivedData;
+    //     //   print('Received response: $response');
+    //     //   notificationModel.setContentLoaded();
+    //     //   //reset data
+    //     //   receivedData = '';
+    //     // }
+    //     //socket.close();
+    //   },onError: (err){
+    //     print('listen error: $err');
+    //     //socket.destroy();
+    //   },onDone: (){
+    //     print('client done');
+    //     timer?.cancel();
+    //     socket.destroy();
+    //   });
+    // }).catchError((error){
+    //   print("socket connect error: ${error}");
+    //   connectStatus = false;
+    // });
   }
 
   showRefresh(){
@@ -259,7 +253,10 @@ class ClientAction {
         requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
       }catch(e){
         print("connect request port error: $e");
-        openDialog(action: action, param: param, callback: callback);
+        if(callback != null){
+          callback(null);
+        }
+        //openDialog(action: action, param: param, callback: callback);
         // notificationModel.enableReconnectDialog();
         return;
       }
@@ -269,8 +266,8 @@ class ClientAction {
       final buffer = StringBuffer();
       String receivedData = '';
       //handle data
-      StreamSubscription streamSubscription = requestSocket.listen((data) {
-        receivedData = utf8.decode(data);
+      StreamSubscription streamSubscription = requestSocket.cast<List<int>>().transform(utf8.decoder).listen((data) {
+        receivedData = data;
         buffer.write(receivedData);
         if (receivedData.endsWith(messageDelimiter)) {
           final messages = buffer.toString().trim();
@@ -300,7 +297,10 @@ class ClientAction {
       await streamSubscription.asFuture<void>().timeout(Duration(seconds: 5));
     } catch(e) {
       print("connect request port error: $e");
-      notificationModel.enableReconnectDialog();
+      if(callback != null){
+        callback(null);
+      }
+      // notificationModel.enableReconnectDialog();
     }
   }
 

@@ -17,17 +17,15 @@ class _OrderPageState extends State<OrderPage> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        return Scaffold(
-            body: Row(
-              children: [
-                Expanded(
-                    flex: 12,
-                    child: FoodMenu(cartModel: cart)
-                )
-              ],
-            ));
-      });
+      return Scaffold(
+          body: Row(
+            children: [
+              Expanded(
+                  flex: 12,
+                  child: FoodMenu()
+              )
+            ],
+          ));
       // final drawerHeader = UserAccountsDrawerHeader(
       //   decoration: BoxDecoration(
       //     color: color.backgroundColor,

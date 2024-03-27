@@ -10,12 +10,10 @@ import 'colorCode.dart';
 class ProductSearchDelegate extends SearchDelegate{
   String? imagePath;
   List<Product>? productList;
-  CartModel? cartModel;
 
   ProductSearchDelegate({
     this.productList,
-    this.imagePath,
-    this.cartModel
+    this.imagePath
   });
 
   @override
@@ -47,7 +45,7 @@ class ProductSearchDelegate extends SearchDelegate{
     //throw UnimplementedError();
   }
 
-  Future<Future<Object?>> openProductOrderDialog(Product product, CartModel cartModel, BuildContext context) async {
+  Future<Future<Object?>> openProductOrderDialog(Product product, BuildContext context) async {
     return showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
         transitionBuilder: (context, a1, a2, widget) {
@@ -57,7 +55,6 @@ class ProductSearchDelegate extends SearchDelegate{
             child: Opacity(
                 opacity: a1.value,
                 child: ProductOrderDialog(
-                  cartModel: cartModel,
                   productDetail: product,
                 )),
           );
@@ -98,7 +95,7 @@ class ProductSearchDelegate extends SearchDelegate{
           ),
           onTap: (){
             close(context, null);
-            openProductOrderDialog(matchQuery[index], cartModel!, context);
+            openProductOrderDialog(matchQuery[index], context);
           },
         );
       },
@@ -133,7 +130,7 @@ class ProductSearchDelegate extends SearchDelegate{
             ),
             onTap: () {
               close(context, null);
-              openProductOrderDialog(matchQuery[index], cartModel!, context);
+              openProductOrderDialog(matchQuery[index], context);
             },
           );
         },

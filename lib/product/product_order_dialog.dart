@@ -26,9 +26,8 @@ import '../utils/Utils.dart';
 
 class ProductOrderDialog extends StatefulWidget {
   final Product? productDetail;
-  final CartModel cartModel;
 
-  const ProductOrderDialog({Key? key, this.productDetail, required this.cartModel}) : super(key: key);
+  const ProductOrderDialog({Key? key, this.productDetail}) : super(key: key);
 
   @override
   _ProductOrderDialogState createState() => _ProductOrderDialogState();

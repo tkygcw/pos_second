@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
@@ -18,9 +19,8 @@ import '../../page/progress_bar.dart';
 import '../../product/product_order_dialog.dart';
 
 class FoodMenu extends StatefulWidget {
-  final CartModel cartModel;
 
-  const FoodMenu({Key? key, required this.cartModel}) : super(key: key);
+  const FoodMenu({Key? key}) : super(key: key);
 
   @override
   _FoodMenuState createState() => _FoodMenuState();
@@ -48,9 +48,9 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
     super.initState();
     //sendRequest();
     //preload();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.cartModel.initialLoad();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   widget.cartModel.initialLoad();
+    // });
     // _tabController = TabController(length: 0, vsync: this);
   }
 
@@ -69,24 +69,9 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    print("food menu rebuild!!!");
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      // if(notificationModel.contentLoad == true) {
-      //   isLoading = true;
-      //   //print('notification refresh called!');
-      // }
-      // if(notificationModel.contentLoad == true && notificationModel.contentLoaded == true){
-      //   notificationModel.resetContentLoaded();
-      //   notificationModel.resetContentLoad();
-      //   Future.delayed(const Duration(seconds: 1), () {
-      //     if(mounted){
-      //       setState(() {
-      //         readAllCategories(hasNotification: true);
-      //       });
-      //     }
-      //   });
-      // }
-      return isLoading ?
-      CustomProgressBar() :
+      return isLoading ? CustomProgressBar() :
       Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -99,7 +84,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
             IconButton(
               color: color.buttonColor,
               onPressed: (){
-                showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath, cartModel: widget.cartModel));
+                showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath));
               },
               icon: Icon(Icons.search),
             )
@@ -125,10 +110,25 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
               ),
             ]),
       );
+      // if(notificationModel.contentLoad == true) {
+      //   isLoading = true;
+      //   //print('notification refresh called!');
+      // }
+      // if(notificationModel.contentLoad == true && notificationModel.contentLoaded == true){
+      //   notificationModel.resetContentLoaded();
+      //   notificationModel.resetContentLoad();
+      //   Future.delayed(const Duration(seconds: 1), () {
+      //     if(mounted){
+      //       setState(() {
+      //         readAllCategories(hasNotification: true);
+      //       });
+      //     }
+      //   });
+      // }
     });
   }
 
-  Future<Future<Object?>> openProductOrderDialog(Product product, CartModel cartModel) async {
+  Future<Future<Object?>> openProductOrderDialog(Product product) async {
     return showGeneralDialog(
         barrierColor: Colors.black.withOpacity(0.5),
         transitionBuilder: (context, a1, a2, widget) {
@@ -138,7 +138,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
             child: Opacity(
                 opacity: a1.value,
                 child: ProductOrderDialog(
-                  cartModel:  cartModel,
                   productDetail: product,
                 )),
           );
@@ -207,7 +206,11 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   //   });
   // }
 
-  readAllCategories() async {
+  readAllCategories({NotificationModel? model}) async {
+    print("read all category");
+    categoryList.clear();
+    categoryTab.clear();
+    categoryTabContent.clear();
     await getPreferences();
     initCategory = decodeAction.decodedCategoryList!;
     initProduct = decodeAction.decodedProductList!;
@@ -242,7 +245,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
                   child: InkWell(
                     splashColor: Colors.blue.withAlpha(30),
                     onTap: () {
-                      openProductOrderDialog(data[index], widget.cartModel);
+                      openProductOrderDialog(data[index]);
                     },
                     child: Stack(
                       alignment: Alignment.bottomLeft,
@@ -287,7 +290,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
                   child: InkWell(
                     splashColor: Colors.blue.withAlpha(30),
                     onTap: () {
-                      openProductOrderDialog(data[index], widget.cartModel);
+                      openProductOrderDialog(data[index]);
                     },
                     child: Stack(
                       alignment: Alignment.bottomLeft,
@@ -322,6 +325,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
       }
     }
     _tabController = TabController(length: categoryTab.length, vsync: this);
+    if(!mounted) return;
+    // Provider.of<NotificationModel>(context, listen: false).resetNotification();
     refresh();
   }
 

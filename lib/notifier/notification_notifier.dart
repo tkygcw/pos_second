@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:presentation_displays/display.dart';
 
 class NotificationModel extends ChangeNotifier {
+  static final NotificationModel instance = NotificationModel();
   bool stopTimer = false;
-  bool notificationStatus = false;
+  bool _notificationStatus = false;
   bool notificationStarted = false;
   bool syncCountStarted = false;
   bool contentLoad = false, contentLoaded = false;
@@ -13,10 +14,12 @@ class NotificationModel extends ChangeNotifier {
   bool hasSecondScreen = false;
   bool secondScreenEnable = true;
 
+  bool get notificationStatus  => _notificationStatus;
+
   void setNotification(bool status){
-    notificationStatus = status;
+    _notificationStatus = status;
     notifyListeners();
-    print('notification status: ${notificationStatus}');
+    print('notification status: ${_notificationStatus}');
   }
 
   void setTimer(bool status){
@@ -29,9 +32,11 @@ class NotificationModel extends ChangeNotifier {
     stopTimer = false;
   }
 
-  void resetNotification(){
-    notificationStatus = false;
-    notifyListeners();
+  void resetNotification({bool? listeners}){
+    _notificationStatus = false;
+    if(listeners != null && listeners == true){
+      notifyListeners();
+    }
   }
 
   void setNotificationAsStarted(){

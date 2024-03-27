@@ -50,7 +50,6 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    notificationModel.showReconnectDialog = false;
                     Navigator.of(context).pushAndRemoveUntil(
                       // the new route
                       MaterialPageRoute(
