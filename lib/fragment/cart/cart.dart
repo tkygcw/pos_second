@@ -1,21 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
 
-import 'package:collection/collection.dart';
-import 'package:confirm_dialog/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
-import 'package:optimy_second_device/fragment/custom_flushbar.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
-import 'package:optimy_second_device/notifier/notification_notifier.dart';
-import 'package:optimy_second_device/object/branch_link_tax.dart';
-import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:provider/provider.dart';
@@ -23,23 +14,16 @@ import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../notifier/cart_notifier.dart';
-import '../../notifier/connectivity_change_notifier.dart';
 import '../../notifier/theme_color.dart';
 import '../../object/branch_link_dining_option.dart';
 import '../../object/branch_link_product.dart';
-import '../../object/branch_link_promotion.dart';
 import '../../object/cart_payment.dart';
 import '../../object/cart_product.dart';
-import '../../object/cash_record.dart';
-import '../../object/dining_option.dart';
 import '../../object/modifier_group.dart';
-import '../../object/order_modifier_detail.dart';
 import '../../object/order_promotion_detail.dart';
 import '../../object/order_tax_detail.dart';
-import '../../object/print_receipt.dart';
 import '../../object/printer.dart';
 import '../../object/promotion.dart';
-import '../../object/table.dart';
 import '../../object/table_use.dart';
 import '../../object/tax.dart';
 import '../../object/variant_group.dart';
@@ -752,7 +736,7 @@ class _CartPageState extends State<CartPage> {
                                             openLoadingDialogBox();
                                             if (cart.selectedOption == 'Dine in') {
                                               if (cart.selectedTable.isNotEmpty) {
-                                                print('has new item ${hasNewItem}');
+                                                print('has new item $hasNewItem');
                                                 if (cart.cartNotifierItem[0].status == 1 && hasNewItem == true) {
                                                   await callPlaceOrder(cart, '9');
                                                 } else {
@@ -969,7 +953,7 @@ class _CartPageState extends State<CartPage> {
           {
             if (int.parse(product.daily_limit!) > 0 && simpleIntInput <= int.parse(product.daily_limit!)) {
               num stockLeft = int.parse(product.daily_limit!) - checkCartProductQuantity(cart, product);
-              print('stock left: ${stockLeft}');
+              print('stock left: $stockLeft');
               if (stockLeft > 0) {
                 hasStock = true;
               } else {
@@ -1065,7 +1049,7 @@ class _CartPageState extends State<CartPage> {
         var length = group.modifierChild!.length;
         for (int j = 0; j < length; j++) {
           if (group.modifierChild![j].isChecked!) {
-            modifier.add(group.modifierChild![j].name! + '\n');
+            modifier.add('${group.modifierChild![j].name!}\n');
             result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
           }
         }
@@ -1073,7 +1057,7 @@ class _CartPageState extends State<CartPage> {
     } else {
       if (object.orderModifierDetail != null && object.orderModifierDetail!.isNotEmpty) {
         for (int i = 0; i < object.orderModifierDetail!.length; i++) {
-          modifier.add(object.orderModifierDetail![i].mod_name! + '\n');
+          modifier.add('${object.orderModifierDetail![i].mod_name!}\n');
           result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
         }
       }
@@ -1952,9 +1936,7 @@ class _CartPageState extends State<CartPage> {
             transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
             child: Opacity(
               opacity: a1.value,
-              child: CartDialog(
-                selectedTableList: cartModel.selectedTable,
-              ),
+              child: CartDialog(),
             ),
           );
         },
@@ -2131,44 +2113,29 @@ class _CartPageState extends State<CartPage> {
   callPlaceOrder(CartModel cart, String action) async {
     print("json cart model: ${jsonEncode(cart)}");
     await clientAction.connectRequestPort(action: action, param: jsonEncode(cart), callback: responseStatusCheck);
-    // resetValue();
-    // if(cart.selectedOption == "Take Away"){
-    //   print("json cart model: ${jsonEncode(cart)}");
-    //   await clientAction.connectRequestPort(action: '9', param: jsonEncode(cart));
-    // } else {
-    //   //await clientAction.connectRequestPort(action: '10', param: jsonEncode(cart.cartNotifierItem));
-    // }
-    // await createOrderCache(cart, connectivity);
-    // await createOrderDetail(cart, connectivity);
-    // await syncAllToCloud();
-    // if(this.isLogOut == true){
-    //   openLogOutDialog();
-    //   return;
-    // }
-    // await printReceipt.printCheckList(printerList, int.parse(this.orderCacheId), context);
-    // await printReceipt.printKitchenList(printerList, context, cart, int.parse(this.orderCacheId));
   }
 
   void responseStatusCheck(response){
-    var json = jsonDecode(response);
-    print("status: ${json['status']}");
-    if(json['status'] == '1'){
-      updateBranchLinkProductData(json['data']['tb_branch_link_product']);
-      Navigator.of(context).pop();
-      cart.initialLoad();
-    } else if (json['status'] == '2'){
-      Navigator.of(context).pop();
-      updateBranchLinkProductData(json['data']['tb_branch_link_product']);
-      showOutOfStockDialog(json['data']['cartItem']);
-      // CustomFlushbar.instance.showFlushbar("Place order failed", "Contain out of stock product", Colors.red, duration: Duration(seconds: 3), (flushbar) async {
-      //   flushbar.dismiss(true);
-      // });
-    } else {
-      cart.initialLoad();
-      Navigator.of(context).pop();
-      CustomFlushbar.instance.showFlushbar("Place order failed", json['exception'], Colors.red, duration: Duration(seconds: 3), (flushbar) async {
-        flushbar.dismiss(true);
-      });
+    if(response != null){
+      var json = jsonDecode(response);
+      switch(json['status']){
+        case '1': {
+          //place order success
+          updateBranchLinkProductData(json['data']['tb_branch_link_product']);
+          Navigator.of(context).pop();
+          cart.initialLoad();
+        }break;
+        case '2': {
+          Navigator.of(context).pop();
+          updateBranchLinkProductData(json['data']['tb_branch_link_product']);
+          showOutOfStockDialog(json['data']['cartItem']);
+        }break;
+        default: {
+          clientAction.openReconnectDialog(action: '15', callback: (response){
+            updateAllBranchLinkProductData(response);
+          });
+        }
+      }
     }
   }
 
@@ -2287,6 +2254,22 @@ class _CartPageState extends State<CartPage> {
       decodeAction.decodedBranchLinkProductList?.add(product[i]);
     }
     //decodeAction.decodedBranchLinkProductList = List<BranchLinkProduct>.from(value4.map((json) => BranchLinkProduct.fromJson(json)));
+  }
+
+  updateAllBranchLinkProductData(response){
+    var json = jsonDecode(response);
+    switch(json['status']){
+      case '1': {
+        Iterable value4 = json['data']['tb_branch_link_product'];
+        List<BranchLinkProduct> product = List<BranchLinkProduct>.from(value4.map((json) => BranchLinkProduct.fromJson(json)));
+        decodeAction.decodedBranchLinkProductList = product;
+        Navigator.of(context).pop();
+        cart.initialLoad();
+      } break;
+      default: {
+        clientAction.openReconnectDialog(action: '15', callback: updateAllBranchLinkProductData);
+      }
+    }
   }
 
 

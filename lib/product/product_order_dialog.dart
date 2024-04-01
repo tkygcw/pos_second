@@ -647,18 +647,27 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   decodeData(response){
-    var json = jsonDecode(response);
-    Iterable value1 = json['data']['variant'];
-    variantGroup = List<VariantGroup>.from(value1.map((json) => VariantGroup.fromJson(json)));
-    Iterable value2 = json['data']['modifier'];
-    modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
-    Iterable value3 = json['data']['branch_link_product'];
-    branchLinkProductList = List<BranchLinkProduct>.from(value3.map((json) => BranchLinkProduct.fromJson(json)));
+    if(response != null && mounted){
+      var json = jsonDecode(response);
+      switch(json['status']){
+        case '1': {
+          Iterable value1 = json['data']['variant'];
+          variantGroup = List<VariantGroup>.from(value1.map((json) => VariantGroup.fromJson(json)));
+          Iterable value2 = json['data']['modifier'];
+          modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
+          Iterable value3 = json['data']['branch_link_product'];
+          branchLinkProductList = List<BranchLinkProduct>.from(value3.map((json) => BranchLinkProduct.fromJson(json)));
 
-    getBranchLinkProductId(widget.productDetail!);
-    getProductPrice(widget.productDetail!.product_sqlite_id.toString());
-    getProductDialogStock(widget.productDetail!);
-    controller.sink.add("refresh");
+          getBranchLinkProductId(widget.productDetail!);
+          getProductPrice(widget.productDetail!.product_sqlite_id.toString());
+          getProductDialogStock(widget.productDetail!);
+          controller.sink.add("refresh");
+        }break;
+        default: {
+          clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData);
+        }
+      }
+    }
   }
 
   Future<Future<Object?>> openChooseTableDialog(CartModel cartModel) async {
@@ -670,9 +679,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
             transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
             child: Opacity(
               opacity: a1.value,
-              child: CartDialog(
-                selectedTableList: cartModel.selectedTable,
-              ),
+              child: CartDialog(),
             ),
           );
         },

@@ -87,7 +87,6 @@ class CartModel extends ChangeNotifier {
   }
 
   void addItem(cartProductItem object, {bool? notifyListener}) {
-    print('add item called');
     cartNotifierItem.add(object);
     if(notifyListener == null){
       notifyListeners();
@@ -134,6 +133,7 @@ class CartModel extends ChangeNotifier {
 
   void addAllTable(List<PosTable> tableList){
     selectedTable.addAll(tableList);
+    notifyListeners();
   }
 
   void removeAllTable(){

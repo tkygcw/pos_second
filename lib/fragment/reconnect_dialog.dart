@@ -20,7 +20,7 @@ class ReconnectDialog extends StatefulWidget {
 }
 
 class _ReconnectDialogState extends State<ReconnectDialog> {
-
+  bool isButtonDisable = false;
   late Map branchObject;
 
   @override
@@ -49,7 +49,8 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                  onPressed: () {
+                  onPressed: isButtonDisable ? null : () {
+                    clientAction.setReconnectDialogStatus = false;
                     Navigator.of(context).pushAndRemoveUntil(
                       // the new route
                       MaterialPageRoute(
@@ -66,12 +67,20 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
               ),
               const SizedBox(width: 20),
               ElevatedButton(
-                  onPressed: () async {
+                  onPressed: isButtonDisable ? null : () async {
+                    setState(() {
+                      isButtonDisable = true;
+                      clientAction.setReconnectDialogStatus = false;
+                    });
                     Navigator.of(context).pop();
-                    await clientAction.connectServer(clientAction.serverIp!, branchObject['branchID'].toString(), callback: checkStatus);
+                    print("pass action: ${widget.action}");
                     if(widget.action != null){
                       await clientAction.connectRequestPort(action: widget.action!, param: widget.param, callback: widget.callback);
+                    } else {
+                      print("else called!!!");
+                      widget.callback!();
                     }
+                    await clientAction.connectServer(clientAction.serverIp!, branchObject['branchID'].toString(), callback: checkStatus);
                     // if(reconnectStatus == true){
                     //   notificationModel.showReconnectDialog = false;
                     //   Navigator.of(context).pop();

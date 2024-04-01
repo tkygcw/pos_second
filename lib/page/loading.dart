@@ -59,23 +59,44 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   startLoad() async  {
-    await clientAction.connectRequestPort(action: '1', callback: decodeAction.decodeAllFunction);
+    print("start load called!!!");
+    await clientAction.connectRequestPort(action: '1', callback: checkStatus);
     // await Future.delayed(Duration(seconds: 3), () {
     //   decodeAction.decodeAllFunction();
     // });
-    if(decodeAction.decodedProductList != null && decodeAction.decodedProductList!.isNotEmpty){
-      await _createProductImgFolder();
-    } else {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (BuildContext context) => LoginPage(),
-        ),
-            (Route route) => false,
-      );
+    // if(decodeAction.decodedProductList != null && decodeAction.decodedProductList!.isNotEmpty){
+    //   await _createProductImgFolder();
+    // } else {
+    //   backToLoginPage();
+    // }
+  }
+
+  checkStatus(response) async {
+    if(response != null){
+      var json = jsonDecode(response);
+      switch(json['status']){
+        case '1': {
+          decodeAction.decodeAllFunction(response);
+          if(decodeAction.decodedProductList != null && decodeAction.decodedProductList!.isNotEmpty){
+            await _createProductImgFolder();
+          } else {
+            backToLoginPage();
+          }
+        }break;
+        default: {
+          clientAction.openReconnectDialog(action: json['action'], callback: checkStatus);
+        }
+      }
     }
+  }
 
-    controller.sink.add("done");
-
+  backToLoginPage(){
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (BuildContext context) => LoginPage(),
+      ),
+          (Route route) => false,
+    );
   }
 
   toNextPage(){
@@ -112,22 +133,41 @@ class _LoadingPageState extends State<LoadingPage> {
   download product image
 */
   downloadProductImage(String path) async {
-    List<Product> productList = decodeAction.decodedProductList!;
+    bool isCompleted = true;
+    List<Product> productList = decodeAction.decodedProductList!.where((e) => e.graphic_type == '2').toList();
     for(int i = 0; i < productList.length; i++){
-      if(productList[i].graphic_type == '2'){
-        await clientAction.connectRequestPort(action: '0', param: productList[i].image, callback: decodeBase64Image);
-        if(decodedByte != null){
-          var localPath = '$path/${productList[i].image}';
-          final imageFile = File(localPath);
-          await imageFile.writeAsBytes(decodedByte!);
-        }
+      await clientAction.connectRequestPort(action: '0', param: productList[i].image, callback: decodeBase64Image);
+      if(decodedByte != null){
+        var localPath = '$path/${productList[i].image}';
+        final imageFile = File(localPath);
+        await imageFile.writeAsBytes(decodedByte!);
       }
+      // else {
+      //   isCompleted = false;
+      //   break;
+      // }
     }
+    controller.sink.add("done");
+    // if(isCompleted){
+    //   controller.sink.add("done");
+    // } else {
+    //   clientAction.openReconnectDialog(callback: startLoad);
+    // }
   }
 
-  void decodeBase64Image(String response){
-    var json = jsonDecode(clientAction.response!);
-    decodedByte = base64Decode(json['data']['image_name']);
+  void decodeBase64Image(response){
+    if(response != null){
+      var json = jsonDecode(response);
+      switch(json['status']){
+        case '1': {
+          decodedByte = base64Decode(json['data']['image_name']);
+        }break;
+        default: {
+          decodedByte = null;
+        }
+
+      }
+    }
   }
 
 }
