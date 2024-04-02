@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'package:lan_scanner/lan_scanner.dart';
 import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -27,24 +29,271 @@ class ServerIpDialog extends StatefulWidget {
 }
 
 class _ServerIpDialogState extends State<ServerIpDialog> {
-  final ScrollController scrollController = ScrollController();
   late Map branchObject;
-  List<String> ips = [];
-  Text? info;
-  double percentage = 0.0;
-  bool isLoad = false;
+  bool isLoaded = false;
 
   @override
-  initState() {
-    super.initState();
-    checkPermission();
+  void initState() {
+    // TODO: implement initState
     getPreferences();
+    super.initState();
   }
 
   getPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final String? branch = prefs.getString('branch');
     branchObject = json.decode(branch!);
+    setState(() {
+      isLoaded = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
+      return PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text('Connect Main Device IP'),
+          content: isLoaded ? SizedBox(
+            height: 500,
+            width: 500,
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TabBar(
+                    isScrollable: true,
+                    unselectedLabelColor: Colors.black,
+                    labelColor: color.buttonColor,
+                    indicatorColor: color.buttonColor,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    tabs: [
+                      Tab(text: 'Type IP'),
+                      Tab(text: 'Scan IP')
+                    ],
+                  ),
+                  SizedBox(height: 25),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: TabBarView(
+                        children: [
+                          TypeIpView(branchID: branchObject['branchID'].toString()),
+                          ScanIpView(branchID: branchObject['branchID'].toString()),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ) : CustomProgressBar(),
+          actions: [
+            // Visibility(
+            //   visible: !isLoad ? false : true,
+            //   child: ElevatedButton(
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: color.backgroundColor,
+            //     ),
+            //     child: Text(
+            //       'Rescan',
+            //       style: TextStyle(color: Colors.white),
+            //     ),
+            //     onPressed: () async  {
+            //       setState(() {
+            //         percentage = 0.0;
+            //         isLoad = false;
+            //       });
+            //       await scan_network();
+            //     },
+            //   ),
+            // ),
+          ],
+        ),
+      );
+    });
+  }
+}
+
+class TypeIpView extends StatefulWidget {
+  final String branchID;
+  const TypeIpView({Key? key, required this.branchID}) : super(key: key);
+
+  @override
+  State<TypeIpView> createState() => _TypeIpViewState();
+}
+
+class _TypeIpViewState extends State<TypeIpView> {
+  final ipTextController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    var color = context.watch<ThemeColor>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Server IP Address',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+        ),
+        SizedBox(height: 10),
+        ValueListenableBuilder(
+          valueListenable: ipTextController,
+          builder: (context, value, __){
+            return TextField(
+              controller: ipTextController,
+              keyboardType: TextInputType.numberWithOptions(),
+              decoration:  InputDecoration(
+                  border: OutlineInputBorder(borderSide: BorderSide(color: color.backgroundColor)),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: color.backgroundColor),
+                  ),
+                  hintText: 'Enter server IP'
+              ),
+            );
+          },
+        ),
+        SizedBox(height: 10),
+        ElevatedButton(
+            style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(color.backgroundColor)),
+            onPressed: () async {
+              await clientAction.connectServer(ipTextController.text, widget.branchID, callback: checkStatus);
+            },
+            child: Text("Connect"))
+      ],
+    );
+  }
+
+  checkStatus(response) async {
+    var json = jsonDecode(response);
+    print('status: ${json['status']}');
+    switch(json['status']){
+      case '0': {
+        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Connection failed, Please check internet connection");
+      } break;
+      case '1': {
+        print("case 1 called!!!");
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoadingPage()));
+      }break;
+      case '2': {
+        await logout();
+      }break;
+      default: {
+        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Request action not found, Please check server POS version");
+      }
+    }
+  }
+
+  Future<Directory> get _localDirectory async {
+    final directory = await getApplicationSupportDirectory();
+    final path = directory.path;
+    return Directory('$path/assets');
+  }
+
+  Future<int> deleteDirectory() async {
+    try {
+      final folder = await _localDirectory;
+      folder.delete(recursive: true);
+      print("delete successful");
+      return 1;
+    } catch (e) {
+      print(e);
+      return 0;
+    }
+  }
+
+  logout() async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    deleteDirectory();
+    displayManager.transferDataToPresentation("refresh_img");
+    //deleteFile2();
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => LoginPage()));
+  }
+}
+
+
+class ScanIpView extends StatefulWidget {
+  final String branchID;
+  const ScanIpView({Key? key, required this.branchID}) : super(key: key);
+
+  @override
+  State<ScanIpView> createState() => _ScanIpViewState();
+}
+
+class _ScanIpViewState extends State<ScanIpView> {
+  final ScrollController scrollController = ScrollController();
+  late Stream serverIpStream;
+  late Map branchObject;
+  List<String> ips = [];
+  Text? info;
+  String getIPType = "type";
+  double percentage = 0.0;
+  bool isLoad = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    checkPermission();
+    super.initState();
+  }
+  @override
+  Widget build(BuildContext context) {
+    var color = context.watch<ThemeColor>();
+    return Center(
+      child: isLoad ? MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: Scrollbar(
+          controller: scrollController,
+          thickness: 5.0,
+          trackVisibility: true,
+          thumbVisibility: true,
+          radius: Radius.circular(20.0),
+          child: ListView.builder(
+              controller: scrollController,
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              itemCount: ips.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  elevation: 5,
+                  child: ListTile(
+                    onTap: () async  {
+                      await clientAction.connectServer(ips[index], widget.branchID, callback: checkStatus);
+                    },
+                    leading: Icon(
+                      Icons.wifi,
+                      color: Colors.black45,
+                    ),
+                    title: Text(ips[index]),
+                  ),
+                );
+              }),
+        ),
+      )
+          :
+      CircularPercentIndicator(
+          footer: Container(
+              margin: EdgeInsets.only(top: 10),
+              child: info
+          ),
+          circularStrokeCap: CircularStrokeCap.round,
+          radius: 90.0,
+          lineWidth: 10.0,
+          percent: percentage,
+          center: Text(
+            "${(percentage * 100).toStringAsFixed(0)} %",
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          progressColor: color.backgroundColor),
+    );
   }
 
   checkPermission() async {
@@ -86,6 +335,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
   }
 
   scan_network() async {
+    print("scan network called!!!");
     final scanner = LanScanner();
     ips = [];
 
@@ -108,91 +358,6 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
 
     stream.listen((HostModel host) {
       ips.add(host.ip);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return PopScope(
-        canPop: false,
-        child: AlertDialog(
-          title: const Text('Choose main device IP'),
-          content: isLoad ?
-          SizedBox(
-              height: 360,
-              width: MediaQuery.of(context).size.width / 4,
-              child: MediaQuery.removePadding(
-                context: context,
-                removeTop: true,
-                child: Scrollbar(
-                  controller: scrollController,
-                  thickness: 5.0,
-                  trackVisibility: true,
-                  thumbVisibility: true,
-                  radius: Radius.circular(20.0),
-                  child: ListView.builder(
-                      controller: scrollController,
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      itemCount: ips.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          elevation: 5,
-                          child: ListTile(
-                            onTap: () async  {
-                              await clientAction.connectServer(ips[index], branchObject['branchID'].toString(), callback: checkStatus);
-                            },
-                            leading: Icon(
-                              Icons.wifi,
-                              color: Colors.black45,
-                            ),
-                            title: Text('${ips[index]}'),
-                          ),
-                        );
-                      }),
-                ),
-              )) :
-          CircularPercentIndicator(
-              footer: Container(
-                  margin: EdgeInsets.only(top: 10),
-                  child: info
-              ),
-              circularStrokeCap: CircularStrokeCap.round,
-              radius: 90.0,
-              lineWidth: 10.0,
-              percent: percentage,
-              center: Text(
-                "${(percentage * 100).toStringAsFixed(0)} %",
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              progressColor: color.backgroundColor),
-          actions: [
-            Visibility(
-              visible: !isLoad ? false : true,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color.backgroundColor,
-                ),
-                child: Text(
-                  'Rescan',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onPressed: () async  {
-                  setState(() {
-                    percentage = 0.0;
-                    isLoad = false;
-                  });
-                  await scan_network();
-                },
-              ),
-            ),
-          ],
-        ),
-      );
     });
   }
 
@@ -222,16 +387,6 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
     return Directory('$path/assets');
   }
 
-  logout() async{
-    final prefs = await SharedPreferences.getInstance();
-    prefs.clear();
-    deleteDirectory();
-    displayManager.transferDataToPresentation("refresh_img");
-    //deleteFile2();
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => LoginPage()));
-  }
-
   Future<int> deleteDirectory() async {
     try {
       final folder = await _localDirectory;
@@ -243,4 +398,15 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
       return 0;
     }
   }
+
+  logout() async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    deleteDirectory();
+    displayManager.transferDataToPresentation("refresh_img");
+    //deleteFile2();
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => LoginPage()));
+  }
 }
+
