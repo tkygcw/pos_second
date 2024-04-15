@@ -89,8 +89,6 @@ class _CartDialogState extends State<CartDialog> {
                 if (tableList[targetIndex].status == 1 && tableList[dragIndex].status == 0) {
                   await mergeTable(dragTableId: tableList[dragIndex].table_sqlite_id!, targetTableId: tableList[targetIndex].table_sqlite_id!);
                   //await _printTableAddList(dragTable: tableList[dragIndex].number, targetTable: tableList[targetIndex].number);
-                  cart.removeAllTable();
-                  cart.removeAllCartItem();
                 } else {
                   Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "${AppLocalizations.of(context)?.translate('merge_error_2')}");
                 }
@@ -552,6 +550,177 @@ class _CartDialogState extends State<CartDialog> {
     );
   }
 
+  readAllTable({isReset}) async {
+    isLoad = false;
+    await clientAction.connectRequestPort(action: '7', callback: decodeData);
+  }
+
+  decodeData(response){
+    try{
+      if(response != null && mounted){
+        var json = jsonDecode(response);
+        switch(json['status']){
+          case '1': {
+            Iterable value1 = json['data']['table_list'];
+            tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+            //var cart = Provider.of<CartModel>(context, listen: false);
+            cartSelectedTableList = cart.selectedTable;
+            if(cartSelectedTableList.isNotEmpty){
+              checkTable(tableList);
+            }
+            setState(() {
+              isLoad = true;
+            });
+          }
+          break;
+          default: {
+            clientAction.openReconnectDialog(action: json['action'], callback: decodeData);
+          }
+        }
+      }
+    }catch(e){
+      print('inti table error: $e');
+      tableList = [];
+    }
+  }
+
+  checkTable(List<PosTable> tableList){
+    if(cartSelectedTableList[0].status == 0){
+      for (int j = 0; j < tableList.length; j++) {
+        for (int i = 0; i < cartSelectedTableList.length; i++) {
+          if(tableList[j].table_sqlite_id == cartSelectedTableList[i].table_sqlite_id){
+            if(cartSelectedTableList[i].status == 0){
+              tableList[j].isSelected = true;
+            }
+          }
+        }
+      }
+    } else {
+      String selectedTableGroup = cartSelectedTableList[0].group!;
+      List<PosTable> sameGroupTable = tableList.where((e) => e.group == selectedTableGroup).toList();
+      for (int j = 0; j < tableList.length; j++) {
+        for (int i = 0; i < sameGroupTable.length; i++) {
+          if(tableList[j].table_sqlite_id == sameGroupTable[i].table_sqlite_id){
+            tableList[j].isSelected = true;
+          }
+        }
+      }
+      if(sameGroupTable.length != cartSelectedTableList.length){
+        cartSelectedTableList.clear();
+        if(sameGroupTable.isNotEmpty){
+          cart.addAllTable(sameGroupTable);
+        } else{
+          cart.removeAllCartItem();
+        }
+      }
+    }
+  }
+
+  readSpecificTableDetail(PosTable posTable) async {
+    try{
+      await clientAction.connectRequestPort(action: '10', param: jsonEncode(posTable), callback: decodeData2);
+      //addToCart(cart);
+    } catch(e){
+      print("response error: $e");
+    }
+  }
+
+  decodeData2(response) {
+    var json = jsonDecode(response);
+    switch(json['status']){
+      case '1': {
+        Iterable value1 = json['data']['order_detail'];
+        Iterable value2 = json['data']['order_cache'];
+        orderDetailList = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
+        orderCacheList = value2.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
+        // this.isLoad = true;
+        if(orderDetailList.isNotEmpty){
+          addToCart();
+        }
+        Navigator.of(context).pop();
+      }break;
+      default: {
+        clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData2);
+      }
+    }
+  }
+
+  addToCart() {
+    getSelectedTable();
+    for (int i = 0; i < orderDetailList.length; i++) {
+      cartProductItem value = cartProductItem(
+        branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
+        product_name: orderDetailList[i].productName!,
+        category_id: orderDetailList[i].product_category_id!,
+        price: orderDetailList[i].price!,
+        quantity: int.tryParse(orderDetailList[i].quantity!) != null ? int.parse(orderDetailList[i].quantity!) : double.parse(orderDetailList[i].quantity!),
+        orderModifierDetail: orderDetailList[i].orderModifierDetail,
+        //modifier: getModifierGroupItem(orderDetailList[i]),
+        //variant: getVariantGroupItem(orderDetailList[i]),
+        productVariantName: orderDetailList[i].product_variant_name,
+        remark: orderDetailList[i].remark!,
+        unit: orderDetailList[i].unit,
+        per_quantity_unit: orderDetailList[i].per_quantity_unit,
+        status: 1,
+        category_sqlite_id: orderDetailList[i].category_sqlite_id,
+        first_cache_created_date_time: orderCacheList.last.created_at,  //orderCacheList[0].created_at,
+        first_cache_batch: orderCacheList.last.batch_id,
+        first_cache_order_by: orderCacheList.last.order_by,
+      );
+      cart.addItem(value);
+    }
+  }
+
+  void getSelectedTable(){
+    if(tableList.isNotEmpty){
+      List<PosTable> selectedTableList = tableList.where((e) => e.isSelected == true).toList();
+      cart.addAllTable(selectedTableList);
+    }
+  }
+
+  Future<void> removeMergedTable(int table_sqlite_id) async {
+    await clientAction.connectRequestPort(action: '11', param: jsonEncode(table_sqlite_id), callback: decodeData3);
+  }
+
+  decodeData3(response) async {
+    var json = jsonDecode(response);
+    switch(json['status']){
+      case '1': {
+        PosTable posTable = tableList.firstWhere((e) => e.table_sqlite_id == int.parse(json['data']));
+        cart.removeSpecificTable(posTable);
+        await readAllTable();
+      }break;
+      default: {
+        clientAction.openReconnectDialog(action: '7', callback: decodeData);
+      }
+    }
+  }
+
+  Future<void> mergeTable({required int dragTableId, required int targetTableId}) async {
+    Map<String, int> param = {
+      "dragTableId": dragTableId,
+      "targetTableId": targetTableId
+    };
+    await clientAction.connectRequestPort(action: '12', param: jsonEncode(param), callback: decodeData4);
+  }
+
+  decodeData4(response) async {
+    cart.removeAllTable();
+    cart.removeAllCartItem();
+    var json = jsonDecode(response);
+    switch(json['status']){
+      case '1': {
+        await readAllTable();
+      }break;
+      case '4': {
+        await readAllTable();
+      }break;
+      default: {
+        clientAction.openReconnectDialog(action: '7', callback: decodeData);
+      }
+    }
+  }
+
   // _printTableAddList({dragTable, targetTable}) async {
   //   try {
   //     for (int i = 0; i < widget.printerList.length; i++) {
@@ -643,45 +812,6 @@ class _CartDialogState extends State<CartDialog> {
   //       });
   // }
 
-  readAllTable({isReset}) async {
-    isLoad = false;
-    await clientAction.connectRequestPort(action: '7', callback: decodeData);
-  }
-
-  decodeData(response){
-    try{
-      if(response != null && mounted){
-        var json = jsonDecode(response);
-        switch(json['status']){
-          case '1': {
-            Iterable value1 = json['data']['table_list'];
-            tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
-            cartSelectedTableList = Provider.of<CartModel>(context, listen: false).selectedTable;
-            if (cartSelectedTableList.isNotEmpty) {
-              for (int i = 0; i < cartSelectedTableList.length; i++) {
-                for (int j = 0; j < tableList.length; j++) {
-                  if (tableList[j].table_sqlite_id == cartSelectedTableList[i].table_sqlite_id) {
-                    tableList[j].isSelected = true;
-                  }
-                }
-              }
-            }
-            setState(() {
-              isLoad = true;
-            });
-          }
-          break;
-          default: {
-            clientAction.openReconnectDialog(action: json['action'], callback: decodeData);
-          }
-        }
-      }
-    }catch(e){
-      print('inti table error: $e');
-      tableList = [];
-    }
-  }
-
   // resetAllTable() async {
   //   List<PosTable> data = await PosDatabase.instance.readAllTable();
   //   for (int j = 0; j < tableList.length; j++) {
@@ -713,109 +843,6 @@ class _CartDialogState extends State<CartDialog> {
   //   }
   //   controller.add('refresh');
   // }
-
-  readSpecificTableDetail(PosTable posTable) async {
-    try{
-      await clientAction.connectRequestPort(action: '10', param: jsonEncode(posTable), callback: decodeData2);
-      //addToCart(cart);
-    } catch(e){
-      print("response error: $e");
-    }
-  }
-
-  decodeData2(response) {
-    var json = jsonDecode(response);
-    switch(json['status']){
-      case '1': {
-        Iterable value1 = json['data']['order_detail'];
-        Iterable value2 = json['data']['order_cache'];
-        orderDetailList = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
-        orderCacheList = value2.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
-        // this.isLoad = true;
-        if(orderDetailList.isNotEmpty){
-          addToCart();
-        }
-        Navigator.of(context).pop();
-      }break;
-      default: {
-        clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData2);
-      }
-    }
-  }
-
-  addToCart() {
-    getSelectedTable();
-    for (int i = 0; i < orderDetailList.length; i++) {
-      cartProductItem value = cartProductItem(
-        branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
-        product_name: orderDetailList[i].productName!,
-        category_id: orderDetailList[i].product_category_id!,
-        price: orderDetailList[i].price!,
-        quantity: int.tryParse(orderDetailList[i].quantity!) != null ? int.parse(orderDetailList[i].quantity!) : double.parse(orderDetailList[i].quantity!),
-        orderModifierDetail: orderDetailList[i].orderModifierDetail,
-        //modifier: getModifierGroupItem(orderDetailList[i]),
-        //variant: getVariantGroupItem(orderDetailList[i]),
-        productVariantName: orderDetailList[i].product_variant_name,
-        remark: orderDetailList[i].remark!,
-        unit: orderDetailList[i].unit,
-        per_quantity_unit: orderDetailList[i].per_quantity_unit,
-        status: 1,
-        category_sqlite_id: orderDetailList[i].category_sqlite_id,
-        first_cache_created_date_time: orderCacheList.last.created_at,  //orderCacheList[0].created_at,
-        first_cache_batch: orderCacheList.last.batch_id,
-        first_cache_order_by: orderCacheList.last.order_by,
-      );
-      cart.addItem(value);
-    }
-  }
-
-  void getSelectedTable(){
-    if(tableList.isNotEmpty){
-      List<PosTable> selectedTableList = tableList.where((e) => e.isSelected == true).toList();
-      cart.addAllTable(selectedTableList);
-    }
-  }
-
-  Future<void> removeMergedTable(int table_sqlite_id) async {
-    await clientAction.connectRequestPort(action: '11', param: jsonEncode(table_sqlite_id), callback: decodeData3);
-  }
-
-  decodeData3(response) async {
-    var json = jsonDecode(response);
-    switch(json['status']){
-      case '1': {
-        PosTable posTable = tableList.firstWhere((e) => e.table_sqlite_id == int.parse(json['data']));
-        cart.removeSpecificTable(posTable);
-        await readAllTable();
-      }break;
-      default: {
-        clientAction.openReconnectDialog(action: '7', callback: decodeData);
-      }
-    }
-  }
-
-  Future<void> mergeTable({required int dragTableId, required int targetTableId}) async {
-    Map<String, int> param = {
-      "dragTableId": dragTableId,
-      "targetTableId": targetTableId
-    };
-    await clientAction.connectRequestPort(action: '12', param: jsonEncode(param), callback: decodeData4);
-  }
-
-  decodeData4(response) async {
-    var json = jsonDecode(response);
-    switch(json['status']){
-      case '1': {
-        await readAllTable();
-      }break;
-      default: {
-        clientAction.openReconnectDialog(action: '7', callback: decodeData);
-      }
-    }
-  }
-
-
-
 
   // deleteCurrentTableUseDetail(int currentTableId) async {
   //   print('current delete table local id: ${currentTableId}');

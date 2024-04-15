@@ -105,15 +105,10 @@ class _CartPageState extends State<CartPage> {
 
   @override
   void initState() {
-    //controller = StreamController();
-    cartStream = cartController.stream;
     preload();
+    cartStream = cartController.stream;
     cart = context.read<CartModel>();
     cart.initBranchLinkDiningOption();
-    //calculateSubtotal();
-    // readAllBranchLinkDiningOption();
-    // getPromotionData();
-    // readAllPrinters();
     super.initState();
   }
 
@@ -125,38 +120,17 @@ class _CartPageState extends State<CartPage> {
 
   preload() async {
     await clientAction.connectRequestPort(action: '6', callback: decodeData);
-    //decodeData();
-    // clientAction.sendRequest(action: '6', param: '');
-    // await Future.delayed(const Duration(milliseconds: 3000), () {
-    //   decodeData();
-    // });
   }
 
   decodeData(response) {
     try {
       var json = jsonDecode(response);
-      // Iterable value1 = json['data']['dining_list'];
-      // diningList = List<BranchLinkDining>.from(value1.map((json) => BranchLinkDining.fromJson(json)));
-      //diningList = decodeAction.decodedBranchLinkDiningList!;
-      // Iterable value2 = json['data']['branch_link_dining_id_list'];
-      // branchLinkDiningIdList = List.from(value2);
       Iterable value3 = json['data']['promotion_list'];
       promotionList = List<Promotion>.from(value3.map((json) => Promotion.fromJson(json)));
-      print("promotion list: ${promotionList.length}");
-      // Iterable value4 = json['data']['taxLinkDiningList'];
-      // taxLinkDiningList =
-      // List<TaxLinkDining>.from(value4.map((json) => TaxLinkDining.fromJson(json)));
-      // decodeAction.cartController.sink.add("refresh");
     } catch (e) {
       print("cart decode data error: $e");
     }
   }
-
-  // calculateSubtotal(){
-  //   decodeAction.cartStream.listen((cart) async {
-  //     await getSubTotal(cart);
-  //   });
-  // }
 
   Future showSecondDialog(BuildContext context, ThemeColor color, CartModel cart,
       BranchLinkDining branchLinkDining) {
@@ -201,26 +175,6 @@ class _CartPageState extends State<CartPage> {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
         print("cart rebuild call");
-        // if(notificationModel.cartContentLoaded == true){
-        //   print('cart refresh!');
-        //   notificationModel.resetCartContentLoaded();
-        //   Future.delayed(const Duration(seconds: 1), () {
-        //     print('cart delay refresh!');
-        //     if(mounted){
-        //       setState(() {
-        //         readAllBranchLinkDiningOption();
-        //         getPromotionData();
-        //         getSubTotal(cart);
-        //         getReceiptPaymentDetail(cart);
-        //       });
-        //     }
-        //   });
-        // }
-        //print("method in here will keep calling");
-        // widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'qr_order' || widget.currentPage == 'other_order'
-        //     ? getSubTotal(cart)
-        //     : getReceiptPaymentDetail(cart);
-        //this.cart = cart;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           getSubTotal();
         });
@@ -255,7 +209,6 @@ class _CartPageState extends State<CartPage> {
                           ),
                           color: color.backgroundColor,
                           onPressed: () {
-                            //tableDialog(context);
                             openReprintKitchenDialog();
                           },
                         );
@@ -278,7 +231,6 @@ class _CartPageState extends State<CartPage> {
                         ),
                         color: color.backgroundColor,
                         onPressed: () {
-                          //tableDialog(context);
                           openChooseTableDialog(cart);
                         },
                       ),
@@ -352,39 +304,28 @@ class _CartPageState extends State<CartPage> {
                                   children: List.generate(diningList.length, (index) {
                                     return InkWell(
                                       onTap: () {
-                                        widget.currentPage == 'menu'
-                                            ? cart.cartNotifierItem.isEmpty
-                                            ? setState(() {
+                                        widget.currentPage == 'menu' ? cart.cartNotifierItem.isEmpty ? setState(() {
                                           cart.removeAllTable();
                                           cart.selectedOption = diningList[index].name!;
                                           cart.selectedOptionId = diningList[index].dining_id!;
                                           print("cart selected option: ${cart.selectedOption}");
-                                          print(
-                                              "cart selected option id: ${cart.selectedOptionId}");
-                                        })
-                                            : cart.cartNotifierItem.isNotEmpty &&
-                                            cart.cartNotifierItem[0].status != 1 &&
-                                            cart.selectedOption != diningList[index].name!
-                                            ? setState(() {
+                                          print("cart selected option id: ${cart.selectedOptionId}");
+                                        }) : cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem[0].status != 1 && cart.selectedOption != diningList[index].name! ?
+                                        setState(() {
                                           showSecondDialog(context, color, cart, diningList[index]);
-                                        })
-                                            : null
+                                        }) : null
                                             : null;
                                       },
                                       child: Container(
-                                          color: cart.selectedOption == diningList[index].name!
-                                              ? color.buttonColor
-                                              : color.backgroundColor,
+                                          color: cart.selectedOption == diningList[index].name! ?
+                                          color.buttonColor : color.backgroundColor,
                                           alignment: Alignment.center,
                                           child: Text(
                                             diningList[index].name!,
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.w600,
-                                                color: cart.selectedOption ==
-                                                    diningList[index].name!
-                                                    ? color.iconColor
-                                                    : Colors.white,
+                                                color: cart.selectedOption == diningList[index].name! ? color.iconColor : Colors.white,
                                                 fontSize: 16),
                                           )),
                                     );
@@ -433,18 +374,14 @@ class _CartPageState extends State<CartPage> {
                                                   text: '${cart.cartNotifierItem[index].product_name!}\n',
                                                   style: TextStyle(
                                                       fontSize: 14,
-                                                      color: cart.cartNotifierItem[index].status ==
-                                                          1 ? font : cart.cartNotifierItem[index]
-                                                          .refColor,
+                                                      color: cart.cartNotifierItem[index].status == 1 ? font : cart.cartNotifierItem[index].refColor,
                                                       fontWeight: FontWeight.bold),
                                                 ),
                                                 TextSpan(
                                                     text: "RM${cart.cartNotifierItem[index].price!}",
                                                     style: TextStyle(
                                                       fontSize: 13,
-                                                      color: cart.cartNotifierItem[index].status ==
-                                                          1 ? font : cart.cartNotifierItem[index]
-                                                          .refColor,
+                                                      color: cart.cartNotifierItem[index].status == 1 ? font : cart.cartNotifierItem[index].refColor,
                                                     )),
                                               ],
                                             ),
@@ -457,9 +394,7 @@ class _CartPageState extends State<CartPage> {
                                             child: Row(
                                               children: [
                                                 Visibility(
-                                                  visible: widget.currentPage == 'menu'
-                                                      ? true
-                                                      : false,
+                                                  visible: widget.currentPage == 'menu' ? true : false,
                                                   child: IconButton(
                                                       hoverColor: Colors.transparent,
                                                       icon: Icon(Icons.remove),
@@ -646,8 +581,7 @@ class _CartPageState extends State<CartPage> {
                                         itemCount: orderTaxList.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text('${orderTaxList[index]
-                                                .tax_name}(${orderTaxList[index].rate}%)',
+                                            title: Text('${orderTaxList[index].tax_name}(${orderTaxList[index].rate}%)',
                                                 style: TextStyle(fontSize: 14)),
                                             trailing: Text('${orderTaxList[index].tax_amount}',
                                                 style: TextStyle(fontSize: 14)),
@@ -755,9 +689,7 @@ class _CartPageState extends State<CartPage> {
                                                 if(mounted){
                                                   Fluttertoast.showToast(
                                                       backgroundColor: Colors.red,
-                                                      msg: AppLocalizations.of(context)!
-                                                          .translate(
-                                                          'make_sure_cart_is_not_empty_and_table_is_selected'));
+                                                      msg: AppLocalizations.of(context)!.translate('make_sure_cart_is_not_empty_and_table_is_selected'));
                                                 }
                                               }
                                             } else {
@@ -1028,10 +960,6 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-  readAllPrinters() async {
-    //printerList = await printReceipt.readAllPrinters();
-  }
-
 /*
   -----------------------Cart-item-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */
@@ -1145,7 +1073,7 @@ class _CartPageState extends State<CartPage> {
   calPromotion(CartModel cart) {
     promoAmount = 0.0;
     getAutoApplyPromotion(cart);
-    getManualApplyPromotion(cart);
+    // getManualApplyPromotion(cart);
     // if (!controller.isClosed) {
     //   controller.sink.add('refresh');
     // }
@@ -1417,6 +1345,7 @@ class _CartPageState extends State<CartPage> {
       hasPromo = false;
       if (cart.cartNotifierItem.isNotEmpty) {
         //loop promotion list get promotion
+        print("promotion list: ${promotionList.length}");
         for (int j = 0; j < promotionList.length; j++) {
           promotionList[j].promoAmount = 0.0;
           //check is the promotion auto apply
@@ -2129,6 +2058,18 @@ class _CartPageState extends State<CartPage> {
           Navigator.of(context).pop();
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           showOutOfStockDialog(json['data']['cartItem']);
+        }break;
+        case '3': {
+          // updateBranchLinkProductData(json['data']['tb_branch_link_product']);
+          Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+          Navigator.of(context).pop();
+          cart.initialLoad();
+        }break;
+        case '4': {
+          // updateBranchLinkProductData(json['data']['tb_branch_link_product']);
+          Fluttertoast.showToast(msg: json['exception']);
+          Navigator.of(context).pop();
+          cart.initialLoad();
         }break;
         default: {
           clientAction.openReconnectDialog(action: '15', callback: (response){

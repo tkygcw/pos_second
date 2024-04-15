@@ -10,6 +10,7 @@ import 'package:optimy_second_device/fragment/qr_order/qr_main_page.dart';
 import 'package:optimy_second_device/fragment/qr_order/qr_order_page.dart';
 import 'package:optimy_second_device/fragment/reconnect_dialog.dart';
 import 'package:optimy_second_device/fragment/setting/device_setting.dart';
+import 'package:optimy_second_device/fragment/setting/setting.dart';
 import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -169,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                             currentPage != 'setting' &&
                             currentPage != 'settlement' &&
                             currentPage != 'qr_order' &&
-                            currentPage != 'device_setting' &&
+                            currentPage != 'setting' &&
                             currentPage != 'report'
                             ? true
                             : false,
@@ -238,9 +239,9 @@ class _HomePageState extends State<HomePage> {
       //   onPressed: () => setState(() => currentPage = 'other_order'),
       // ),
       CollapsibleItem(
-        text: 'Device setting',
-        icon: Icons.devices,
-        onPressed: () => setState(() => currentPage = 'device_setting'),
+        text: 'Setting',
+        icon: Icons.settings,
+        onPressed: () => setState(() => currentPage = 'setting'),
       ),
       // CollapsibleItem(
       //   text: 'Counter',
@@ -279,8 +280,8 @@ class _HomePageState extends State<HomePage> {
       //   return BillPage();
       case 'other_order':
         return OtherOrderPage();
-      case 'device_setting':
-        return DeviceSetting();
+      case 'setting':
+        return SettingMenu();
       // case 'report':
       //   return InitReportPage();
       // case 'settlement':

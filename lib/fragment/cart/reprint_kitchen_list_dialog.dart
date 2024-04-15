@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:confirm_dialog/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_function.dart';
+import 'package:optimy_second_device/fragment/custom_flushbar.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
@@ -264,9 +265,16 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   void responseStatusCheck(response){
     var json = jsonDecode(response);
     print("status: ${json['status']}");
-     if (json['status'] == '2'){
-      model.removeAllFailedOrderDetail();
-      Navigator.of(context).pop();
+    switch(json['status']){
+      case '0': {
+        if(mounted){
+          clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: responseStatusCheck);
+        }
+      }break;
+      case '2': {
+        model.removeAllFailedOrderDetail();
+        Navigator.of(context).pop();
+      }break;
     }
   }
 

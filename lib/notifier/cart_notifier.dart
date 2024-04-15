@@ -29,6 +29,15 @@ class CartModel extends ChangeNotifier {
     'subtotal': this.subtotal
   };
 
+  List<int> getSelectedTableIdList(){
+    List<int> idList = selectedTable.map((e) => e.table_sqlite_id!).toList();
+    return idList;
+    // for(int i = 0; i < selectedTable.length; i++){
+    //   idList.add(selectedTable[i].table_sqlite_id!);
+    // }
+    // return idList;
+  }
+
   void initBranchLinkDiningOption() {
     List<BranchLinkDining> data = decodeAction.decodedBranchLinkDiningList!;
     if (data.length == 3) {
@@ -117,13 +126,13 @@ class CartModel extends ChangeNotifier {
   }
 
   void removePartialCartItem(){
-    List<cartProductItem> _removeItem = [];
+    List<cartProductItem> removeItem = [];
     for(int j = 0; j < cartNotifierItem.length; j++){
       if(cartNotifierItem[j].status == 0){
-        _removeItem.add(cartNotifierItem[j]);
+        removeItem.add(cartNotifierItem[j]);
       }
     }
-    cartNotifierItem.removeWhere((element) => _removeItem.contains(element));
+    cartNotifierItem.removeWhere((element) => removeItem.contains(element));
   }
 
   void addTable(PosTable posTable){

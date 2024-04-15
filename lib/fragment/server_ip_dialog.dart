@@ -54,9 +54,19 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
       return PopScope(
         canPop: false,
         child: AlertDialog(
-          title: const Text('Connect Main Device IP'),
+          title: Row(
+            children: [
+              Text(AppLocalizations.of(context)!.translate("connect_server_device")),
+              Spacer(),
+              IconButton(
+                  onPressed: () async {
+                    await logout();
+                  },
+                  color: Colors.red,
+                  icon: Icon(Icons.logout))
+            ],
+          ),
           content: isLoaded ? SizedBox(
-            height: 500,
             width: 500,
             child: DefaultTabController(
               length: 2,
@@ -64,21 +74,22 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TabBar(
-                    isScrollable: true,
+                    isScrollable: false,
                     unselectedLabelColor: Colors.black,
                     labelColor: color.buttonColor,
                     indicatorColor: color.buttonColor,
                     indicatorSize: TabBarIndicatorSize.tab,
                     tabs: [
-                      Tab(text: 'Type IP'),
-                      Tab(text: 'Scan IP')
+                      Tab(icon: Icon(Icons.keyboard_alt_outlined)),
+                      Tab(icon: Icon(Icons.radar_outlined))
                     ],
                   ),
-                  SizedBox(height: 25),
+                  SizedBox(height: 15),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: TabBarView(
+                        physics: NeverScrollableScrollPhysics(),
                         children: [
                           TypeIpView(branchID: branchObject['branchID'].toString()),
                           ScanIpView(branchID: branchObject['branchID'].toString()),
@@ -90,30 +101,42 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
               ),
             ),
           ) : CustomProgressBar(),
-          actions: [
-            // Visibility(
-            //   visible: !isLoad ? false : true,
-            //   child: ElevatedButton(
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: color.backgroundColor,
-            //     ),
-            //     child: Text(
-            //       'Rescan',
-            //       style: TextStyle(color: Colors.white),
-            //     ),
-            //     onPressed: () async  {
-            //       setState(() {
-            //         percentage = 0.0;
-            //         isLoad = false;
-            //       });
-            //       await scan_network();
-            //     },
-            //   ),
-            // ),
-          ],
         ),
       );
     });
+  }
+
+  Future<Directory> get _localDirectory async {
+    final directory = await getApplicationSupportDirectory();
+    final path = directory.path;
+    return Directory('$path/assets');
+  }
+
+  Future<int> deleteDirectory() async {
+    try {
+      final folder = await _localDirectory;
+      folder.delete(recursive: true);
+      print("delete successful");
+      return 1;
+    } catch (e) {
+      print(e);
+      return 0;
+    }
+  }
+
+  logout() async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    deleteDirectory();
+    displayManager.transferDataToPresentation("refresh_img");
+    //deleteFile2();
+    Navigator.of(context).pushAndRemoveUntil(
+      // the new route
+      MaterialPageRoute(
+        builder: (BuildContext context) => LoginPage(),
+      ),
+          (Route route) => false,
+    );
   }
 }
 
@@ -127,51 +150,107 @@ class TypeIpView extends StatefulWidget {
 
 class _TypeIpViewState extends State<TypeIpView> {
   final ipTextController = TextEditingController();
+  bool isSubmitted = false, waitingResponse = false;
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    print("dispose called!!!");
+    ipTextController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     var color = context.watch<ThemeColor>();
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Server IP Address',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
-        ),
-        SizedBox(height: 10),
-        ValueListenableBuilder(
-          valueListenable: ipTextController,
-          builder: (context, value, __){
-            return TextField(
-              controller: ipTextController,
-              keyboardType: TextInputType.numberWithOptions(),
-              decoration:  InputDecoration(
-                  border: OutlineInputBorder(borderSide: BorderSide(color: color.backgroundColor)),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: color.backgroundColor),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Server IP Address',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+            ),
+            SizedBox(height: 10),
+            ValueListenableBuilder(
+              valueListenable: ipTextController,
+              builder: (context, value, __){
+                return TextField(
+                  autofocus: true,
+                  enabled: waitingResponse ? false : true,
+                  controller: ipTextController,
+                  keyboardType: TextInputType.numberWithOptions(),
+                  onSubmitted: _onSubmitted,
+                  decoration:  InputDecoration(
+                      border: OutlineInputBorder(borderSide: BorderSide(color: color.backgroundColor)),
+                      errorText: isSubmitted ? errorIp == null ? errorIp : AppLocalizations.of(context)?.translate(errorIp!) : null,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: color.backgroundColor),
+                      ),
+                      hintText: 'Enter server IP',
                   ),
-                  hintText: 'Enter server IP'
-              ),
-            );
-          },
+
+                );
+              },
+            ),
+            SizedBox(height: 10),
+          ],
         ),
-        SizedBox(height: 10),
-        ElevatedButton(
+        ElevatedButton.icon(
             style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(color.backgroundColor)),
-            onPressed: () async {
-              await clientAction.connectServer(ipTextController.text, widget.branchID, callback: checkStatus);
-            },
-            child: Text("Connect"))
+            icon: waitingResponse ? CustomProgressBar() : Icon(Icons.wifi),
+            onPressed: waitingResponse ? null : _onPressed,
+            label: Visibility(visible: waitingResponse ? false : true, child: Text(AppLocalizations.of(context)!.translate("connect"))))
       ],
     );
   }
 
-  checkStatus(response) async {
+  receivedResponse() async {
+    await Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        waitingResponse = false;
+      });
+    });
+  }
+
+  String? get errorIp {
+    final text = ipTextController.value.text;
+    if (text.isEmpty) {
+      return 'ip_required';
+    }
+    return null;
+  }
+
+  _onSubmitted(String value) async {
+    setState(() {
+      isSubmitted = true;
+      waitingResponse = true;
+      FocusManager.instance.primaryFocus?.unfocus();
+    });
+    if(errorIp == null){
+      await clientAction.connectServer(ipTextController.text, widget.branchID, callback: checkStatus);
+    }
+  }
+
+  _onPressed() async {
+    setState(() {
+      isSubmitted = true;
+      waitingResponse = true;
+      FocusManager.instance.primaryFocus?.unfocus();
+    });
+    if(errorIp == null){
+      await clientAction.connectServer(ipTextController.text, widget.branchID, callback: checkStatus);
+    }
+  }
+
+  void checkStatus(response) async {
     var json = jsonDecode(response);
     print('status: ${json['status']}');
     switch(json['status']){
       case '0': {
-        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Connection failed, Please check internet connection");
+        await receivedResponse();
+        Fluttertoast.showToast(backgroundColor: Colors  .redAccent, msg: "Connection failed, Please check internet connection");
       } break;
       case '1': {
         print("case 1 called!!!");
@@ -181,6 +260,7 @@ class _TypeIpViewState extends State<TypeIpView> {
         await logout();
       }break;
       default: {
+        await receivedResponse();
         Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Request action not found, Please check server POS version");
       }
     }
@@ -216,6 +296,7 @@ class _TypeIpViewState extends State<TypeIpView> {
 }
 
 
+
 class ScanIpView extends StatefulWidget {
   final String branchID;
   const ScanIpView({Key? key, required this.branchID}) : super(key: key);
@@ -225,6 +306,7 @@ class ScanIpView extends StatefulWidget {
 }
 
 class _ScanIpViewState extends State<ScanIpView> {
+  StreamController streamController = StreamController();
   final ScrollController scrollController = ScrollController();
   late Stream serverIpStream;
   late Map branchObject;
@@ -237,66 +319,114 @@ class _ScanIpViewState extends State<ScanIpView> {
   @override
   void initState() {
     // TODO: implement initState
-    checkPermission();
+    FocusManager.instance.primaryFocus?.unfocus();
     super.initState();
   }
   @override
+  void dispose() {
+    // TODO: implement dispose
+    streamController.sink.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     var color = context.watch<ThemeColor>();
-    return Center(
-      child: isLoad ? MediaQuery.removePadding(
-        context: context,
-        removeTop: true,
-        child: Scrollbar(
-          controller: scrollController,
-          thickness: 5.0,
-          trackVisibility: true,
-          thumbVisibility: true,
-          radius: Radius.circular(20.0),
-          child: ListView.builder(
-              controller: scrollController,
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              itemCount: ips.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  elevation: 5,
-                  child: ListTile(
-                    onTap: () async  {
-                      await clientAction.connectServer(ips[index], widget.branchID, callback: checkStatus);
-                    },
-                    leading: Icon(
-                      Icons.wifi,
-                      color: Colors.black45,
-                    ),
-                    title: Text(ips[index]),
+    return StreamBuilder(
+      stream: streamController.stream,
+      builder: (context, snapshot) {
+        if(snapshot.hasData){
+          if(snapshot.data == 'done'){
+            return Center(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: Scrollbar(
+                  controller: scrollController,
+                  thickness: 5.0,
+                  trackVisibility: true,
+                  thumbVisibility: true,
+                  radius: Radius.circular(20.0),
+                  child: Stack(
+                    children: [
+                      ListView.builder(
+                          controller: scrollController,
+                          padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                          shrinkWrap: true,
+                          itemCount: ips.length,
+                          itemBuilder: (context, index) {
+                            return Card(
+                              elevation: 5,
+                              child: ListTile(
+                                onTap: () async  {
+                                  await clientAction.connectServer(ips[index], widget.branchID, callback: checkStatus);
+                                },
+                                leading: Icon(
+                                  Icons.wifi,
+                                  color: Colors.black45,
+                                ),
+                                title: Text(ips[index]),
+                              ),
+                            );
+                          }),
+                      Container(
+                        alignment: Alignment.bottomRight,
+                        padding: EdgeInsets.all(15),
+                        child: FloatingActionButton(
+                          onPressed: () async {
+                            streamController.add("scanning");
+                            await checkPermission();
+                          },
+                          child: Icon(Icons.radar),
+                        ),
+                      )
+                    ],
+                  )
+                ),
+              ),
+            );
+          } else {
+            return CircularPercentIndicator(
+                addAutomaticKeepAlive: false,
+                footer: Container(
+                    margin: EdgeInsets.only(top: 10),
+                    child: info
+                ),
+                circularStrokeCap: CircularStrokeCap.round,
+                radius: 90.0,
+                lineWidth: 10.0,
+                percent: percentage,
+                center: Text(
+                  "${(percentage * 100).toStringAsFixed(0)} %",
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
                   ),
-                );
-              }),
-        ),
-      )
-          :
-      CircularPercentIndicator(
-          footer: Container(
-              margin: EdgeInsets.only(top: 10),
-              child: info
-          ),
-          circularStrokeCap: CircularStrokeCap.round,
-          radius: 90.0,
-          lineWidth: 10.0,
-          percent: percentage,
-          center: Text(
-            "${(percentage * 100).toStringAsFixed(0)} %",
-            style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
+                ),
+                progressColor: color.backgroundColor);
+          }
+        } else {
+          return Center(
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width / 4,
+              height: MediaQuery.of(context).size.height / 12,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  streamController.add("scanning");
+                  await checkPermission();
+                },
+                label: Text(AppLocalizations.of(context)!.translate("start_scan")),
+                icon: Icon(Icons.radar),
+              ),
             ),
-          ),
-          progressColor: color.backgroundColor),
+          );
+        }
+      }
     );
   }
 
   checkPermission() async {
+    percentage = 0.0;
     Location location = Location();
     //check location permission is granted or not
     var permissionGranted = await location.hasPermission();
@@ -347,10 +477,15 @@ class _ScanIpViewState extends State<ScanIpView> {
     final stream = scanner.icmpScan(subnet, progressCallback: (progress) {
       if (mounted) {
         setState(() {
-          info = Text('Scanning device within $wifiName');
+          if(wifiName != null){
+            info = Text('Scanning device within $wifiName');
+          } else {
+            info = Text('Scanning device');
+          }
           percentage = progress;
           if (percentage == 1.0) {
-            isLoad = true;
+            streamController.sink.add("done");
+            // isLoad = true;
           }
         });
       }
