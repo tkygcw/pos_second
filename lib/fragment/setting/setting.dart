@@ -61,7 +61,6 @@ class _SettingMenuState extends State<SettingMenu> {
                     footer: SideNavigationBarFooter(
                         label: Column(
                           children: [
-                            // Text("${userEmail}"),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.backgroundColor,
@@ -133,31 +132,21 @@ class _SettingMenuState extends State<SettingMenu> {
                       footer: SideNavigationBarFooter(
                           label: Column(
                             children: [
-                              // Text("${userEmail}"),
-                              // ElevatedButton(
-                              //   style: ElevatedButton.styleFrom(
-                              //     backgroundColor: color.backgroundColor,
-                              //   ),
-                              //   onPressed: () async {
-                              //     bool _hasInternetAccess = await Domain().isHostReachable();
-                              //     if(this.cashRecordList.isEmpty){
-                              //       if(_hasInternetAccess){
-                              //         notificationModel.setTimer(true);
-                              //         toPosPinPage();
-                              //       } else {
-                              //         Fluttertoast.showToast(
-                              //             backgroundColor: Colors.red,
-                              //             msg: "${AppLocalizations.of(context)?.translate('check_internet_connection')}");
-                              //       }
-                              //     } else {
-                              //       Fluttertoast.showToast(
-                              //           backgroundColor: Colors.red,
-                              //           msg: "${AppLocalizations.of(context)?.translate('log_out_settlement')}");
-                              //     }
-                              //
-                              //   },
-                              //   child: Text(AppLocalizations.of(context)!.translate('close_counter')),
-                              // ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: color.backgroundColor,
+                                ),
+                                onPressed: () async {
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(
+                                      builder: (BuildContext context) => PosPinPage(),
+                                    ),
+                                        (Route route) => false,
+                                  );
+
+                                },
+                                child: Text(AppLocalizations.of(context)!.translate('back_to_pos_pin')),
+                              ),
                             ],
                           )),
                       theme: SideNavigationBarTheme(

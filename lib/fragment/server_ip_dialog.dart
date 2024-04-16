@@ -20,9 +20,7 @@ import '../page/login.dart';
 import '../translation/AppLocalizations.dart';
 
 class ServerIpDialog extends StatefulWidget {
-  final String? currentPage;
-  final Function() callBack;
-  const ServerIpDialog({Key? key, required this.callBack, this.currentPage}) : super(key: key);
+  const ServerIpDialog({Key? key}) : super(key: key);
 
   @override
   State<ServerIpDialog> createState() => _ServerIpDialogState();
@@ -53,54 +51,112 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return PopScope(
         canPop: false,
-        child: AlertDialog(
-          title: Row(
-            children: [
-              Text(AppLocalizations.of(context)!.translate("connect_server_device")),
-              Spacer(),
-              IconButton(
-                  onPressed: () async {
-                    await logout();
-                  },
-                  color: Colors.red,
-                  icon: Icon(Icons.logout))
-            ],
-          ),
-          content: isLoaded ? SizedBox(
-            width: 500,
-            child: DefaultTabController(
-              length: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TabBar(
-                    isScrollable: false,
-                    unselectedLabelColor: Colors.black,
-                    labelColor: color.buttonColor,
-                    indicatorColor: color.buttonColor,
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    tabs: [
-                      Tab(icon: Icon(Icons.keyboard_alt_outlined)),
-                      Tab(icon: Icon(Icons.radar_outlined))
-                    ],
-                  ),
-                  SizedBox(height: 15),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: TabBarView(
-                        physics: NeverScrollableScrollPhysics(),
-                        children: [
-                          TypeIpView(branchID: branchObject['branchID'].toString()),
-                          ScanIpView(branchID: branchObject['branchID'].toString()),
-                        ],
-                      ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if(constraints.maxWidth > 800){
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Text(AppLocalizations.of(context)!.translate("connect_server_device")),
+                    Spacer(),
+                    IconButton(
+                        onPressed: () async {
+                          await logout();
+                        },
+                        color: Colors.red,
+                        icon: Icon(Icons.logout))
+                  ],
+                ),
+                content: isLoaded ? SizedBox(
+                  width: 500,
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TabBar(
+                          isScrollable: false,
+                          unselectedLabelColor: Colors.black,
+                          labelColor: color.buttonColor,
+                          indicatorColor: color.buttonColor,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          tabs: [
+                            Tab(icon: Icon(Icons.keyboard_alt_outlined)),
+                            Tab(icon: Icon(Icons.radar_outlined))
+                          ],
+                        ),
+                        SizedBox(height: 15),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: TabBarView(
+                              physics: NeverScrollableScrollPhysics(),
+                              children: [
+                                TypeIpView(branchID: branchObject['branchID'].toString()),
+                                ScanIpView(branchID: branchObject['branchID'].toString(), isMobile: false),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ) : CustomProgressBar(),
+              ); 
+            }else {
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Text(AppLocalizations.of(context)!.translate("connect_server_device")),
+                  ],
+                ),
+                content: isLoaded ? SizedBox(
+                  height: 300,
+                  width: 500,
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TabBar(
+                          isScrollable: false,
+                          unselectedLabelColor: Colors.black,
+                          labelColor: color.buttonColor,
+                          indicatorColor: color.buttonColor,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          tabs: [
+                            Tab(icon: Icon(Icons.keyboard_alt_outlined)),
+                            Tab(icon: Icon(Icons.radar_outlined))
+                          ],
+                        ),
+                        SizedBox(height: 15),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: TabBarView(
+                              physics: NeverScrollableScrollPhysics(),
+                              children: [
+                                TypeIpView(branchID: branchObject['branchID'].toString()),
+                                ScanIpView(branchID: branchObject['branchID'].toString(), isMobile: true),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ) : CustomProgressBar(),
+                actions: [
+                  ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      onPressed: logout,
+                      icon: Icon(Icons.logout),
+                      label: Text(AppLocalizations.of(context)!.translate("logout")))
                 ],
-              ),
-            ),
-          ) : CustomProgressBar(),
+              );
+            }
+          }
         ),
       );
     });
@@ -124,7 +180,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
     }
   }
 
-  logout() async{
+  Future<void> logout() async{
     final prefs = await SharedPreferences.getInstance();
     prefs.clear();
     deleteDirectory();
@@ -199,9 +255,9 @@ class _TypeIpViewState extends State<TypeIpView> {
         ),
         ElevatedButton.icon(
             style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(color.backgroundColor)),
-            icon: waitingResponse ? CustomProgressBar() : Icon(Icons.wifi),
+            icon: Icon(Icons.wifi),
             onPressed: waitingResponse ? null : _onPressed,
-            label: Visibility(visible: waitingResponse ? false : true, child: Text(AppLocalizations.of(context)!.translate("connect"))))
+            label: Text(AppLocalizations.of(context)!.translate("connect")))
       ],
     );
   }
@@ -250,7 +306,7 @@ class _TypeIpViewState extends State<TypeIpView> {
     switch(json['status']){
       case '0': {
         await receivedResponse();
-        Fluttertoast.showToast(backgroundColor: Colors  .redAccent, msg: "Connection failed, Please check internet connection");
+        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Connection failed, Please check internet connection");
       } break;
       case '1': {
         print("case 1 called!!!");
@@ -298,8 +354,9 @@ class _TypeIpViewState extends State<TypeIpView> {
 
 
 class ScanIpView extends StatefulWidget {
+  final bool isMobile;
   final String branchID;
-  const ScanIpView({Key? key, required this.branchID}) : super(key: key);
+  const ScanIpView({Key? key, required this.branchID, required this.isMobile}) : super(key: key);
 
   @override
   State<ScanIpView> createState() => _ScanIpViewState();
@@ -338,18 +395,19 @@ class _ScanIpViewState extends State<ScanIpView> {
         if(snapshot.hasData){
           if(snapshot.data == 'done'){
             return Center(
-              child: MediaQuery.removePadding(
-                context: context,
-                removeTop: true,
-                child: Scrollbar(
-                  controller: scrollController,
-                  thickness: 5.0,
-                  trackVisibility: true,
-                  thumbVisibility: true,
-                  radius: Radius.circular(20.0),
-                  child: Stack(
-                    children: [
-                      ListView.builder(
+              child: widget.isMobile ?
+              RefreshIndicator(
+                onRefresh: checkPermission,
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: Scrollbar(
+                      controller: scrollController,
+                      thickness: 5.0,
+                      trackVisibility: true,
+                      thumbVisibility: true,
+                      radius: Radius.circular(20.0),
+                      child: ListView.builder(
                           controller: scrollController,
                           padding: EdgeInsets.only(left: 10.0, right: 10.0),
                           shrinkWrap: true,
@@ -369,19 +427,54 @@ class _ScanIpViewState extends State<ScanIpView> {
                               ),
                             );
                           }),
-                      Container(
-                        alignment: Alignment.bottomRight,
-                        padding: EdgeInsets.all(15),
-                        child: FloatingActionButton(
-                          onPressed: () async {
-                            streamController.add("scanning");
-                            await checkPermission();
-                          },
-                          child: Icon(Icons.radar),
-                        ),
-                      )
-                    ],
-                  )
+                  ),
+                ),
+              )
+                  :
+              MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                child: Scrollbar(
+                    controller: scrollController,
+                    thickness: 5.0,
+                    trackVisibility: true,
+                    thumbVisibility: true,
+                    radius: Radius.circular(20.0),
+                    child: Stack(
+                      children: [
+                        ListView.builder(
+                            controller: scrollController,
+                            padding: EdgeInsets.only(left: 10.0, right: 10.0),
+                            shrinkWrap: true,
+                            itemCount: ips.length,
+                            itemBuilder: (context, index) {
+                              return Card(
+                                elevation: 5,
+                                child: ListTile(
+                                  onTap: () async  {
+                                    await clientAction.connectServer(ips[index], widget.branchID, callback: checkStatus);
+                                  },
+                                  leading: Icon(
+                                    Icons.wifi,
+                                    color: Colors.black45,
+                                  ),
+                                  title: Text(ips[index]),
+                                ),
+                              );
+                            }),
+                        Container(
+                          alignment: Alignment.bottomRight,
+                          padding: EdgeInsets.all(15),
+                          child: FloatingActionButton(
+                            onPressed: () async {
+                              streamController.add("scanning");
+                              await checkPermission();
+                            },
+                            child: Icon(Icons.radar),
+                          ),
+                        )
+                      ],
+                    )
                 ),
               ),
             );
@@ -407,12 +500,20 @@ class _ScanIpViewState extends State<ScanIpView> {
           }
         } else {
           return Center(
-            child: SizedBox(
+            child: widget.isMobile ?
+            ElevatedButton.icon(
+              onPressed: () async {
+                // streamController.add("scanning");
+                await checkPermission();
+              },
+              label: Text(AppLocalizations.of(context)!.translate("start_scan")),
+              icon: Icon(Icons.radar),
+            ) :
+            SizedBox(
               width: MediaQuery.of(context).size.width / 4,
               height: MediaQuery.of(context).size.height / 12,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  streamController.add("scanning");
                   await checkPermission();
                 },
                 label: Text(AppLocalizations.of(context)!.translate("start_scan")),
@@ -425,7 +526,8 @@ class _ScanIpViewState extends State<ScanIpView> {
     );
   }
 
-  checkPermission() async {
+  Future<void> checkPermission() async {
+    streamController.add("scanning");
     percentage = 0.0;
     Location location = Location();
     //check location permission is granted or not

@@ -54,7 +54,7 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
                     Navigator.of(context).pushAndRemoveUntil(
                       // the new route
                       MaterialPageRoute(
-                        builder: (BuildContext context) => ServerIpDialog(callBack: () {}, currentPage: "login"),
+                        builder: (BuildContext context) => ServerIpDialog(),
                       ),
 
                       // this function should return true when we're done removing routes

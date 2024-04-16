@@ -164,10 +164,7 @@ class _LoginPageState extends State<LoginPage> {
     final int? device_id = prefs.getInt('device_id');
     if (user != '' && user != null && branch_id != '' && branch_id != null && device_id != '' && device_id != null) {
       Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => ServerIpDialog(
-            currentPage: "login",
-            callBack: () => {}
-        ),
+        builder: (context) => ServerIpDialog(),
       ));
       return;
     }
