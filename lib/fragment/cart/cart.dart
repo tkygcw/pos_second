@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -2082,33 +2083,55 @@ class _CartPageState extends State<CartPage> {
 
   Future<void> showOutOfStockDialog(response) async {
     List<cartProductItem> item = List<cartProductItem>.from(response.map((json) => cartProductItem.fromJson(json)));
-
     return showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context){
           return AlertDialog(
-            title: Text("Product out of stock"),
-            content: SizedBox(
-              width: 300,
-              child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: item.where((e) => e.status == 0).toList().length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      title: Text(item[index].product_name!),
-                      subtitle: Text(getCartVariant(item[index]) + getCartModifier(item[index])),
-                      trailing: Text("x${item[index].quantity}\nStock left: ${getStockLeft(item[index])}", textAlign: TextAlign.right),
-                    );
-                  },
-                  separatorBuilder: (BuildContext context, int index) => const Divider()),
+            title: Text(AppLocalizations.of(context)!.translate("product_out_of_stock")),
+            content: Container(
+              constraints: BoxConstraints(maxHeight: 400),
+              width: 350,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${AppLocalizations.of(context)!.translate("total_item")}: ${item.where((e) => e.status == 0).toList().length}'),
+                    SizedBox(height: 10),
+                    ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: item.where((e) => e.status == 0).toList().length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            elevation: 5,
+                            child: ListTile(
+                              isThreeLine: true,
+                              title: Text(item[index].product_name!, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                              subtitle: Text(getCartVariant(item[index]) + getCartModifier(item[index])),
+                              trailing: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text("x${item[index].quantity}"),
+                                  Text("${AppLocalizations.of(context)!.translate("available_stock")}: ${getStockLeft(item[index])}", style: TextStyle(color: Colors.red),)
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                    )
+                        // separatorBuilder: (BuildContext context, int index) => const Divider()),
+                  ],
+                ),
+              ),
             ),
             actions: [
               ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                   onPressed: (){
                     Navigator.of(context).pop();
                   },
-                  child: Text("Close"))
+                  child: Text(AppLocalizations.of(context)!.translate("close")))
             ],
           );
         });
