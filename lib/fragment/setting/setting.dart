@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 
@@ -61,6 +62,7 @@ class _SettingMenuState extends State<SettingMenu> {
                     footer: SideNavigationBarFooter(
                         label: Column(
                           children: [
+                            Text("IP: ${clientAction.deviceIp}"),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.backgroundColor,

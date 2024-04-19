@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/server_ip_dialog.dart';
+import 'package:optimy_second_device/object/client_action.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,19 +22,11 @@ class ReconnectDialog extends StatefulWidget {
 
 class _ReconnectDialogState extends State<ReconnectDialog> {
   bool isButtonDisable = false;
-  late Map branchObject;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getPreferences();
-  }
-
-  getPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? branch = prefs.getString('branch');
-    branchObject = json.decode(branch!);
   }
 
 
@@ -80,7 +73,7 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
                       print("else called!!!");
                       widget.callback!();
                     }
-                    await clientAction.connectServer(clientAction.serverIp!, branchObject['branchID'].toString(), callback: checkStatus);
+                    await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
                     // if(reconnectStatus == true){
                     //   notificationModel.showReconnectDialog = false;
                     //   Navigator.of(context).pop();
@@ -112,7 +105,7 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
     final prefs = await SharedPreferences.getInstance();
     prefs.clear();
     deleteDirectory();
-    displayManager.transferDataToPresentation("refresh_img");
+    // displayManager.transferDataToPresentation("refresh_img");
     //deleteFile2();
     Navigator.of(context).pushReplacement(MaterialPageRoute(
         builder: (context) => LoginPage()));

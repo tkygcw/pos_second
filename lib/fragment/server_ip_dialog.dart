@@ -27,24 +27,24 @@ class ServerIpDialog extends StatefulWidget {
 }
 
 class _ServerIpDialogState extends State<ServerIpDialog> {
-  late Map branchObject;
+  // late Map branchObject;
   bool isLoaded = false;
 
   @override
   void initState() {
     // TODO: implement initState
-    getPreferences();
+    // getPreferences();
     super.initState();
   }
 
-  getPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? branch = prefs.getString('branch');
-    branchObject = json.decode(branch!);
-    setState(() {
-      isLoaded = true;
-    });
-  }
+  // getPreferences() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final String? branch = prefs.getString('branch');
+  //   branchObject = json.decode(branch!);
+  //   setState(() {
+  //     isLoaded = true;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +67,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                         icon: Icon(Icons.logout))
                   ],
                 ),
-                content: isLoaded ? SizedBox(
+                content: SizedBox(
                   width: 500,
                   child: DefaultTabController(
                     length: 2,
@@ -92,8 +92,8 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                             child: TabBarView(
                               physics: NeverScrollableScrollPhysics(),
                               children: [
-                                TypeIpView(branchID: branchObject['branchID'].toString()),
-                                ScanIpView(branchID: branchObject['branchID'].toString(), isMobile: false),
+                                TypeIpView(),
+                                ScanIpView(isMobile: false),
                               ],
                             ),
                           ),
@@ -101,7 +101,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                       ],
                     ),
                   ),
-                ) : CustomProgressBar(),
+                )
               ); 
             }else {
               return AlertDialog(
@@ -137,8 +137,8 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                             child: TabBarView(
                               physics: NeverScrollableScrollPhysics(),
                               children: [
-                                TypeIpView(branchID: branchObject['branchID'].toString()),
-                                ScanIpView(branchID: branchObject['branchID'].toString(), isMobile: true),
+                                TypeIpView(),
+                                ScanIpView(isMobile: true),
                               ],
                             ),
                           ),
@@ -197,8 +197,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
 }
 
 class TypeIpView extends StatefulWidget {
-  final String branchID;
-  const TypeIpView({Key? key, required this.branchID}) : super(key: key);
+  const TypeIpView({Key? key}) : super(key: key);
 
   @override
   State<TypeIpView> createState() => _TypeIpViewState();
@@ -285,7 +284,7 @@ class _TypeIpViewState extends State<TypeIpView> {
       FocusManager.instance.primaryFocus?.unfocus();
     });
     if(errorIp == null){
-      await clientAction.connectServer(ipTextController.text, widget.branchID, callback: checkStatus);
+      await clientAction.connectServer(ipTextController.text, callback: checkStatus);
     }
   }
 
@@ -296,7 +295,7 @@ class _TypeIpViewState extends State<TypeIpView> {
       FocusManager.instance.primaryFocus?.unfocus();
     });
     if(errorIp == null){
-      await clientAction.connectServer(ipTextController.text, widget.branchID, callback: checkStatus);
+      await clientAction.connectServer(ipTextController.text, callback: checkStatus);
     }
   }
 
@@ -355,8 +354,7 @@ class _TypeIpViewState extends State<TypeIpView> {
 
 class ScanIpView extends StatefulWidget {
   final bool isMobile;
-  final String branchID;
-  const ScanIpView({Key? key, required this.branchID, required this.isMobile}) : super(key: key);
+  const ScanIpView({Key? key, required this.isMobile}) : super(key: key);
 
   @override
   State<ScanIpView> createState() => _ScanIpViewState();
@@ -417,7 +415,7 @@ class _ScanIpViewState extends State<ScanIpView> {
                               elevation: 5,
                               child: ListTile(
                                 onTap: () async  {
-                                  await clientAction.connectServer(ips[index], widget.branchID, callback: checkStatus);
+                                  await clientAction.connectServer(ips[index], callback: checkStatus);
                                 },
                                 leading: Icon(
                                   Icons.wifi,
@@ -452,7 +450,7 @@ class _ScanIpViewState extends State<ScanIpView> {
                                 elevation: 5,
                                 child: ListTile(
                                   onTap: () async  {
-                                    await clientAction.connectServer(ips[index], widget.branchID, callback: checkStatus);
+                                    await clientAction.connectServer(ips[index], callback: checkStatus);
                                   },
                                   leading: Icon(
                                     Icons.wifi,

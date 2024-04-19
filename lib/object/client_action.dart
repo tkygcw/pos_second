@@ -39,7 +39,18 @@ class ClientAction {
     return _deviceIp;
   }
 
-  connectServer(String ips, String branchId, {Function? callback}) async {
+  Future<Map> getPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? branch = prefs.getString('branch');
+    return json.decode(branch!);
+  }
+
+  void disconnectFromServer(){
+    socket.destroy();
+  }
+
+  connectServer(String ips, {Function? callback}) async {
+    Map branchObject = await getPreferences();
     notificationModel.showReconnectDialog = false;
     int i = 0;
     Map<String, dynamic>? result;
@@ -50,13 +61,13 @@ class ClientAction {
       socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
     }catch(e){
       print('connect server error: $e');
-      Map<String, dynamic> result = {'status': '0'};
+      Map<String, dynamic> result = {'status': '0', 'exception': e.toString()};
       serverCallBack!(jsonEncode(result));
       return;
     }
     serverIp = ips;
     //send first request to server side
-    result = {'action': '-1', 'param': branchId};
+    result = {'action': '-1', 'param': branchObject['branchID'].toString()};
     socket.write('${jsonEncode(result)}\n');
 
     //socket stream listen for data
