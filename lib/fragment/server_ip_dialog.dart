@@ -110,7 +110,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                     Text(AppLocalizations.of(context)!.translate("connect_server_device")),
                   ],
                 ),
-                content: isLoaded ? SizedBox(
+                content: SizedBox(
                   height: 300,
                   width: 500,
                   child: DefaultTabController(
@@ -146,7 +146,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                       ],
                     ),
                   ),
-                ) : CustomProgressBar(),
+                ),
                 actions: [
                   ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

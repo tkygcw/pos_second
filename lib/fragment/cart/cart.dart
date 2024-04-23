@@ -309,8 +309,6 @@ class _CartPageState extends State<CartPage> {
                                           cart.removeAllTable();
                                           cart.selectedOption = diningList[index].name!;
                                           cart.selectedOptionId = diningList[index].dining_id!;
-                                          print("cart selected option: ${cart.selectedOption}");
-                                          print("cart selected option id: ${cart.selectedOptionId}");
                                         }) : cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem[0].status != 1 && cart.selectedOption != diningList[index].name! ?
                                         setState(() {
                                           showSecondDialog(context, color, cart, diningList[index]);
@@ -379,7 +377,7 @@ class _CartPageState extends State<CartPage> {
                                                       fontWeight: FontWeight.bold),
                                                 ),
                                                 TextSpan(
-                                                    text: "RM${cart.cartNotifierItem[index].price!}",
+                                                    text: "RM${cart.cartNotifierItem[index].price!} (${getCartUnit(cart.cartNotifierItem[index])})",
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       color: cart.cartNotifierItem[index].status == 1 ? font : cart.cartNotifierItem[index].refColor,
@@ -402,7 +400,7 @@ class _CartPageState extends State<CartPage> {
                                                       onPressed: () {
                                                         if (cart.cartNotifierItem[index].status == 0) {
                                                           if (cart.cartNotifierItem[index].quantity! > 1) {
-                                                            if (cart.cartNotifierItem[index].unit != 'each') {
+                                                            if (cart.cartNotifierItem[index].unit != 'each' && cart.cartNotifierItem[index].unit != 'each_c') {
                                                               setState(() {
                                                                 cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1).ceilToDouble();
                                                               });
@@ -874,6 +872,14 @@ class _CartPageState extends State<CartPage> {
         );
       });
     });
+  }
+
+  String getCartUnit(cartProductItem productItem){
+    if(productItem.unit != 'each' && productItem.unit! != 'each_c'){
+      return productItem.per_quantity_unit! + productItem.unit!;
+    } else {
+      return 'each';
+    }
   }
 
   checkProductStock(CartModel cart, cartProductItem cartItem) {
