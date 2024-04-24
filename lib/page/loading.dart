@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/page/pos_pin.dart';
@@ -77,6 +78,7 @@ class _LoadingPageState extends State<LoadingPage> {
       switch(json['status']){
         case '1': {
           decodeAction.decodeAllFunction(response);
+          initAppSetting();
           if(decodeAction.decodedProductList != null && decodeAction.decodedProductList!.isNotEmpty){
             await _createProductImgFolder();
           } else {
@@ -87,6 +89,14 @@ class _LoadingPageState extends State<LoadingPage> {
           clientAction.openReconnectDialog(action: json['action'], callback: checkStatus);
         }
       }
+    }
+  }
+
+  initAppSetting(){
+    if(decodeAction.decodedAppSetting!.show_sku == 1){
+      AppSettingModel.instance.setShowSKUStatus(true);
+    } else {
+      AppSettingModel.instance.setShowSKUStatus(false);
     }
   }
 

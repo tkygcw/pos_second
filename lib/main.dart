@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/object/decode_action.dart';
 import 'package:optimy_second_device/object/table.dart';
 import 'package:optimy_second_device/page/loading.dart';
@@ -99,6 +100,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (_) => FailPrintModel.instance,
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AppSettingModel.instance,
         ),
       ],
       child: Consumer<AppLanguage>(builder: (context, model, child) {

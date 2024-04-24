@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/setting/general_setting.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
@@ -30,6 +31,7 @@ class _SettingMenuState extends State<SettingMenu> {
 
   getView(){
     views = [
+      GeneralSetting(),
       DeviceSetting(),
     ];
     setState(() {
@@ -41,7 +43,7 @@ class _SettingMenuState extends State<SettingMenu> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return LayoutBuilder(builder: (context,  constraints) {
-        if(constraints.maxWidth > 800){
+        if(constraints.maxWidth > 900 && constraints.maxHeight > 500){
           return Padding(
             padding: EdgeInsets.fromLTRB(8, 10, 8, 8),
             child: this.isLoaded ?
@@ -67,14 +69,13 @@ class _SettingMenuState extends State<SettingMenu> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.backgroundColor,
                               ),
-                              onPressed: () async {
+                              onPressed: () {
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
                                     builder: (BuildContext context) => PosPinPage(),
                                   ),
                                       (Route route) => false,
                                 );
-
                               },
                               child: Text(AppLocalizations.of(context)!.translate('back_to_pos_pin')),
                             ),
@@ -91,8 +92,12 @@ class _SettingMenuState extends State<SettingMenu> {
                     selectedIndex: selectedIndex,
                     items: [
                       SideNavigationBarItem(
+                        icon: Icons.settings,
+                        label: AppLocalizations.of(context)!.translate("general_setting"),
+                      ),
+                      SideNavigationBarItem(
                         icon: Icons.devices_other,
-                        label: "Device setting",
+                        label: AppLocalizations.of(context)!.translate("device_setting"),
                       ),
                     ],
                     onTap: (index) {
@@ -101,7 +106,6 @@ class _SettingMenuState extends State<SettingMenu> {
                       });
                     },
                   ),
-
                   /// Make it take the rest of the available width
                   Expanded(
                     child: views.elementAt(selectedIndex),
@@ -162,8 +166,12 @@ class _SettingMenuState extends State<SettingMenu> {
                       selectedIndex: selectedIndex,
                       items: [
                         SideNavigationBarItem(
+                          icon: Icons.settings,
+                          label: AppLocalizations.of(context)!.translate("general_setting"),
+                        ),
+                        SideNavigationBarItem(
                           icon: Icons.devices_other,
-                          label: "Device setting",
+                          label: AppLocalizations.of(context)!.translate("device_setting"),
                         ),
                       ],
                       onTap: (index) {

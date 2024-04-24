@@ -30,8 +30,8 @@ class _DeviceSettingState extends State<DeviceSetting> {
           child: Column(
             children: [
               ListTile(
-                title: Text("Quick connect server IP"),
-                subtitle: Text("Server device IP: ${ClientAction.instance.serverIp}"),
+                title: Text(AppLocalizations.of(context)!.translate('quick_connect_server_ip'), style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
+                subtitle: Text("${AppLocalizations.of(context)!.translate('server_device_ip')}: ${ClientAction.instance.serverIp}"),
                 trailing: Icon(Icons.link),
                 onTap: () async {
                   await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
@@ -48,7 +48,7 @@ class _DeviceSettingState extends State<DeviceSetting> {
               Card(
                 color: Colors.green,
                 child: ListTile(
-                  title: Text("Sync data", style: TextStyle(color: Colors.white)),
+                  title: Text(AppLocalizations.of(context)!.translate('sync'), style: TextStyle(color: Colors.white)),
                   trailing: Icon(Icons.sync, color: Colors.white),
                   onTap: () {
                     Navigator.of(context).pushAndRemoveUntil(

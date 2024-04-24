@@ -2062,14 +2062,15 @@ class _CartPageState extends State<CartPage> {
           cart.initialLoad();
         }break;
         case '2': {
-          Navigator.of(context).pop();
+          //product out of stock
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
+          Navigator.of(context).pop();
           showOutOfStockDialog(json['data']['cartItem']);
         }break;
         case '3': {
-          // updateBranchLinkProductData(json['data']['tb_branch_link_product']);
-          Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+          updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
+          Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
           cart.initialLoad();
         }break;
         case '4': {

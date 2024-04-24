@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +29,7 @@ class FoodMenu extends StatefulWidget {
 
 class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
+  late final AppSettingModel appSetting;
   List<Tab> categoryTab = [];
   List<Widget> categoryTabContent = [];
   List<String> categoryList = [];
@@ -44,6 +46,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
 
   @override
   void initState() {
+    appSetting = Provider.of<AppSettingModel>(context, listen: false);
     readAllCategories();
     super.initState();
     //sendRequest();
@@ -152,8 +155,9 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   }
 
   void refresh() {
-    isLoading = false;
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
   }
 
   // decodeData() {
@@ -206,6 +210,14 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   //   });
   // }
 
+  String getSKU(String sku){
+    if(appSetting.showSKUStatus == true){
+      return sku;
+    }else {
+      return '';
+    }
+  }
+
   readAllCategories({NotificationModel? model}) async {
     print("read all category");
     categoryList.clear();
@@ -257,7 +269,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
                           width: 200,
                           alignment: Alignment.center,
                           child: Text(
-                            data[index].SKU! + ' ' + data[index].name!,
+                            '${getSKU(data[index].SKU!)} ${data[index].name!}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -283,8 +295,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(
-                  decoration: (data[index].graphic_type == '2'
-                      ? //BoxDecoration(color: Colors.grey)
+                  decoration: (data[index].graphic_type == '2' ?
                   BoxDecoration(image: DecorationImage(image: FileImage(File(imagePath + '/' + data[index].image!)), fit: BoxFit.cover))
                       : BoxDecoration(color: HexColor(data[index].color!))),
                   child: InkWell(
@@ -302,7 +313,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
                           width: 200,
                           alignment: Alignment.center,
                           child: Text(
-                            data[index].SKU! + ' ' + data[index].name!,
+                            '${getSKU(data[index].SKU!)} ${data[index].name!}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(

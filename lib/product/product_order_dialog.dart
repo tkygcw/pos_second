@@ -203,7 +203,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                       children: [
                         Container(
                           constraints: BoxConstraints(maxWidth: 300),
-                          child: Text(widget.productDetail!.name!,
+                          child: Text(productName,
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -277,7 +277,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                             keyboardType: TextInputType.text,
                                             textAlign: TextAlign.center,
                                             decoration: InputDecoration(
-                                              errorText: nameController.text.isEmpty ? "${AppLocalizations.of(context)?.translate('product_name_empty')}" : null,
+                                              errorText: getErrorText(nameController.text),
                                               focusedBorder: OutlineInputBorder(
                                                 borderSide: BorderSide(color: color.backgroundColor),
                                               ),
@@ -290,7 +290,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                               }
                                             }),
                                             onSubmitted: (value) {
-                                              if(productName.isNotEmpty){
+                                              if(productName.isNotEmpty || productName == ''){
                                                 setState(() {
                                                   productName = value;
                                                 });
@@ -329,7 +329,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                             inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                                             textAlign: TextAlign.center,
                                             decoration: InputDecoration(
-                                              errorText: priceController.text.isEmpty || priceController.text == '' ? "${AppLocalizations.of(context)?.translate('product_price_empty')}" : null,
+                                              errorText: getPriceErrorText(priceController.text),
                                               prefixText: 'RM ',
                                               focusedBorder: OutlineInputBorder(
                                                 borderSide: BorderSide(color: color.backgroundColor),
@@ -373,7 +373,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Quantity",
+                                        AppLocalizations.of(context)!.translate('quantity'),
                                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                       ),
                                     ],
@@ -517,10 +517,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                               isButtonDisabled = true;
                             });
                           },
-                          child: Text(
-                            'Close',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: Text('${AppLocalizations.of(context)?.translate('close')}')
                         ),
                       ),
                       SizedBox(
@@ -531,16 +528,13 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                             backgroundColor: color.buttonColor,
                           ),
                           onPressed: isButtonDisabled ? null : ()  {
-                            if((priceController.text.isEmpty || priceController.text == '') || (nameController.text.isEmpty || nameController.text == '')){
+                            if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
                               Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
                             } else {
                               _productStockStatusAction();
                             }
                           },
-                          child: Text(
-                            'ADD',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: Text('${AppLocalizations.of(context)?.translate('add')}')
                         ),
                       ),
                     ],
@@ -554,7 +548,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           children: [
                             Container(
                               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width / 2),
-                              child: Text(widget.productDetail!.name!,
+                              child: Text(productName,
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -626,6 +620,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                 keyboardType: TextInputType.text,
                                                 textAlign: TextAlign.center,
                                                 decoration: InputDecoration(
+                                                  errorText: getErrorText(nameController.text),
                                                   focusedBorder: OutlineInputBorder(
                                                     borderSide: BorderSide(color: color.backgroundColor),
                                                   ),
@@ -677,6 +672,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                 inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))],
                                                 textAlign: TextAlign.center,
                                                 decoration: InputDecoration(
+                                                  errorText: getPriceErrorText(priceController.text),
                                                   prefixText: 'RM ',
                                                   focusedBorder: OutlineInputBorder(
                                                     borderSide: BorderSide(color: color.backgroundColor),
@@ -851,9 +847,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                             height: MediaQuery.of(context).size.height / 10,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
-                              onPressed: isButtonDisabled
-                                  ? null
-                                  : () {
+                              onPressed: isButtonDisabled ? null : () {
                                 // Disable the button after it has been pressed
                                 setState(() {
                                   isButtonDisabled = true;
@@ -870,8 +864,12 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.buttonColor,
                               ),
-                              onPressed: isButtonDisabled ? null : () async {
-                                _productStockStatusAction();
+                              onPressed: isButtonDisabled ? null : () {
+                                if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
+                                  Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
+                                } else {
+                                  _productStockStatusAction();
+                                }
                               },
                               child: Text('${AppLocalizations.of(context)?.translate('add')}'),
                             ),
@@ -889,6 +887,22 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         );
       });
     });
+  }
+
+  String? getErrorText(String textInController){
+    if(textInController.isEmpty || textInController.trim().isEmpty){
+      return "${AppLocalizations.of(context)?.translate('product_name_empty')}";
+    } else {
+      return null;
+    }
+  }
+
+  String? getPriceErrorText(String textInController){
+    if(textInController.isEmpty || textInController.trim().isEmpty){
+      return "${AppLocalizations.of(context)?.translate('product_price_empty')}";
+    } else {
+      return null;
+    }
   }
 
   Future<Future<Object?>> openChooseTableDialog(CartModel cartModel) async {

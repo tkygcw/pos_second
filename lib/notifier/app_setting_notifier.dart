@@ -1,16 +1,10 @@
 import 'package:flutter/cupertino.dart';
 
 class AppSettingModel extends ChangeNotifier {
-  bool? directPaymentStatus;
-  bool? autoPrintChecklist;
-  bool? autoPrintReceipt;
-  bool? show_sku;
-  bool? enable_numbering;
-  int? starting_number;
-  bool? table_order;
+  static final AppSettingModel instance = AppSettingModel.init();
+  bool? _show_sku;
 
-  AppSettingModel({this.directPaymentStatus, this.autoPrintChecklist, this.autoPrintReceipt, this.show_sku, this.enable_numbering, this.starting_number, this.table_order});
-
+  AppSettingModel.init();
   // void initialLoad() async {
   //   AppSetting? data = await PosDatabase.instance.readAppSetting();
   //   if (data != null) {
@@ -24,33 +18,11 @@ class AppSettingModel extends ChangeNotifier {
   //   }
   // }
 
-  void setDirectPaymentStatus(bool status) {
-    directPaymentStatus = status;
-    notifyListeners();
-  }
-
-  void setPrintChecklistStatus(bool status) {
-    autoPrintChecklist = status;
-    notifyListeners();
-  }
-
-  void setPrintReceiptStatus(bool status) {
-    autoPrintReceipt = status;
-    notifyListeners();
-  }
+  bool? get showSKUStatus => _show_sku;
 
   void setShowSKUStatus(bool status) {
-    show_sku = status;
+    _show_sku = status;
     notifyListeners();
   }
 
-  void setOrderNumberingStatus(bool status) {
-    enable_numbering = status;
-    notifyListeners();
-  }
-
-  void setTableOrderStatus(bool status) {
-    table_order = status;
-    notifyListeners();
-  }
 }
