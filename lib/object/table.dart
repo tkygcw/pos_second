@@ -12,9 +12,11 @@ class PosTableFields {
     table_use_key,
     status,
     sync_status,
+    dx,
+    dy,
     created_at,
     updated_at,
-    soft_delete
+    soft_delete,
   ];
 
   static String table_sqlite_id = 'table_sqlite_id';
@@ -27,6 +29,8 @@ class PosTableFields {
   static String table_use_key = 'table_use_key';
   static String status = 'status';
   static String sync_status = 'sync_status';
+  static String dx = 'table_dx';
+  static String dy = 'table_dy';
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
@@ -43,14 +47,17 @@ class PosTable{
   String? table_use_key;
   int? status;
   int? sync_status;
+  String? dx;
+  String? dy;
   String? created_at;
   String? updated_at;
   String? soft_delete;
-  double? total_Amount = 0.0;
+  String? total_amount;
   String? group;
   String? card_color;
   bool isSelected = false;
   String? qrOrderUrl;
+
 
   PosTable(
       {this.table_sqlite_id,
@@ -63,13 +70,15 @@ class PosTable{
         this.table_use_key,
         this.status,
         this.sync_status,
+        this.dx,
+        this.dy,
         this.created_at,
         this.updated_at,
         this.soft_delete,
-        this.total_Amount,
         this.group,
         this.card_color,
         this.qrOrderUrl,
+        this.total_amount
       });
 
   PosTable copy({
@@ -83,42 +92,52 @@ class PosTable{
     String? table_use_key,
     int? status,
     int? sync_status,
+    String? dx,
+    String? dy,
     String? created_at,
     String? updated_at,
     String? soft_delete,
+
   }) =>
       PosTable(
-          table_sqlite_id: table_sqlite_id ?? this.table_sqlite_id,
-          table_url: table_url ?? this.table_url,
-          table_id: table_id ?? this.table_id,
-          branch_id: branch_id ?? this.branch_id,
-          number: number ?? this.number,
-          seats: seats ?? this.seats,
-          status: status ?? this.status,
-          table_use_detail_key: table_use_detail_key ?? this.table_use_detail_key,
-          table_use_key: table_use_key ?? this.table_use_key,
-          sync_status: sync_status ?? this.sync_status,
-          created_at: created_at ?? this.created_at,
-          updated_at: updated_at ?? this.updated_at,
-          soft_delete: soft_delete ?? this.soft_delete);
+        table_sqlite_id: table_sqlite_id ?? this.table_sqlite_id,
+        table_url: table_url ?? this.table_url,
+        table_id: table_id ?? this.table_id,
+        branch_id: branch_id ?? this.branch_id,
+        number: number ?? this.number,
+        seats: seats ?? this.seats,
+        status: status ?? this.status,
+        dx: dx ?? this.dx,
+        dy: dy ?? this.dy,
+        table_use_detail_key: table_use_detail_key ?? this.table_use_detail_key,
+        table_use_key: table_use_key ?? this.table_use_key,
+        sync_status: sync_status ?? this.sync_status,
+        created_at: created_at ?? this.created_at,
+        updated_at: updated_at ?? this.updated_at,
+        soft_delete: soft_delete ?? this.soft_delete,
 
-  static PosTable fromJson(Map<String, Object?> json) => PosTable  (
-    table_sqlite_id: json[PosTableFields.table_sqlite_id] as int?,
-    table_url: json[PosTableFields.table_url] as String?,
-    table_id: json[PosTableFields.table_id] as int?,
-    branch_id: json[PosTableFields.branch_id] as String?,
-    number: json[PosTableFields.number] as String?,
-    seats: json[PosTableFields.seats] as String?,
-    table_use_detail_key: json[PosTableFields.table_use_detail_key] as String?,
-    table_use_key: json[PosTableFields.table_use_key] as String?,
-    status: json[PosTableFields.status] as int?,
-    sync_status: json[PosTableFields.sync_status] as int?,
-    created_at: json[PosTableFields.created_at] as String?,
-    updated_at: json[PosTableFields.updated_at] as String?,
-    soft_delete: json[PosTableFields .soft_delete] as String?,
-    total_Amount: json['total_amount'] as double?,
-    group: json['group'] as String?,
-    card_color: json['card_color'] as String?
+      );
+
+  static PosTable fromJson(Map<String, Object?> json) => PosTable(
+      table_sqlite_id: json[PosTableFields.table_sqlite_id] as int?,
+      table_url: json[PosTableFields.table_url] as String?,
+      table_id: json[PosTableFields.table_id] as int?,
+      branch_id: json[PosTableFields.branch_id] as String?,
+      number: json[PosTableFields.number] as String?,
+      seats: json[PosTableFields.seats] as String?,
+      table_use_detail_key: json[PosTableFields.table_use_detail_key] as String?,
+      table_use_key: json[PosTableFields.table_use_key] as String?,
+      status: json[PosTableFields.status] as int?,
+      sync_status: json[PosTableFields.sync_status] as int?,
+      dx: json[PosTableFields.dx] as String?,
+      dy: json[PosTableFields.dy] as String?,
+      created_at: json[PosTableFields.created_at] as String?,
+      updated_at: json[PosTableFields.updated_at] as String?,
+      soft_delete: json[PosTableFields .soft_delete] as String?,
+      group: json['group'] as String?,
+      card_color: json['card_color'] as String?,
+      total_amount: json['total_amount'] as String?
+
   );
 
   Map<String, Object?> toJson() => {
@@ -132,12 +151,14 @@ class PosTable{
     PosTableFields.table_use_key: table_use_key,
     PosTableFields.status: status,
     PosTableFields.sync_status: sync_status,
+    PosTableFields.dx: dx,
+    PosTableFields.dy: dy,
     PosTableFields.created_at: created_at,
     PosTableFields.updated_at: updated_at,
     PosTableFields.soft_delete: soft_delete,
     'group': group,
     'card_color': card_color,
-    'total_amount': total_Amount
+    'total_amount': total_amount
   };
 
 

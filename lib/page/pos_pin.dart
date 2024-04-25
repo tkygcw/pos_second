@@ -10,6 +10,7 @@ import 'package:optimy_second_device/main.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:custom_pin_screen/custom_pin_screen.dart';
+import 'package:collection/collection.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
@@ -158,8 +159,8 @@ class _PosPinPageState extends State<PosPinPage> {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return LayoutBuilder(builder: (context, constraints) {
         if (constraints.maxWidth > 800) {
-          return WillPopScope(
-            onWillPop: () async => false,
+          return PopScope(
+            canPop: false,
             child: Scaffold(
               body: Container(
                 decoration: BoxDecoration(
@@ -239,7 +240,7 @@ class _PosPinPageState extends State<PosPinPage> {
                           onCompleted: (v) {
                             if (v.length == 6) {
                               //verifyUser(v);
-                              //userCheck(v);
+                              userCheck(v);
                             }
                           },
                           maxLength: 6,
@@ -284,9 +285,8 @@ class _PosPinPageState extends State<PosPinPage> {
     List<User>? userList = decodeAction.decodedUserList;
     // final prefs = await SharedPreferences.getInstance();
     // final int? branch_id = prefs.getInt('branch_id');
-    User? user = userList?.firstWhere((item) => item.pos_pin == pos_pin);  //await PosDatabase.instance.verifyPosPin(pos_pin, branch_id.toString());
-    print('user data: ${user}');
-    if (user != '' && user != null) {
+    User? user = userList?.firstWhereOrNull((item) => item.pos_pin == pos_pin);  //await PosDatabase.instance.verifyPosPin(pos_pin, branch_id.toString());
+    if (user != null) {
       print('log in pos pin success');
         Navigator.push(
           context,
@@ -298,42 +298,8 @@ class _PosPinPageState extends State<PosPinPage> {
             ),
           ),
         );
-      // if (await settlementCheck(user) == true) {
-      //   if(this.isLogOut == true){
-      //     openLogOutDialog();
-      //     return;
-      //   }
-      //   print('pop a start cash dialog');
-      //   Navigator.push(
-      //     context,
-      //     PageTransition(
-      //       type: PageTransitionType.fade,
-      //       child: HomePage(
-      //         user: user,
-      //         isNewDay: true,
-      //       ),
-      //     ),
-      //   );
-      // } else {
-      //   print('direct to home page');
-      //   if(this.isLogOut == true){
-      //     openLogOutDialog();
-      //     return;
-      //   }
-      //   Navigator.push(
-      //     context,
-      //     PageTransition(
-      //       type: PageTransitionType.fade,
-      //       child: HomePage(
-      //         user: user,
-      //         isNewDay: false,
-      //       ),
-      //     ),
-      //   );
-      // }
     } else {
-      Fluttertoast.showToast(backgroundColor: Colors.red, msg: "Wrong pin. Please insert valid pin");
-
+      Fluttertoast.showToast(backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('wrong_pin_please_insert_valid_pin'));
     }
   }
 

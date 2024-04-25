@@ -1,8 +1,8 @@
+
+
 import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/variant_item.dart';
 
-import 'branch_link_product.dart';
-import 'categories.dart';
 import 'modifier_item.dart';
 import 'order_modifier_detail.dart';
 
@@ -26,10 +26,14 @@ class OrderDetailFields {
     quantity,
     remark,
     account,
+    edited_by,
+    edited_by_user_id,
     cancel_by,
     cancel_by_user_id,
     status,
     sync_status,
+    unit,
+    per_quantity_unit,
     created_at,
     updated_at,
     soft_delete
@@ -51,10 +55,14 @@ class OrderDetailFields {
   static String quantity = 'quantity';
   static String remark = 'remark';
   static String account = 'account';
+  static String edited_by = 'edited_by';
+  static String edited_by_user_id = 'edited_by_user_id';
   static String cancel_by = 'cancel_by';
   static String cancel_by_user_id = 'cancel_by_user_id';
   static String status = 'status';
   static String sync_status = 'sync_status';
+  static String unit = 'unit';
+  static String per_quantity_unit = 'per_quantity_unit';
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
@@ -77,10 +85,14 @@ class OrderDetail{
   String? quantity;
   String? remark;
   String? account;
+  String? edited_by;
+  String? edited_by_user_id;
   String? cancel_by;
   String? cancel_by_user_id;
   int? status;
   int? sync_status;
+  String? unit;
+  String? per_quantity_unit;
   String? created_at;
   String? updated_at;
   String? soft_delete;
@@ -89,20 +101,31 @@ class OrderDetail{
   String? product_category_id;
   String? mod_item_id;
   ProductVariant? productVariant;
-  List<VariantItem>? variantItem = [];
-  List<ModifierItem>? modifierItem = [];
-  List<OrderModifierDetail>? orderModifierDetail = [];
-  List<String>? mod_group_id = [];
-  bool? hasModifier = false;
+  List<VariantItem> variantItem = [];
+  List<ModifierItem> modifierItem = [];
+  List<OrderModifierDetail>? orderModifierDetail;
+  List<String> mod_group_id = [];
+  bool hasModifier = false;
   int? category_id;
   int? branch_link_product_id;
-  int? item_sum;
+  num? category_item_sum;
+  num? item_sum;
+  double? category_net_sales;
+  double? category_gross_sales;
   double? double_price;
   double? gross_price;
   int? total_record;
   String? available_stock;
   bool? isRemove;
   String? item_cancel;
+  List<OrderDetail> categoryOrderDetailList = [];
+  bool isSelected = true;
+  List<String>? tableNumber = [];
+  String? orderQueue = '';
+  String? order_number = '';
+  String? branch_id = '';
+  String? order_created_at = '';
+  String? failPrintBatch;
 
   OrderDetail(
       {this.order_detail_sqlite_id,
@@ -121,32 +144,41 @@ class OrderDetail{
         this.quantity,
         this.remark,
         this.account,
+        this.edited_by,
+        this.edited_by_user_id,
         this.cancel_by,
         this.cancel_by_user_id,
         this.status,
         this.sync_status,
+        this.unit,
+        this.per_quantity_unit,
         this.created_at,
         this.updated_at,
         this.soft_delete,
         this.total_amount,
-        this.product_category_id,
-        this.mod_item_id,
-        this.productVariant,
-        this.variantItem,
-        this.modifierItem,
-        this.orderModifierDetail,
-        this.mod_group_id,
-        this.hasModifier,
         this.category_id,
         this.branch_link_product_id,
+        this.category_item_sum,
         this.item_sum,
+        this.category_net_sales,
+        this.category_gross_sales,
         this.double_price,
         this.gross_price,
         this.total_record,
         this.available_stock,
         this.isRemove,
-        this.item_cancel
-      });
+        this.item_cancel,
+        this.order_number,
+        this.branch_id,
+        this.order_created_at,
+        this.product_category_id,
+        this.orderModifierDetail,
+        this.tableNumber,
+        this.failPrintBatch,
+        bool? isSelected
+      }) {
+    this.isSelected = isSelected ?? true;
+  }
 
   OrderDetail copy({
     int? order_detail_sqlite_id,
@@ -165,10 +197,14 @@ class OrderDetail{
     String? quantity,
     String? remark,
     String? account,
+    String? edited_by,
+    String? edited_by_user_id,
     String? cancel_by,
     String? cancel_by_user_id,
     int? status,
     int? sync_status,
+    String? unit,
+    String? per_quantity_unit,
     String? created_at,
     String? updated_at,
     String? soft_delete
@@ -190,32 +226,23 @@ class OrderDetail{
           quantity: quantity ?? this.quantity,
           remark: remark ?? this.remark,
           account: account ?? this.account,
+          edited_by: edited_by ?? this.edited_by,
+          edited_by_user_id: edited_by_user_id ?? this.edited_by_user_id,
           cancel_by: cancel_by ?? this.cancel_by,
           cancel_by_user_id: cancel_by_user_id ?? this.cancel_by_user_id,
           status: status ?? this.status,
           sync_status: sync_status ?? this.sync_status,
+          unit: unit ?? this.unit,
+          per_quantity_unit: per_quantity_unit ?? this.per_quantity_unit,
           created_at: created_at ?? this.created_at,
           updated_at: updated_at ?? this.updated_at,
           soft_delete: soft_delete ?? this.soft_delete);
 
   static OrderDetail fromJson(Map<String, Object?> json) {
-    List<VariantItem>? variantItem;
-    List<ModifierItem>? modItem;
-    List<OrderModifierDetail>? orderModDetail;
-    if(json['variantItem'] != null){
-      var variantJson = json['variantItem'] as List;
-      variantItem = variantJson.map((tagJson) => VariantItem.fromJson(tagJson)).toList();
-    }
-    if(json['modifierItem'] != null){
-      var modJson = json['modifierItem'] as List;
-      modItem = modJson.map((tagJson) => ModifierItem.fromJson(tagJson)).toList();
-    }
-    if(json['order_modifier_detail'] != null){
-      var modJson = json['order_modifier_detail'] as List;
-      orderModDetail = modJson.map((tagJson) => OrderModifierDetail.fromJson(tagJson)).toList();
-    }
-
-    List<String> stringList = List<String>.from(json['mod_group_id'] as Iterable);
+    var orderModDetailJson = json['order_modifier_detail'] as List?;
+    var tableNumberJson = json['tableNumber'] as List?;
+    List<OrderModifierDetail>? orderModifierDetailList = orderModDetailJson?.map((tagJson) => OrderModifierDetail.fromJson(tagJson)).toList();
+    List<String> tableNumber = List<String>.from(tableNumberJson as Iterable);
     return OrderDetail(
         order_detail_sqlite_id: json[OrderDetailFields.order_detail_sqlite_id] as int?,
         order_detail_id: json[OrderDetailFields.order_detail_id] as int?,
@@ -233,32 +260,36 @@ class OrderDetail{
         quantity: json[OrderDetailFields.quantity] as String?,
         remark: json[OrderDetailFields.remark] as String?,
         account: json[OrderDetailFields.account] as String?,
+        edited_by: json[OrderDetailFields.edited_by] as String?,
+        edited_by_user_id: json[OrderDetailFields.edited_by_user_id] as String?,
         cancel_by: json[OrderDetailFields.cancel_by] as String?,
         cancel_by_user_id: json[OrderDetailFields.cancel_by_user_id] as String?,
         status: json[OrderDetailFields.status] as int?,
         sync_status: json[OrderDetailFields.sync_status] as int?,
+        unit: json[OrderDetailFields.unit] as String?,
+        per_quantity_unit: json[OrderDetailFields.per_quantity_unit] as String?,
         created_at: json[OrderDetailFields.created_at] as String?,
         updated_at: json[OrderDetailFields.updated_at] as String?,
         soft_delete: json[OrderDetailFields.soft_delete] as String?,
+        total_amount: json['total_amount'] as String?,
+        category_id: json['category_id'] as int?,
+        branch_link_product_id: json['branch_link_product_id'] as int?,
+        category_item_sum: json['category_item_sum'] as num?,
+        item_sum: json['item_sum'] as num?,
+        category_net_sales: json['category_net_sales'] as double?,
+        category_gross_sales: json['category_gross_sales'] as double?,
+        double_price: json['net_sales'] as double?,
+        gross_price: json['gross_price'] as double?,
+        total_record: json['total_record'] as int?,
+        item_cancel: json['item_cancel'] as String?,
+        order_number: json['order_number'] as String?,
+        branch_id: json['branch_id'] as String?,
+        order_created_at: json['order_created_at'] as String?,
         product_category_id: json['product_category_id'] as String?,
-        mod_item_id: json['mod_item_id'] as String?,
-        productVariant: json['productVariant'] as ProductVariant?,
-        variantItem: variantItem,
-        modifierItem: modItem,
-        orderModifierDetail: orderModDetail,
-        mod_group_id: stringList,
-        available_stock: json['available_stock'] as String?,
-        isRemove: json['isRemove'] as bool?
-      // total_amount: json['total_amount'] as String?,
-      // category_id: json['category_id'] as int?,
-      // branch_link_product_id: json['branch_link_product_id'] as int?,
-      //category_name: json['category_name'] as String?,
-      // item_sum: json['item_sum'] as int?,
-      // double_price: json['net_sales'] as double?,
-      // gross_price: json['gross_price'] as double?,
-      // total_record: json['total_record'] as int?,
-      // item_cancel: json['item_cancel'] as String?
-
+        orderModifierDetail: orderModifierDetailList,
+        tableNumber: tableNumber,
+        failPrintBatch: json['failPrintBatch'] as String?,
+        isSelected: json['isSelected'] as bool?
     );
   }
 
@@ -279,20 +310,52 @@ class OrderDetail{
     OrderDetailFields.quantity: quantity,
     OrderDetailFields.remark: remark,
     OrderDetailFields.account: account,
+    OrderDetailFields.edited_by: edited_by,
+    OrderDetailFields.edited_by_user_id: edited_by_user_id,
     OrderDetailFields.cancel_by: cancel_by,
     OrderDetailFields.cancel_by_user_id: cancel_by_user_id,
     OrderDetailFields.status: status,
     OrderDetailFields.sync_status: sync_status,
+    OrderDetailFields.unit: unit,
+    OrderDetailFields.per_quantity_unit: per_quantity_unit,
     OrderDetailFields.created_at: created_at,
     OrderDetailFields.updated_at: updated_at,
     OrderDetailFields.soft_delete: soft_delete,
     'product_category_id': product_category_id,
-    'mod_item_id': mod_item_id,
-    'productVariant': productVariant,
-    'variantItem': variantItem,
-    'modifierItem': modifierItem,
-    'mod_group_id': mod_group_id,
-    'hasModifier': hasModifier
+    'order_modifier_detail': orderModifierDetail,
+    'tableNumber': tableNumber,
+    'failPrintBatch': failPrintBatch,
+    'isSelected': isSelected
+  };
+
+  Map<String, Object?> toInsertJson() => {
+    OrderDetailFields.order_detail_sqlite_id: order_detail_sqlite_id,
+    OrderDetailFields.order_detail_id: order_detail_id,
+    OrderDetailFields.order_detail_key: order_detail_key,
+    OrderDetailFields.order_cache_sqlite_id: order_cache_sqlite_id,
+    OrderDetailFields.order_cache_key: order_cache_key,
+    OrderDetailFields.branch_link_product_sqlite_id: branch_link_product_sqlite_id,
+    OrderDetailFields.category_sqlite_id: category_sqlite_id,
+    OrderDetailFields.category_name: category_name,
+    OrderDetailFields.productName: productName,
+    OrderDetailFields.has_variant: has_variant,
+    OrderDetailFields.product_variant_name: product_variant_name,
+    OrderDetailFields.price: price,
+    OrderDetailFields.original_price: original_price,
+    OrderDetailFields.quantity: quantity,
+    OrderDetailFields.remark: remark,
+    OrderDetailFields.account: account,
+    OrderDetailFields.edited_by: edited_by,
+    OrderDetailFields.edited_by_user_id: edited_by_user_id,
+    OrderDetailFields.cancel_by: cancel_by,
+    OrderDetailFields.cancel_by_user_id: cancel_by_user_id,
+    OrderDetailFields.status: status,
+    OrderDetailFields.sync_status: sync_status,
+    OrderDetailFields.unit: unit,
+    OrderDetailFields.per_quantity_unit: per_quantity_unit,
+    OrderDetailFields.created_at: created_at,
+    OrderDetailFields.updated_at: updated_at,
+    OrderDetailFields.soft_delete: soft_delete
   };
 
   Map syncJson() => {
@@ -307,14 +370,18 @@ class OrderDetail{
     OrderDetailFields.quantity: quantity,
     OrderDetailFields.remark: remark,
     OrderDetailFields.account: account,
+    OrderDetailFields.edited_by: edited_by,
+    OrderDetailFields.edited_by_user_id: edited_by_user_id,
     OrderDetailFields.cancel_by: cancel_by,
     OrderDetailFields.cancel_by_user_id: cancel_by_user_id,
     OrderDetailFields.status: status,
     OrderDetailFields.sync_status: sync_status,
+    OrderDetailFields.unit: unit,
+    OrderDetailFields.per_quantity_unit: per_quantity_unit,
     OrderDetailFields.created_at: created_at,
     OrderDetailFields.updated_at: updated_at,
     OrderDetailFields.soft_delete: soft_delete,
-    CategoriesFields.category_id: category_id,
-    BranchLinkProductFields.branch_link_product_id: branch_link_product_id
+    // CategoriesFields.category_id: category_id,
+    // BranchLinkProductFields.branch_link_product_id: branch_link_product_id
   };
 }

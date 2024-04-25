@@ -1,12 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:another_flushbar/flushbar.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
+import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
+import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/product_variant.dart';
+import 'package:optimy_second_device/object/promotion.dart';
+import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/object/user.dart';
 
 import '../main.dart';
+import '../notifier/notification_notifier.dart';
+import '../translation/AppLocalizations.dart';
+import 'app_setting.dart';
 import 'branch_link_modifier.dart';
 import 'branch_link_product.dart';
 import 'categories.dart';
@@ -26,7 +39,13 @@ class DecodeAction {
   List<BranchLinkProduct>? decodedBranchLinkProductList = [];
   List<BranchLinkModifier>? decodedBranchLinkModifierList = [];
   List<ProductVariant>? decodedProductVariantList = [];
+  List<BranchLinkDining>? decodedBranchLinkDiningList = [];
+  List<TaxLinkDining> decodedTaxLinkDiningList = [];
   List<User>? decodedUserList = [];
+  List<Promotion>? decodedBranchPromotionList = [];
+  AppSetting? decodedAppSetting;
+  final BuildContext _context = MyApp.navigatorKey.currentContext!;
+  String flushbarStatus = '';
 
   DecodeAction({
     this.decodedProductList,
@@ -34,10 +53,12 @@ class DecodeAction {
     this.decodedBranchLinkProductList,
     this.decodedBranchLinkModifierList,
     this.decodedUserList,
+    this.decodedBranchLinkDiningList
   });
 
-  decodeAllFunction(){
-    var json = jsonDecode(clientAction.response!);
+  decodeAllFunction(response){
+    print("decode all action called!!!");
+    var json = jsonDecode(response);
     Iterable value1 = json['data']['tb_categories'];
     decodedCategoryList = List<Categories>.from(value1.map((json) => Categories.fromJson(json)));
     Iterable value2 = json['data']['tb_product'];
@@ -50,16 +71,43 @@ class DecodeAction {
     decodedBranchLinkModifierList = List<BranchLinkModifier>.from(value5.map((json) => BranchLinkModifier.fromJson(json)));
     Iterable value6 = json['data']['tb_product_variant'];
     decodedProductVariantList = List<ProductVariant>.from(value6.map((json) => ProductVariant.fromJson(json)));
+    //Iterable value7 = json['data']['tb_app_setting'];
+    decodedAppSetting = AppSetting.fromJson(json['data']['tb_app_setting']);
+    Iterable value8 = json['data']['tb_branch_link_dining_option'];
+    decodedBranchLinkDiningList = List<BranchLinkDining>.from(value8.map((json) => BranchLinkDining.fromJson(json)));
+    Iterable value9 = json['data']['taxLinkDiningList'];
+    decodedTaxLinkDiningList = List<TaxLinkDining>.from(value9.map((json) => TaxLinkDining.fromJson(json)));
+    print("decodedTaxLinkDiningList length: ${decodedTaxLinkDiningList.length}");
+    Iterable value10 = json['data']['branchPromotionList'];
+    decodedBranchPromotionList =  List<Promotion>.from(value10.map((json) => Promotion.fromJson(json)));
+
     ///image part
     // Iterable value7 = json['data']['image_list'];
     // decodedBase64ImageList = List.from(value7);
   }
 
   checkAction() {
-    var json = jsonDecode(clientAction.response!);
+    var json = jsonDecode(clientAction.serverResponse!);
     if(json['action'] != null){
       String action = json['action'];
       switch(action){
+        case '0': {
+          Iterable value1 = json['failedPrintOrderDetail'];
+          List<OrderDetail> failOrderDetail = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
+          if( FailPrintModel.instance.failPrintOrderDetails.isEmpty){
+            FailPrintModel.instance.addAllFailedOrderDetail(failOrderDetail);
+            showFlushBarAndPlaySound();
+          } else {
+            checkFailOrderDetailListBatch(failOrderDetail);
+          }
+
+        }
+        break;
+        case '1': {
+          decodeAllFunction(clientAction.serverResponse);
+          NotificationModel.instance.setNotification(true);
+        }
+        break;
         // case'17': {
         //   Map<String, dynamic>? objectData;
         //   Map<String, dynamic>? result;
@@ -83,6 +131,88 @@ class DecodeAction {
         }
         break;
       }
+    }
+  }
+
+  Map<String, List<OrderDetail>> groupOrder(List<OrderDetail> returnData) {
+    Map<String, List<OrderDetail>> groupedOrderDetails = {};
+    for (OrderDetail orderItem in returnData) {
+      String cardID = '';
+      // if(getOrderNumber(orderItem) != '') {
+      //   cardID = getOrderNumber(orderItem);
+      // } else
+      // if(getTableNumber(orderItem) != '') {
+      //   cardID = getTableNumber(orderItem);
+      // }
+      // else {
+      //   cardID = orderItem.order_cache_key.toString().replaceAll("[", "").replaceAll("]", "");
+      // }
+      cardID = orderItem.failPrintBatch!;
+      if (groupedOrderDetails.containsKey(cardID)) {
+        groupedOrderDetails[cardID]!.add(orderItem);
+      } else {
+        groupedOrderDetails[cardID] = [orderItem];
+      }
+    }
+    return groupedOrderDetails;
+  }
+
+  void checkFailOrderDetailListBatch(List<OrderDetail> orderDetail){
+    Map<String, List<OrderDetail>> requestOrder = groupOrder(orderDetail);
+    List<String> localOrderKey = groupOrder(FailPrintModel.instance.failPrintOrderDetails).keys.toList();
+    print("local order length: ${localOrderKey.length}");
+    print("request order length: ${requestOrder.length}");
+    for(int i = 0 ; i < localOrderKey.length; i++){
+      if(requestOrder.containsKey(localOrderKey[i]) == true){
+        requestOrder.remove(localOrderKey[i]);
+      }
+    }
+    if(requestOrder.isNotEmpty){
+      for(int i = 0; i < requestOrder.values.length; i++){
+        FailPrintModel.instance.addAllFailedOrderDetail(requestOrder.values.elementAt(i));
+      }
+      showFlushBarAndPlaySound();
+    }
+  }
+
+  showFlushBarAndPlaySound(){
+    Flushbar(
+      icon: Icon(Icons.error, size: 32, color: Colors.white),
+      shouldIconPulse: false,
+      title: "${AppLocalizations.of(_context)?.translate('error')}${AppLocalizations.of(_context)?.translate('kitchen_printer_timeout')}",
+      message: "${AppLocalizations.of(_context)?.translate('please_try_again_later')}",
+      duration: Duration(seconds: 5),
+      backgroundColor: Colors.red,
+      messageColor: Colors.white,
+      flushbarPosition: FlushbarPosition.TOP,
+      maxWidth: 350,
+      margin: EdgeInsets.all(8),
+      borderRadius: BorderRadius.circular(8),
+      padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
+      onTap: (flushbar) {
+        flushbar.dismiss(true);
+      },
+      onStatusChanged: (status) {
+        flushbarStatus = status.toString();
+        print("onStatusChanged: ${status}");
+      },
+    ).show(_context);
+    playSound();
+    Future.delayed(Duration(seconds: 3), () {
+      if(flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") {
+        playSound();
+      }
+    });
+  }
+
+  playSound() {
+    try {
+      final assetsAudioPlayer = AssetsAudioPlayer();
+      assetsAudioPlayer.open(
+        Audio("audio/review.mp3"),
+      );
+    } catch (e) {
+      print("Play Sound Error: ${e}");
     }
   }
 }

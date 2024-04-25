@@ -2,147 +2,194 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ClientAction{
+import '../fragment/reconnect_dialog.dart';
+
+class ClientAction {
+  final NetworkInfo networkInfo = NetworkInfo();
+  static final ClientAction instance = ClientAction.init();
   late Socket socket;
   late Socket requestSocket;
   late String? serverIp;
-  String? response;
+  static String? _deviceIp;
+  Function? serverCallBack;
+  String? response, serverResponse;
   bool status = false, loading = false;
   static const messageDelimiter = '\n';
   Timer? timer;
+  bool _isReconnectDialogOpen = false;
 
+  ClientAction.init();
 
-  ClientAction({
-    this.serverIp
-  });
+  bool get isReconnectDialogOpen => _isReconnectDialogOpen;
 
-  connectServer(String ips) async  {
+  get deviceIp  => _deviceIp;
+
+  set setReconnectDialogStatus (bool value){
+    _isReconnectDialogOpen = value;
+  }
+
+  Future<String?> getDeviceIp() async {
+    _deviceIp = await networkInfo.getWifiIP();
+    return _deviceIp;
+  }
+
+  Future<Map> getPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? branch = prefs.getString('branch');
+    return json.decode(branch!);
+  }
+
+  void disconnectFromServer(){
+    socket.destroy();
+  }
+
+  connectServer(String ips, {Function? callback}) async {
+    Map branchObject = await getPreferences();
+    notificationModel.showReconnectDialog = false;
+    int i = 0;
+    Map<String, dynamic>? result;
+    StringBuffer buffer = StringBuffer();
+    String? receivedData;
+    serverCallBack = callback;
     try{
-      Map<String, dynamic>? result;
-      final buffer = StringBuffer();
-      bool connectStatus = false;
-
       socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
-      serverIp = ips;
-      //send first request to server side
-      result = {'action': '1', 'param': ''};
-      socket.write('${jsonEncode(result)}\n');
-
-      //split request call every 1 sec
-      splitRequest(buffer: buffer, serverSocket: socket, response: response);
-
-      //socket stream listen for data
-      socket.listen( (data) {
-        /// Track the received data
-        String receivedData = utf8.decode(data);
-        buffer.write(receivedData);
-      },onError: (err){
-        print('listen error: $err');
-        timer?.cancel();
-        socket.destroy();
-        notificationModel.enableReconnectDialog();
-        throw "listen error";
-      },onDone: (){
-        print('client done');
-        timer?.cancel();
-        socket.destroy();
-        notificationModel.enableReconnectDialog();
-      });
-
-      return connectStatus = true;
-
-      // Socket.connect(ips, 9999, timeout: const Duration(seconds: 3)).then((socket) {
-      //   connectStatus = true;
-      //   print('client connected : ${socket.remoteAddress.address}:${socket.remotePort}');
-      //   this.socket = socket;
-      //   serverIp = ips;
-      //   result = {'action': '1', 'param': ''};
-      //   socket.write('${jsonEncode(result)}\n');
-      //
-      //   //List<int> receivedData = [];
-      //   final buffer = StringBuffer();
-      //   splitRequest(buffer: buffer, serverSocket: socket, response: response);
-      //
-      //   socket.listen( (data) {
-      //     /// Track the received data
-      //     String receivedData = utf8.decode(data);
-      //     buffer.write(receivedData);
-      //     // if(buffer.toString() != ''){
-      //     //   qrOrderController.sink.add("rebuild");
-      //     // }
-      //
-      //     // if (receivedData.endsWith(messageDelimiter)) {
-      //     //   final messages = buffer.toString().split('\n');
-      //     //   for(int i = 0; i < messages.length; i++){
-      //     //     final message = messages[i];
-      //     //     if(message.isNotEmpty){
-      //     //       response = message;
-      //     //     }
-      //     //   }
-      //     //   // Update the buffer with the remaining incomplete message
-      //     //   buffer.clear();
-      //     //   buffer.write(messages.last);
-      //     // }
-      //     // if (receivedData.endsWith('\n')) {
-      //     //   /// Process the complete response
-      //     //   //response = utf8.decode(receivedData);
-      //     //   // Remove the end-of-message marker before processing the data
-      //     //   receivedData = receivedData.substring(0, receivedData.length - 1);
-      //     //   response = receivedData;
-      //     //   print('Received response: $response');
-      //     //   notificationModel.setContentLoaded();
-      //     //   //reset data
-      //     //   receivedData = '';
-      //     // }
-      //     //socket.close();
-      //   },onError: (err){
-      //     print('listen error: $err');
-      //     //socket.destroy();
-      //   },onDone: (){
-      //     print('client done');
-      //     timer?.cancel();
-      //     socket.destroy();
-      //   });
-      // }).catchError((error){
-      //   print("socket connect error: ${error}");
-      //   connectStatus = false;
-      // });
     }catch(e){
-      print('connect error2: $e');
-      return false;
+      print('connect server error: $e');
+      Map<String, dynamic> result = {'status': '0', 'exception': e.toString()};
+      serverCallBack!(jsonEncode(result));
+      return;
     }
-  }
+    serverIp = ips;
+    //send first request to server side
+    result = {'action': '-1', 'param': branchObject['branchID'].toString()};
+    socket.write('${jsonEncode(result)}\n');
 
-  splitRequest({required StringBuffer buffer, required Socket serverSocket, response}) {
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      print("buffer: ${buffer.toString()}");
-      if(loading == false && buffer.toString() != ''){
-        loading = true;
-        final messages = buffer.toString().split('\n');
-        String firstRequest = messages[0];
-        for(int i = 0; i < messages.length; i++){
-          if(i != 0){
-            buffer.clear();
-            buffer.write(messages[i]);
+    //socket stream listen for data
+    socket.cast<List<int>>().transform(utf8.decoder).listen( (data) async  {
+      // Track the received data
+      receivedData = data;
+      if(receivedData != null){
+        buffer.write(receivedData);
+        if(receivedData!.contains(messageDelimiter)){
+          final messages = buffer.toString().split('\n');
+          String firstRequest = messages[0];
+          for(int i = 0; i < messages.length; i++){
+            if(i != 0){
+              buffer.clear();
+              buffer.write(messages[i]);
+            }
           }
+          processData(message: firstRequest);
         }
-        processData(message: firstRequest, serverSocket: serverSocket);
-        loading = false;
-      } else {
-        return;
       }
-    });
+      //split request call every 1 sec
+      //splitRequest(buffer: buffer, serverSocket: socket);
+    }, cancelOnError: true
+        ,onError: (err){
+          print('listen error: $err');
+          timer?.cancel();
+          socket.destroy();
+          notificationModel.enableReconnectDialog();
+        },onDone: (){
+          print('client done');
+          timer?.cancel();
+          socket.destroy();
+          notificationModel.enableReconnectDialog();
+        });
   }
 
-  processData({required Socket serverSocket, message}){
-    print("message: ${message}");
-    if (message != '') {
-      response = message;
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        decodeAction.checkAction();
-      });
+  showRefresh(){
+    //call custom flush bar
+    // Flushbar(
+    //   icon: Icon(Icons.error, size: 32, color: Colors.white),
+    //   shouldIconPulse: false,
+    //   title: "New update from server",
+    //   message: "Click to get latest data",
+    //   duration: null,
+    //   backgroundColor: Colors.green,
+    //   messageColor: Colors.white,
+    //   flushbarPosition: FlushbarPosition.TOP,
+    //   maxWidth: 350,
+    //   margin: EdgeInsets.all(8),
+    //   borderRadius: BorderRadius.circular(8),
+    //   padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
+    //   onTap: (flushbar) {
+    //     Map<String, dynamic>? result = {'action': '1', 'param': ''};
+    //     socket.write('${jsonEncode(result)}\n');
+    //     flushbar.dismiss(true);
+    //   },
+    //   onStatusChanged: (status) {
+    //     flushbarStatus = status.toString();
+    //   },
+    // )
+    //   .show(context);
+    // Future.delayed(Duration(seconds: 3), () {
+    //   print("status change: ${flushbarStatus}");
+    //   if (flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") playSound();
+    // });
+  }
+
+  splitRequest({required StringBuffer buffer, required Socket serverSocket}) {
+    if(loading == false && buffer.toString() != ''){
+      print("if called!!!");
+      loading = true;
+      final messages = buffer.toString().split('\n');
+      String firstRequest = messages[0];
+      for(int i = 0; i < messages.length; i++){
+        if(i != 0){
+          buffer.clear();
+          buffer.write(messages[i]);
+        }
+      }
+      //processData(message: firstRequest, serverSocket: serverSocket);
+      loading = false;
+    } else {
+      print("else called");
+      return;
+    }
+    // timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+    //   print("loading status: $loading");
+    //   print("splitRequest- buffer: ${buffer.toString()}");
+    //   if(loading == false && buffer.toString() != ''){
+    //     print("if called!!!");
+    //     loading = true;
+    //     final messages = buffer.toString().split('\n');
+    //     String firstRequest = messages[0];
+    //     for(int i = 0; i < messages.length; i++){
+    //       if(i != 0){
+    //         buffer.clear();
+    //         buffer.write(messages[i]);
+    //       }
+    //     }
+    //     processData(message: firstRequest, serverSocket: serverSocket);
+    //     loading = false;
+    //   } else {
+    //     print("else called");
+    //     return;
+    //   }
+    // });
+  }
+
+  processData({message}) {
+    print("process data message: ${message}");
+    if (message != '' && message != 'null') {
+      serverResponse = message;
+      var json = jsonDecode(serverResponse!);
+      if(json['action'] != null){
+        return decodeAction.checkAction();
+      } else {
+        serverCallBack!(message);
+      }
+    } else {
+      Map<String, dynamic> result = {'status': '-1'};
+      serverCallBack!(jsonEncode(result));
+      // socket.destroy();
     }
   }
 
@@ -154,29 +201,40 @@ class ClientAction{
     return utf8.decode(data).endsWith('\n');
   }
 
-  connectRequestPort({required String action, String? param}) async {
+  connectRequestPort({required String action, String? param, Function? callback}) async {
+    notificationModel.showReconnectDialog = false;
+    print("request port called!");
+    Map<String, dynamic>? result;
+    if(param != null){
+      result = {'action': action, 'param': param};
+    } else {
+      result = {'action': action, 'param': ''};
+    }
     try{
-      print("request port called!");
-      Map<String, dynamic>? result;
-      if(param != null){
-        result = {'action': action, 'param': param};
-      } else {
-        result = {'action': action, 'param': ''};
-      }
       requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
-      print("encode request ${jsonEncode(result)}");
-      requestSocket.write('${jsonEncode(result)}\n');
-
+    }catch(e){
+      print("connect request port error: $e");
+      if(callback != null){
+        result = {'status': '0', 'action': action, 'param': param};
+        callback(jsonEncode(result));
+      }
+      return;
+    }
+    try{
       final buffer = StringBuffer();
       String receivedData = '';
+      requestSocket.write('${jsonEncode(result)}\n');
       //handle data
-      StreamSubscription streamSubscription = requestSocket.listen((data) async {
-        receivedData = utf8.decode(data);
+      StreamSubscription streamSubscription = requestSocket.cast<List<int>>().transform(utf8.decoder).listen((data) {
+        receivedData = data;
         buffer.write(receivedData);
         if (receivedData.endsWith(messageDelimiter)) {
           final messages = buffer.toString().trim();
           print("message: ${messages}");
           response = messages;
+          if(callback != null){
+            callback(response);
+          }
 
           receivedData = '';
 
@@ -185,21 +243,55 @@ class ClientAction{
           requestSocket.flush();
           requestSocket.destroy();
         }
-
       },
-          onDone: (){
-            print("client done");
-            socket.destroy();
-          },
-          onError: (error){
-            print("connection error");
-            socket.destroy();
-          },
+          // onDone: (){
+          //   print("client done");
+          //   socket.destroy();
+          // },
+          // onError: (error){
+          //   print("connection error");
+          //   socket.destroy();
+          // },
       );
-      await streamSubscription.asFuture("true");
+      await streamSubscription.asFuture<void>().timeout(Duration(seconds: 5));
     } catch(e) {
       print("connect request port error: $e");
+      requestSocket.destroy();
+      if(callback != null){
+        result = {'status': '0', 'action': action, 'param': param};
+        callback(jsonEncode(result));
+      }
     }
+  }
+
+  Future<Future<Object?>> openReconnectDialog({String? action, String? param, Function? callback}) async {
+    print("is reconnect dialog opened: ${_isReconnectDialogOpen}");
+    if (!_isReconnectDialogOpen) {
+      _isReconnectDialogOpen = true;
+    }
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: ReconnectDialog(
+                action: action,
+                param: param,
+                callback: callback,
+              ),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: MyApp.navigatorKey.currentContext!,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
   }
 
   sendRequest({required String action, String? param}){

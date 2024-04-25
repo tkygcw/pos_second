@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/main.dart';
 
+import '../object/branch_link_dining_option.dart';
 import '../object/cart_payment.dart';
 import '../object/cart_product.dart';
 import '../object/promotion.dart';
@@ -14,17 +16,44 @@ class CartModel extends ChangeNotifier {
   List<PosTable> selectedTable = [];
   String selectedOption = 'Dine in';
   String selectedOptionId = '';
+  String? subtotal;
   bool isInit = false;
   int myCount = 0;
   bool isChange = false;
+
+  Map<String, Object?> toJson() => {
+    'selectedTable': this.selectedTable,
+    'cartNotifierItem': this.cartNotifierItem,
+    'selectedOption': this.selectedOption,
+    'selectedOptionId': this.selectedOptionId,
+    'subtotal': this.subtotal
+  };
+
+  List<int> getSelectedTableIdList(){
+    List<int> idList = selectedTable.map((e) => e.table_sqlite_id!).toList();
+    return idList;
+    // for(int i = 0; i < selectedTable.length; i++){
+    //   idList.add(selectedTable[i].table_sqlite_id!);
+    // }
+    // return idList;
+  }
+
+  void initBranchLinkDiningOption() {
+    List<BranchLinkDining> data = decodeAction.decodedBranchLinkDiningList!;
+    if (data.length == 3) {
+      selectedOption = 'Dine in';
+    } else {
+      selectedOption = "Take Away";
+    }
+    selectedOptionId = data.firstWhere((e) => e.name == selectedOption).dining_id!;
+  }
 
   void initialLoad() {
     removeAllTable();
     removeAllCartItem();
     removePromotion();
     removePaymentDetail();
-    selectedOption = 'Dine in';
-    //selectedOptionId = '1';
+    initBranchLinkDiningOption();
     notifyListeners();
   }
 
@@ -33,8 +62,7 @@ class CartModel extends ChangeNotifier {
     removeAllCartItem();
     removePromotion();
     removePaymentDetail();
-    selectedOption = 'Take Away';
-    //selectedOptionId = '2';
+    initBranchLinkDiningOption();
     notifyListeners();
   }
 
@@ -67,10 +95,11 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addItem(cartProductItem object) {
-    print('add item called');
+  void addItem(cartProductItem object, {bool? notifyListener}) {
     cartNotifierItem.add(object);
-    //notifyListeners();
+    if(notifyListener == null){
+      notifyListeners();
+    }
   }
 
   void removeItem(cartProductItem object) {
@@ -97,17 +126,22 @@ class CartModel extends ChangeNotifier {
   }
 
   void removePartialCartItem(){
-    List<cartProductItem> _removeItem = [];
+    List<cartProductItem> removeItem = [];
     for(int j = 0; j < cartNotifierItem.length; j++){
       if(cartNotifierItem[j].status == 0){
-        _removeItem.add(cartNotifierItem[j]);
+        removeItem.add(cartNotifierItem[j]);
       }
     }
-    cartNotifierItem.removeWhere((element) => _removeItem.contains(element));
+    cartNotifierItem.removeWhere((element) => removeItem.contains(element));
   }
 
   void addTable(PosTable posTable){
     selectedTable.add(posTable);
+    notifyListeners();
+  }
+
+  void addAllTable(List<PosTable> tableList){
+    selectedTable.addAll(tableList);
     notifyListeners();
   }
 
@@ -138,7 +172,7 @@ class CartModel extends ChangeNotifier {
 
   void addAutoApplyPromo(Promotion promo){
     autoPromotion.add(promo);
-    notifyListeners();
+    //notifyListeners();
   }
 
   void removeAutoPromotion(){

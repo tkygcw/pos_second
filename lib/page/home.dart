@@ -9,6 +9,8 @@ import 'package:optimy_second_device/fragment/network_dialog.dart';
 import 'package:optimy_second_device/fragment/qr_order/qr_main_page.dart';
 import 'package:optimy_second_device/fragment/qr_order/qr_order_page.dart';
 import 'package:optimy_second_device/fragment/reconnect_dialog.dart';
+import 'package:optimy_second_device/fragment/setting/device_setting.dart';
+import 'package:optimy_second_device/fragment/setting/setting.dart';
 import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +20,7 @@ import '../fragment/order/order.dart';
 import '../fragment/other_order/other_order.dart';
 import '../fragment/table/table_page.dart';
 import '../main.dart';
+import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
 import '../object/app_setting.dart';
 import '../object/user.dart';
@@ -89,13 +92,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   setScreenLayout() {
-    final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
-    if (screenWidth < 500) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    }
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
   // Future<Future<Object?>> openLogOutDialog() async {
@@ -122,69 +122,68 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print("home rebuild!!!");
     var size = MediaQuery.of(context).size;
-    return Consumer<NotificationModel>(builder: (context, notificationModel, child) {
-      if(notificationModel.showReconnectDialog == true){
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          openDialog();
-        });
-      }
-      return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-        this.themeColor = color;
-        return WillPopScope(
-          onWillPop: () async {
-            showSecondDialog(context, color);
-            return willPop;
-          },
-          child: Scaffold(
-              resizeToAvoidBottomInset: false,
-              body: SafeArea(
-                //side nav bar
-                child: CollapsibleSidebar(
-                    sidebarBoxShadow: [
-                      BoxShadow(
-                        color: Colors.transparent,
+    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
+      this.themeColor = color;
+      return PopScope(
+        canPop: willPop,
+        onPopInvoked: (didPop){
+          showSecondDialog(context, color);
+        },
+        // onWillPop: () async {
+        //   showSecondDialog(context, color);
+        //   return willPop;
+        // },
+        child: Scaffold(
+            resizeToAvoidBottomInset: false,
+            body: SafeArea(
+              //side nav bar
+              child: CollapsibleSidebar(
+                  sidebarBoxShadow: [
+                    BoxShadow(
+                      color: Colors.transparent,
+                    ),
+                  ],
+                  // maxWidth: 80,
+                  isCollapsed: true,
+                  items: _items,
+                  avatarImg: AssetImage("drawable/logo.png"),
+                  title: widget.user!.name! + "\n" + (branchName ?? '') + " - " + role,
+                  backgroundColor: color.backgroundColor,
+                  selectedTextColor: color.iconColor,
+                  textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                  titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                  toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  selectedIconColor: color.iconColor,
+                  selectedIconBox: color.buttonColor,
+                  unselectedIconColor: Colors.white,
+                  body: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: _body(size, context),
                       ),
+                      //cart page
+                      Visibility(
+                        visible: currentPage != 'product' &&
+                            currentPage != 'setting' &&
+                            currentPage != 'settlement' &&
+                            currentPage != 'qr_order' &&
+                            currentPage != 'setting' &&
+                            currentPage != 'report'
+                            ? true
+                            : false,
+                        child: Expanded(
+                            flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                            child: CartPage(
+                              currentPage: currentPage,
+                            )),
+                      )
                     ],
-                    // maxWidth: 80,
-                    isCollapsed: true,
-                    items: _items,
-                    avatarImg: AssetImage("drawable/logo.png"),
-                    title: widget.user!.name! + "\n" + (branchName ?? '') + " - " + role,
-                    backgroundColor: color.backgroundColor,
-                    selectedTextColor: color.iconColor,
-                    textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                    titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                    toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    selectedIconColor: color.iconColor,
-                    selectedIconBox: color.buttonColor,
-                    unselectedIconColor: Colors.white,
-                    body: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: _body(size, context),
-                        ),
-                        //cart page
-                        Visibility(
-                          visible: currentPage != 'product' &&
-                              currentPage != 'setting' &&
-                              currentPage != 'settlement' &&
-                              currentPage != 'qr_order' &&
-                              currentPage != 'report'
-                              ? true
-                              : false,
-                          child: Expanded(
-                              flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                              child: CartPage(
-                                currentPage: currentPage,
-                              )),
-                        )
-                      ],
-                    )),
-              )),
-        );
-      });
+                  )),
+            )),
+      );
     });
 
   }
@@ -213,33 +212,37 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<CollapsibleItem> get _generateItems {
+    CartModel cart = Provider.of<CartModel>(context, listen: false);
     return [
       CollapsibleItem(
         text: 'Menu',
         icon: Icons.add_shopping_cart,
-        onPressed: () => setState(() => currentPage = 'menu'),
+        onPressed: () => setState(() {
+          currentPage = 'menu';
+          cart.initialLoad();
+        }),
         isSelected: true,
       ),
-      CollapsibleItem(
-        text: 'Table',
-        icon: Icons.table_restaurant,
-        onPressed: () => setState(() => currentPage = 'table'),
-      ),
-      CollapsibleItem(
-        text: 'Qr Order',
-        icon: Icons.qr_code_2,
-        onPressed: () => setState(() => currentPage = 'qr_order'),
-      ),
-      CollapsibleItem(
-        text: 'Other Order',
-        icon: Icons.delivery_dining,
-        onPressed: () => setState(() => currentPage = 'other_order'),
-      ),
       // CollapsibleItem(
-      //   text: 'Bill',
-      //   icon: Icons.receipt_long,
-      //   onPressed: () => setState(() => currentPage = 'bill'),
+      //   text: 'Table',
+      //   icon: Icons.table_restaurant,
+      //   onPressed: () => setState(() => currentPage = 'table'),
       // ),
+      // CollapsibleItem(
+      //   text: 'Qr Order',
+      //   icon: Icons.qr_code_2,
+      //   onPressed: () => setState(() => currentPage = 'qr_order'),
+      // ),
+      // CollapsibleItem(
+      //   text: 'Other Order',
+      //   icon: Icons.delivery_dining,
+      //   onPressed: () => setState(() => currentPage = 'other_order'),
+      // ),
+      CollapsibleItem(
+        text: 'Setting',
+        icon: Icons.settings,
+        onPressed: () => setState(() => currentPage = 'setting'),
+      ),
       // CollapsibleItem(
       //   text: 'Counter',
       //   icon: Icons.point_of_sale,
@@ -271,12 +274,14 @@ class _HomePageState extends State<HomePage> {
       //   return ProductPage();
       case 'table':
         return TablePage();
-      case 'qr_order':
-        return QrOrderPage();
+      // case 'qr_order':
+      //   return QrOrderPage();
       // case 'bill':
       //   return BillPage();
       case 'other_order':
         return OtherOrderPage();
+      case 'setting':
+        return SettingMenu();
       // case 'report':
       //   return InitReportPage();
       // case 'settlement':

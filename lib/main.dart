@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/object/decode_action.dart';
 import 'package:optimy_second_device/object/table.dart';
 import 'package:optimy_second_device/page/loading.dart';
@@ -19,6 +20,7 @@ import 'package:provider/provider.dart';
 
 import 'notifier/cart_notifier.dart';
 import 'notifier/connectivity_change_notifier.dart';
+import 'notifier/fail_print_notifier.dart';
 import 'notifier/notification_notifier.dart';
 import 'notifier/printer_notifier.dart';
 import 'notifier/report_notifier.dart';
@@ -29,13 +31,16 @@ import 'object/lcd_display.dart';
 
 final snackBarKey = GlobalKey<ScaffoldMessengerState>();
 final NotificationModel notificationModel = NotificationModel();
-final ClientAction clientAction = ClientAction();
+final ClientAction clientAction = ClientAction.instance;
 final LCDDisplay lcdDisplay = LCDDisplay();
 final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();
 
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
+
+  //get device ip
+  getDeviceIp();
 
   //init lcd screen
   initLCDScreen();
@@ -51,15 +56,14 @@ void main() async  {
 
   AppLanguage appLanguage = AppLanguage();
   await appLanguage.fetchLocale();
-  runApp(ChangeNotifierProvider.value(
-    value: notificationModel,
-    child: MyApp(appLanguage: appLanguage),
-  ));
+  runApp(MyApp(appLanguage: appLanguage));
 }
 
 class MyApp extends StatelessWidget {
   final AppLanguage appLanguage;
   const MyApp({super.key, required this.appLanguage});
+
+  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   // This widget is the root of your application.
   @override
@@ -94,9 +98,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => ReportModel(),
         ),
+        ChangeNotifierProvider(
+          create: (_) => FailPrintModel.instance,
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AppSettingModel.instance,
+        ),
       ],
       child: Consumer<AppLanguage>(builder: (context, model, child) {
         return MaterialApp(
+          navigatorKey: MyApp.navigatorKey,
           scaffoldMessengerKey: snackBarKey,
           locale: model.appLocal,
           supportedLocales: [
@@ -113,6 +124,7 @@ class MyApp extends StatelessWidget {
           ],
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
+              useMaterial3: false,
               appBarTheme: AppBarTheme(
                 backgroundColor: Colors.white24,
                 titleTextStyle: TextStyle(color: Colors.black),
@@ -152,12 +164,14 @@ initLCDScreen() async {
 }
 
 deviceDetect() async {
-  final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
+  final double screenWidth = WidgetsBinding
+      .instance.platformDispatcher.views.first.physicalSize.width /
+      WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+  //final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
+  print('screen width: ${screenWidth}');
   if (screenWidth < 500) {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown
-    ]);
+    await SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   } else {
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -185,6 +199,10 @@ statusBarColor() {
     statusBarBrightness: Brightness.dark, //status bar brightness
     statusBarIconBrightness: Brightness.dark,
   ));
+}
+
+getDeviceIp() async {
+  await clientAction.getDeviceIp();
 }
 
 // class MyHomePage extends StatefulWidget {

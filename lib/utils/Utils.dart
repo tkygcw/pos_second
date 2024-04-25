@@ -89,4 +89,18 @@ class Utils {
       return Color(int.parse("0x$hexColor"));
     }
   }
+
+  static roundToNearestFiveSen(double amount) {
+    const fiveSen = 0.05;
+
+    double remainder = amount % fiveSen;
+
+    if (remainder < fiveSen / 2) {
+      // Round down
+      return (amount - remainder);
+    } else {
+      // Round up
+      return (amount + (fiveSen - remainder));
+    }
+  }
 }

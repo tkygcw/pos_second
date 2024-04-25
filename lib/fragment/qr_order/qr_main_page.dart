@@ -22,7 +22,7 @@ class QrMainPage extends StatefulWidget {
 }
 
 class _QrMainPageState extends State<QrMainPage> {
-  final ClientAction qrClientAction = ClientAction(serverIp: clientAction.serverIp);
+  final ClientAction qrClientAction = clientAction;
   late StreamController controller;
   List<OrderCache> qrOrderCacheList = [];
   List<OrderDetail> orderDetailList = [], noStockOrderDetailList = [];
@@ -69,7 +69,7 @@ class _QrMainPageState extends State<QrMainPage> {
           primary: false,
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: ElevatedButton(onPressed: () async { await clientAction.connectServer("192.168.0.223");}, child: Text("Qr order", style: TextStyle(fontSize: 25))),
+          //title: ElevatedButton(onPressed: () async { await clientAction.connectServer("192.168.0.223");}, child: Text("Qr order", style: TextStyle(fontSize: 25))),
         ),
         body: StreamBuilder(
             stream: decodeAction.qrStream,

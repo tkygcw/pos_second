@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 
 class Domain {
-  static var domain = 'https://pos.lkmng.com/';
-  //static var domain = 'https://pos.optimy.com.my/';
+  // static var domain = 'https://pos.lkmng.com/';
+  static var domain = 'https://pos.optimy.com.my/';
   static Uri login = Uri.parse('${domain}mobile-api/login/index.php');
   static Uri device = Uri.parse('${domain}mobile-api/device/index.php');
   static Uri branch = Uri.parse('${domain}mobile-api/branch/index.php');
@@ -72,9 +75,11 @@ class Domain {
 
   isHostReachable() async {
     try {
-      await http.get(Uri.parse('https://pos.optimy.com.my/login/index.php'));
+      await http.post(Uri.parse("https://www.google.com/")).timeout(Duration(seconds: 3), onTimeout: ()=> throw TimeoutException("Timeout"));
       return true;
     } catch (e) {
+      Fluttertoast.showToast(msg: "is host reachable domain: ${Domain.login}", backgroundColor: Colors.red);
+      Fluttertoast.showToast(msg: "is host reachable error: ${e}");
       return false;
     }
   }

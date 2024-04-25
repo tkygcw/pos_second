@@ -83,25 +83,24 @@ class _TableMenuState extends State<TableMenu> {
       model.changeContent2(false);
     }
 
-    await clientAction.connectRequestPort(action: '13', param: '');
-    decodeData();
+    await clientAction.connectRequestPort(action: '13', param: '', callback: decodeData);
 
     // List<PosTable> data = await PosDatabase.instance.readAllTable();
     //
     // tableList = data;
     // await readAllTableGroup();
-    if (mounted) {
-      setState(() {
-        isLoaded = true;
-      });
-    }
   }
 
-  decodeData(){
+  decodeData(response){
     try{
       var json = jsonDecode(clientAction.response!);
       Iterable value1 = json['data']['table_list'];
       tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+      if (mounted) {
+        setState(() {
+          isLoaded = true;
+        });
+      }
     }catch(e){
       print('init table error: $e');
       //readAllTable();
@@ -116,23 +115,22 @@ class _TableMenuState extends State<TableMenu> {
           if (tableModel.isChange) {
             readAllTable(model: tableModel);
           }
-          if (notificationModel.contentLoad == true) {
-            isLoaded = false;
-          }
-          if (notificationModel.contentLoad == true && notificationModel.contentLoaded == true) {
-            notificationModel.resetContentLoaded();
-            notificationModel.resetContentLoad();
-            Future.delayed(const Duration(seconds: 1), () {
-              if (mounted) {
-                setState(() {
-                  readAllTable(notification: true);
-                });
-              }
-            });
-          }
+          // if (notificationModel.contentLoad == true) {
+          //   isLoaded = false;
+          // }
+          // if (notificationModel.contentLoad == true && notificationModel.contentLoaded == true) {
+          //   notificationModel.resetContentLoaded();
+          //   notificationModel.resetContentLoad();
+          //   Future.delayed(const Duration(seconds: 1), () {
+          //     if (mounted) {
+          //       setState(() {
+          //         readAllTable(notification: true);
+          //       });
+          //     }
+          //   });
+          // }
           return Scaffold(
-              body: isLoaded
-                  ?
+              body: isLoaded ?
               Container(
                 child: Column(
                   children: [
@@ -145,12 +143,7 @@ class _TableMenuState extends State<TableMenu> {
                             style: TextStyle(fontSize: 25),
                           ),
                           SizedBox(
-                              width: MediaQuery
-                                  .of(context)
-                                  .size
-                                  .height > 500
-                                  ? 500
-                                  : 50),
+                              width: MediaQuery.of(context).size.height > 500 ? 500 : 50),
                           // Expanded(
                           //   child: TextField(
                           //     onChanged: (value) {
@@ -174,29 +167,19 @@ class _TableMenuState extends State<TableMenu> {
                     Expanded(
                       child: GridView.count(
                         shrinkWrap: true,
-                        crossAxisCount: MediaQuery
-                            .of(context)
-                            .size
-                            .height > 500 ? 5 : 3,
+                        crossAxisCount: MediaQuery.of(context).size.height > 500 ? 5 : 3,
                         children: List.generate(
                           //this is the total number of cards
                             tableList.length, (index) {
                           // tableList[index].seats == 2;
                           return Card(
-                            color: tableList[index].status != 0 && MediaQuery
-                                .of(context)
-                                .size
-                                .height < 500
-                                ? toColor(tableList[index].card_color!)
-                                : Colors.white,
-                            shape: tableList[index].isSelected
-                                ? new RoundedRectangleBorder(
-                                side: new BorderSide(
+                            color: tableList[index].status != 0 && MediaQuery.of(context).size.height < 500 ?
+                            toColor(tableList[index].card_color!) : Colors.white,
+                            shape: tableList[index].isSelected ? RoundedRectangleBorder(
+                                side: BorderSide(
                                     color: color.backgroundColor, width: 3.0),
-                                borderRadius:
-                                BorderRadius.circular(4.0))
-                                : new RoundedRectangleBorder(
-                                side: new BorderSide(
+                                borderRadius: BorderRadius.circular(4.0)) : RoundedRectangleBorder(
+                                side: BorderSide(
                                     color: Colors.white, width: 3.0),
                                 borderRadius:
                                 BorderRadius.circular(4.0)),
@@ -221,18 +204,9 @@ class _TableMenuState extends State<TableMenu> {
                                           tableList[i].isSelected = true;
                                         } else if (tableList[i].isSelected == true) {
                                           if (tableList[index].group == tableList[i].group) {
-                                            setState(() {
-                                              //removeFromCart(cart, tableList[index]);
-                                              tableList[i].isSelected = false;
-                                              //print('table list: ${tableList[i].number}');
-                                              //cart.removeSpecificTable(tableList[i]);
-                                            });
+                                            tableList[i].isSelected = false;
                                           } else {
-                                            setState(() {
-                                              //removeFromCart(cart, tableList[index]);
-                                              tableList[i].isSelected = false;
-                                              //cart.removeSpecificTable(tableList[index]);
-                                            });
+                                            tableList[i].isSelected = false;
                                           }
                                         }
                                       }
@@ -250,8 +224,7 @@ class _TableMenuState extends State<TableMenu> {
                                     Fluttertoast.showToast(backgroundColor: Color(0xFF07F107),
                                         msg: "Table not in use");
                                   }
-                                  if (tableList[index].status == 1 &&
-                                      tableList[index].isSelected == true) {
+                                  if (tableList[index].status == 1 && tableList[index].isSelected == true) {
                                     //await readSpecificTableDetail(tableList[index]);
                                     addToCart(cart);
                                   } else {
@@ -260,10 +233,7 @@ class _TableMenuState extends State<TableMenu> {
                                 }
                               },
                               child: Container(
-                                margin: MediaQuery
-                                    .of(context)
-                                    .size
-                                    .height > 500 ? EdgeInsets.all(2) : EdgeInsets.all(0),
+                                margin: MediaQuery.of(context).size.height > 500 ? EdgeInsets.all(2) : EdgeInsets.all(0),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -357,7 +327,7 @@ class _TableMenuState extends State<TableMenu> {
                                           // ),
                                           Container(
                                               alignment: Alignment.center,
-                                              child: Text("#${tableList[index].number!}")),
+                                              child: Text(tableList[index].number!)),
                                           Visibility(
                                             visible: MediaQuery
                                                 .of(context)
@@ -366,7 +336,7 @@ class _TableMenuState extends State<TableMenu> {
                                             child: Container(
                                                 alignment: Alignment.bottomCenter,
                                                 child: Text(
-                                                    "RM ${tableList[index].total_Amount!.toStringAsFixed(2)}",
+                                                    "RM ${tableList[index].total_amount ?? '0.00'}",
                                                     style: TextStyle(fontSize: 18))),
                                           ),
 
@@ -456,21 +426,20 @@ class _TableMenuState extends State<TableMenu> {
   }
 
   readSpecificTableDetail(PosTable posTable) async {
-    await clientAction.connectRequestPort(action: '14', param: jsonEncode(posTable));
-    decodeData2();
+    await clientAction.connectRequestPort(action: '10', param: jsonEncode(posTable), callback: decodeData2);
     setState(() {
       productDetailLoaded = true;
     });
   }
 
-  decodeData2(){
-    var json = jsonDecode(clientAction.response!);
+  decodeData2(response){
+    var json = jsonDecode(response);
     Iterable value1 = json['data']['order_detail'];
     Iterable value2 = json['data']['order_cache'];
-    Iterable value3 = json['data']['pos_table'];
+    // Iterable value3 = json['data']['pos_table'];
     orderDetailList = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
     orderCacheList = value2.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
-    cartSelectedTableList =value3.map((tagJson) => PosTable.fromJson(tagJson)).toList();
+    // cartSelectedTableList =value3.map((tagJson) => PosTable.fromJson(tagJson)).toList();
   }
 
   addToCart(CartModel cart) {
@@ -499,17 +468,7 @@ class _TableMenuState extends State<TableMenu> {
       //print("order cache batch: ${value.first_cache_batch}");
       cart.addItem(value);
     }
-    cart.selectedTable.addAll(cartSelectedTableList);
-    // for (int j = 0; j < orderCacheList.length; j++) {
-    //   //Get specific table use detail
-    //   List<TableUseDetail> tableUseDetailData = await PosDatabase.instance.readAllTableUseDetail(orderCacheList[j].table_use_sqlite_id!);
-    //   tableUseDetailList = List.from(tableUseDetailData);
-    // }
-    //
-    // for (int k = 0; k < tableUseDetailList.length; k++) {
-    //   List<PosTable> tableData = await PosDatabase.instance.readSpecificTable(tableUseDetailList[k].table_sqlite_id!);
-    //   cart.addTable(tableData[0]);
-    // }
+    cart.addAllTable(tableList.where((element) => element.isSelected == true).toList());
   }
 
   removeFromCart(CartModel cart) async {

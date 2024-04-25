@@ -26,6 +26,9 @@ class TaxLinkDining{
   String? updated_at;
   String? soft_delete;
   String? tax_rate;
+  String? tax_name;
+  String? dining_name;
+  double? tax_amount;
 
   TaxLinkDining(
       {this.tax_link_dining_id,
@@ -34,7 +37,11 @@ class TaxLinkDining{
         this.created_at,
         this.updated_at,
         this.soft_delete,
-        this.tax_rate});
+        this.tax_rate,
+        this.tax_name,
+        this.dining_name,
+        this.tax_amount
+      });
 
   TaxLinkDining copy({
     int? tax_link_dining_id,
@@ -62,6 +69,8 @@ class TaxLinkDining{
     updated_at: json[TaxLinkDiningFields.updated_at] as String?,
     soft_delete: json[TaxLinkDiningFields .soft_delete] as String?,
     tax_rate: json['tax_rate'] as String?,
+    tax_name: json['tax_name'] as String?,
+    dining_name: json['dining_name'] as String?
   );
 
   Map<String, Object?> toJson() => {

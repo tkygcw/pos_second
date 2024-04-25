@@ -47,9 +47,7 @@ class _SetupPageState extends State<SetupPage> {
             transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
             child: Opacity(
               opacity: a1.value,
-              child: ServerIpDialog(
-                callBack: () => saveBranchAndDevice(),
-              )
+              child: ServerIpDialog()
             ),
           );
         },
@@ -227,8 +225,8 @@ class _SetupPageState extends State<SetupPage> {
           ),
         );
       } else {
-         openIpDialog();
-        //saveBranchAndDevice();
+        await saveBranchAndDevice();
+        openIpDialog();
         //checkDeviceLogin();
       }
     }
@@ -247,10 +245,10 @@ class _SetupPageState extends State<SetupPage> {
   //   }
   // }
 
-  saveBranchAndDevice() {
+  saveBranchAndDevice() async  {
     // Navigator.of(context).pushReplacement(
     //     MaterialPageRoute(builder: (context) => LoadingPage()));
-    savePref();
+    await savePref();
     // Obtain shared preferences.
 
     // if(this.token != null){
@@ -278,7 +276,7 @@ class _SetupPageState extends State<SetupPage> {
     await prefs.setInt('branch_id', selectedBranch!.branchID!);
     await prefs.setInt('device_id', selectedDevice!.deviceID!);
     await prefs.setString("branch", json.encode(selectedBranch!));
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoadingPage()));
+    //Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoadingPage()));
   }
 
 //   updateBranchToken() async {
