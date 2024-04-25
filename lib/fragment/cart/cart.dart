@@ -52,7 +52,8 @@ class _CartPageState extends State<CartPage> {
   final ScrollController _scrollController = ScrollController();
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<Printer> printerList = [];
-  List<Promotion> promotionList = [], autoApplyPromotionList = [];
+  List<Promotion> autoApplyPromotionList = [];
+  List<Promotion> promotionList = decodeAction.decodedBranchPromotionList!;
   List<BranchLinkDining> diningList = decodeAction.decodedBranchLinkDiningList!;
   List<TaxLinkDining> taxLinkDiningList = decodeAction.decodedTaxLinkDiningList, currentDiningTax = [];
   List<String> branchLinkDiningIdList = [];
@@ -106,7 +107,7 @@ class _CartPageState extends State<CartPage> {
 
   @override
   void initState() {
-    preload();
+    // preload();
     cartStream = cartController.stream;
     cart = context.read<CartModel>();
     cart.initBranchLinkDiningOption();
@@ -175,7 +176,6 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        print("cart rebuild call");
         WidgetsBinding.instance.addPostFrameCallback((_) {
           getSubTotal();
         });
@@ -669,7 +669,6 @@ class _CartPageState extends State<CartPage> {
                                             openLoadingDialogBox();
                                             if (cart.selectedOption == 'Dine in') {
                                               if (cart.selectedTable.isNotEmpty) {
-                                                print('has new item $hasNewItem');
                                                 if (cart.cartNotifierItem[0].status == 1 && hasNewItem == true) {
                                                   await callPlaceOrder(cart, '9');
                                                 } else {
@@ -693,7 +692,6 @@ class _CartPageState extends State<CartPage> {
                                               }
                                             } else {
                                               // not dine in call
-                                              print("Not dine in called");
                                               cart.removeAllTable();
                                               if (cart.cartNotifierItem.isNotEmpty) {
                                                 await callPlaceOrder(cart, '8');
@@ -892,7 +890,6 @@ class _CartPageState extends State<CartPage> {
           {
             if (int.parse(product.daily_limit!) > 0 && simpleIntInput <= int.parse(product.daily_limit!)) {
               num stockLeft = int.parse(product.daily_limit!) - checkCartProductQuantity(cart, product);
-              print('stock left: $stockLeft');
               if (stockLeft > 0) {
                 hasStock = true;
               } else {
@@ -1352,7 +1349,6 @@ class _CartPageState extends State<CartPage> {
       hasPromo = false;
       if (cart.cartNotifierItem.isNotEmpty) {
         //loop promotion list get promotion
-        print("promotion list: ${promotionList.length}");
         for (int j = 0; j < promotionList.length; j++) {
           promotionList[j].promoAmount = 0.0;
           //check is the promotion auto apply
@@ -2047,7 +2043,6 @@ class _CartPageState extends State<CartPage> {
 
   ///place order
   callPlaceOrder(CartModel cart, String action) async {
-    print("json cart model: ${jsonEncode(cart)}");
     await clientAction.connectRequestPort(action: action, param: jsonEncode(cart), callback: responseStatusCheck);
   }
 

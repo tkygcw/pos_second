@@ -3,11 +3,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:optimy_second_device/fragment/server_ip_dialog.dart';
+import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/page/loading.dart';
 import 'package:optimy_second_device/page/login.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../main.dart';
@@ -21,6 +22,14 @@ class DeviceSetting extends StatefulWidget {
 }
 
 class _DeviceSettingState extends State<DeviceSetting> {
+  late CartModel cart;
+
+  @override
+  void initState() {
+    // preload();
+    cart = context.read<CartModel>();
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,6 +60,7 @@ class _DeviceSettingState extends State<DeviceSetting> {
                   title: Text(AppLocalizations.of(context)!.translate('sync'), style: TextStyle(color: Colors.white)),
                   trailing: Icon(Icons.sync, color: Colors.white),
                   onTap: () {
+                    cart.initialLoad();
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
                         builder: (BuildContext context) => LoadingPage(),

@@ -712,6 +712,10 @@ class _CartDialogState extends State<CartDialog> {
       case '1': {
         await readAllTable();
       }break;
+      case '2': {
+        Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+        await readAllTable();
+      }break;
       case '4': {
         await readAllTable();
       }break;

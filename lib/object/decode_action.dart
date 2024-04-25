@@ -12,6 +12,7 @@ import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/product_variant.dart';
+import 'package:optimy_second_device/object/promotion.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/object/user.dart';
 
@@ -41,6 +42,7 @@ class DecodeAction {
   List<BranchLinkDining>? decodedBranchLinkDiningList = [];
   List<TaxLinkDining> decodedTaxLinkDiningList = [];
   List<User>? decodedUserList = [];
+  List<Promotion>? decodedBranchPromotionList = [];
   AppSetting? decodedAppSetting;
   final BuildContext _context = MyApp.navigatorKey.currentContext!;
   String flushbarStatus = '';
@@ -51,6 +53,7 @@ class DecodeAction {
     this.decodedBranchLinkProductList,
     this.decodedBranchLinkModifierList,
     this.decodedUserList,
+    this.decodedBranchLinkDiningList
   });
 
   decodeAllFunction(response){
@@ -75,6 +78,8 @@ class DecodeAction {
     Iterable value9 = json['data']['taxLinkDiningList'];
     decodedTaxLinkDiningList = List<TaxLinkDining>.from(value9.map((json) => TaxLinkDining.fromJson(json)));
     print("decodedTaxLinkDiningList length: ${decodedTaxLinkDiningList.length}");
+    Iterable value10 = json['data']['branchPromotionList'];
+    decodedBranchPromotionList =  List<Promotion>.from(value10.map((json) => Promotion.fromJson(json)));
 
     ///image part
     // Iterable value7 = json['data']['image_list'];

@@ -72,7 +72,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    print("food menu rebuild!!!");
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return isLoading ? CustomProgressBar() :
       Scaffold(
@@ -219,7 +218,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   }
 
   readAllCategories({NotificationModel? model}) async {
-    print("read all category");
     categoryList.clear();
     categoryTab.clear();
     categoryTabContent.clear();

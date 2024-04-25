@@ -226,7 +226,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                 )),
                             Visibility(
                               visible: dialogStock != '' ? true : false,
-                              child: Text("In stock: $dialogStock${widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.unit : ''}",
+                              child: Text("${AppLocalizations.of(context)!.translate('in_stock')}: $dialogStock${widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.unit : ''}",
                                   style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -479,7 +479,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Remark",
+                                        AppLocalizations.of(context)!.translate('remark'),
                                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                       ),
                                     ],
@@ -571,7 +571,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                     )),
                                 Visibility(
                                   visible: dialogStock != '' ? true : false,
-                                  child: Text("In stock: $dialogStock${widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.unit : ''}",
+                                  child: Text("${AppLocalizations.of(context)!.translate('in_stock')}: $dialogStock${widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.unit : ''}",
                                       style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -785,21 +785,18 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                               onPressed: () {
                                                 // stock disable or in stock
                                                 if(dialogStock == '' || simpleIntInput+1 < int.parse(dialogStock)) {
-                                                  print('stock_quantity: $dialogStock');
                                                   setState(() {
                                                     simpleIntInput += 1;
                                                     quantityController.text = simpleIntInput.toString();
                                                     simpleIntInput =  int.parse(quantityController.text.replaceAll(',', ''));
                                                   });
                                                 } else{
-                                                  print('stock_quantity: $dialogStock');
                                                   setState(() {
                                                     simpleIntInput = int.parse(dialogStock);
                                                     quantityController.text = simpleIntInput.toString();
                                                     simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
                                                   });
                                                   if(dialogStock == '0'){
-                                                    print('stock_quantity: $dialogStock');
                                                     Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
                                                   }
                                                 }
@@ -939,7 +936,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         this.branchLinkProduct = branchLinkProduct;
       }
     }
-    print('branch link product: ${branchLinkProduct.branch_link_product_sqlite_id}');
   }
 
   void _productStockStatusAction(){
@@ -982,7 +978,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   _onSubmitted(String value) {
-    print("app setting table order: ${appSetting.table_order}");
     _productStockStatusAction();
   }
 
@@ -1193,9 +1188,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
 
   void getProductDialogStock(Product product){
     if (product.has_variant == 0) {
-      print("no variant called!!!");
-      print("stock type: ${branchLinkProduct.stock_type}");
-      print("stock left: ${branchLinkProduct.daily_limit}");
       switch(branchLinkProduct.stock_type){
         case '1': {
           dialogStock = branchLinkProduct.daily_limit.toString();
@@ -1208,7 +1200,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         }
       }
     } else {
-      print("variant called!!!");
       switch(branchLinkProduct.stock_type){
         case '1': {
           dialogStock = branchLinkProduct.daily_limit.toString();
@@ -1256,7 +1247,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       }
       //get all same mod item into a list
       List<int> comparedList = cartModItemId.toSet().intersection(checkedModItemId.toSet()).toList();
-      print('compared list length: ${comparedList.length}');
       if(comparedList.length == checkedModItem.length){
         same = true;
       } else {
@@ -1352,7 +1342,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           item[0].quantity = quantityStack(cartItem: item[0], newAddItem: value);
         } else {
           bool status = compareCartProductModifier(cartModifierGroup: item[0].modifier!);
-          print('compared status: $status');
           if(status == false){
             cart.addItem(value);
           } else{
