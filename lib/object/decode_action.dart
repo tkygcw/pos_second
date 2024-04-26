@@ -3,8 +3,6 @@ import 'dart:convert';
 
 import 'package:another_flushbar/flushbar.dart';
 import 'package:assets_audio_player/assets_audio_player.dart';
-import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
@@ -45,7 +43,7 @@ class DecodeAction {
   List<Promotion>? decodedBranchPromotionList = [];
   AppSetting? decodedAppSetting;
   final BuildContext _context = MyApp.navigatorKey.currentContext!;
-  String flushbarStatus = '';
+  String flushbarStatus = '', appLanguageCode = '';
 
   DecodeAction({
     this.decodedProductList,
@@ -80,7 +78,7 @@ class DecodeAction {
     print("decodedTaxLinkDiningList length: ${decodedTaxLinkDiningList.length}");
     Iterable value10 = json['data']['branchPromotionList'];
     decodedBranchPromotionList =  List<Promotion>.from(value10.map((json) => Promotion.fromJson(json)));
-
+    appLanguageCode = json['data']['app_language_code'];
     ///image part
     // Iterable value7 = json['data']['image_list'];
     // decodedBase64ImageList = List.from(value7);

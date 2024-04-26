@@ -237,10 +237,10 @@ packages:
     dependency: transitive
     description:
       name: dart_ping
-      sha256: "623cce963c66643cb26661187651a1c69ec09ac3a8bae3a17717aed0e17c0054"
+      sha256: "2f5418d0a5c64e53486caaac78677b25725b1e13c33c5be834ce874ea18bd24f"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.2"
+    version: "9.0.1"
   dbus:
     dependency: transitive
     description:
@@ -562,10 +562,10 @@ packages:
     dependency: "direct main"
     description:
       name: lan_scanner
-      sha256: cb3ece64ab8eacb5ce367b792e1ceedfbf4d6e74d8bb4184919c7f832742967c
+      sha256: a36865c20469f99d26078b488d4ce2787fef8cf59c4c5c5f2f72a148c6721418
       url: "https://pub.dev"
     source: hosted
-    version: "3.5.0"
+    version: "4.0.0+1"
   leak_tracker:
     dependency: transitive
     description:

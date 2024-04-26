@@ -56,11 +56,11 @@ class _HomePageState extends State<HomePage> {
     //   setupFirebaseMessaging();
     // }
     setScreenLayout();
-    initSecondDisplay();
-    _items = _generateItems;
-    currentPage = 'menu';
-    getRoleName();
-    getBranchName();
+    // initSecondDisplay();
+    // _items = _generateItems;
+    // currentPage = 'menu';
+    // getRoleName();
+    // getBranchName();
     // if (widget.isNewDay) {
     //   WidgetsBinding.instance.addPostFrameCallback((_) {
     //     showDialog(
@@ -72,6 +72,17 @@ class _HomePageState extends State<HomePage> {
     //         });
     //   });
     // }
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    _items = _generateItems;
+    currentPage = 'menu';
+    getRoleName();
+    getBranchName();
+
+    super.didChangeDependencies();
   }
 
   @override
@@ -123,7 +134,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     print("home rebuild!!!");
-    var size = MediaQuery.of(context).size;
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       this.themeColor = color;
       return PopScope(
@@ -149,7 +159,7 @@ class _HomePageState extends State<HomePage> {
                   isCollapsed: true,
                   items: _items,
                   avatarImg: AssetImage("drawable/logo.png"),
-                  title: widget.user!.name! + "\n" + (branchName ?? '') + " - " + role,
+                  title: "${widget.user!.name!}\n${branchName ?? ''} - $role",
                   backgroundColor: color.backgroundColor,
                   selectedTextColor: color.iconColor,
                   textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
@@ -162,7 +172,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         flex: 3,
-                        child: _body(size, context),
+                        child: _body(context),
                       ),
                       //cart page
                       Visibility(
@@ -215,7 +225,7 @@ class _HomePageState extends State<HomePage> {
     CartModel cart = Provider.of<CartModel>(context, listen: false);
     return [
       CollapsibleItem(
-        text: 'Menu',
+        text: AppLocalizations.of(context)!.translate('menu'),
         icon: Icons.add_shopping_cart,
         onPressed: () => setState(() {
           currentPage = 'menu';
@@ -239,7 +249,7 @@ class _HomePageState extends State<HomePage> {
       //   onPressed: () => setState(() => currentPage = 'other_order'),
       // ),
       CollapsibleItem(
-        text: 'Setting',
+        text: AppLocalizations.of(context)!.translate('setting'),
         icon: Icons.settings,
         onPressed: () => setState(() => currentPage = 'setting'),
       ),
@@ -266,7 +276,7 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  Widget _body(Size size, BuildContext context) {
+  Widget _body(BuildContext context) {
     switch (currentPage) {
       case 'menu':
         return OrderPage();

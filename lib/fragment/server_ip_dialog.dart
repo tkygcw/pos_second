@@ -8,7 +8,6 @@ import 'package:lan_scanner/lan_scanner.dart';
 import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
-import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -210,7 +209,7 @@ class _TypeIpViewState extends State<TypeIpView> {
   @override
   void dispose() {
     // TODO: implement dispose
-    print("dispose called!!!");
+    // print("dispose called!!!");
     ipTextController.dispose();
     super.dispose();
   }
@@ -224,7 +223,7 @@ class _TypeIpViewState extends State<TypeIpView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Server IP Address',
+              AppLocalizations.of(context)!.translate('server_device_ip'),
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
             ),
             SizedBox(height: 10),
@@ -239,11 +238,10 @@ class _TypeIpViewState extends State<TypeIpView> {
                   onSubmitted: _onSubmitted,
                   decoration:  InputDecoration(
                       border: OutlineInputBorder(borderSide: BorderSide(color: color.backgroundColor)),
-                      errorText: isSubmitted ? errorIp == null ? errorIp : AppLocalizations.of(context)?.translate(errorIp!) : null,
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: color.backgroundColor),
                       ),
-                      hintText: 'Enter server IP',
+                      hintText: AppLocalizations.of(context)!.translate("enter_server_ip"),
                   ),
 
                 );
@@ -278,24 +276,32 @@ class _TypeIpViewState extends State<TypeIpView> {
   }
 
   _onSubmitted(String value) async {
-    setState(() {
-      isSubmitted = true;
-      waitingResponse = true;
-      FocusManager.instance.primaryFocus?.unfocus();
-    });
-    if(errorIp == null){
-      await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+    if(ipTextController.text.trim().isNotEmpty){
+      setState(() {
+        isSubmitted = true;
+        waitingResponse = true;
+        FocusManager.instance.primaryFocus?.unfocus();
+      });
+      if(errorIp == null){
+        await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+      }
+    } else {
+      Fluttertoast.showToast(msg: AppLocalizations.of(context)!.translate("ip_required"),  backgroundColor: Colors.red);
     }
   }
 
   _onPressed() async {
-    setState(() {
-      isSubmitted = true;
-      waitingResponse = true;
-      FocusManager.instance.primaryFocus?.unfocus();
-    });
-    if(errorIp == null){
-      await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+    if(ipTextController.text.trim().isNotEmpty){
+      setState(() {
+        isSubmitted = true;
+        waitingResponse = true;
+        FocusManager.instance.primaryFocus?.unfocus();
+      });
+      if(errorIp == null){
+        await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+      }
+    } else {
+      Fluttertoast.showToast(msg: AppLocalizations.of(context)!.translate("ip_required"), backgroundColor: Colors.red);
     }
   }
 
@@ -578,9 +584,9 @@ class _ScanIpViewState extends State<ScanIpView> {
       if (mounted) {
         setState(() {
           if(wifiName != null){
-            info = Text('Scanning device within $wifiName');
+            info = Text('${AppLocalizations.of(context)!.translate('scanning_device_within')} $wifiName');
           } else {
-            info = Text('Scanning device');
+            info = Text(AppLocalizations.of(context)!.translate('scanning'));
           }
           percentage = progress;
           if (percentage == 1.0) {
@@ -591,8 +597,8 @@ class _ScanIpViewState extends State<ScanIpView> {
       }
     });
 
-    stream.listen((HostModel host) {
-      ips.add(host.ip);
+    stream.listen((Host host) {
+      ips.add(host.internetAddress.address);
     });
   }
 

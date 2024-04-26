@@ -7,6 +7,7 @@ import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
+import 'package:optimy_second_device/fragment/custom_flushbar.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
@@ -33,8 +34,6 @@ import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
 import 'cart_dialog.dart';
 import 'cart_remove_dialog.dart';
-// import '../settlement/cash_dialog.dart';
-// import '../payment/payment_select_dialog.dart';
 
 class CartPage extends StatefulWidget {
   final String currentPage;
@@ -2065,12 +2064,13 @@ class _CartPageState extends State<CartPage> {
         case '3': {
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
-          Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+          // Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+          CustomFlushbar.instance.showFlushbar(json['error'], ' ', Colors.red, (flushbar) => flushbar.dismiss(true), duration: Duration(seconds: 3));
           cart.initialLoad();
         }break;
         case '4': {
           // updateBranchLinkProductData(json['data']['tb_branch_link_product']);
-          Fluttertoast.showToast(msg: json['exception']);
+          CustomFlushbar.instance.showFlushbar(json['exception'], ' ', Colors.red, (flushbar) => flushbar.dismiss(true), duration: Duration(seconds: 3));
           Navigator.of(context).pop();
           cart.initialLoad();
         }break;

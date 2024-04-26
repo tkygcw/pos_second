@@ -21,10 +21,6 @@ import '../../page/progress_bar.dart';
 import '../../translation/AppLocalizations.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
-import '../custom_flushbar.dart';
-
-// import '../table/table_change_dialog.dart';
-
 class CartDialog extends StatefulWidget {
   const CartDialog({Key? key}) : super(key: key);
 
@@ -111,7 +107,7 @@ class _CartDialogState extends State<CartDialog> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Select Table"),
+              Text(AppLocalizations.of(context)!.translate('select_table')),
               Visibility(
                 visible: checkIsSelected(),
                 child: SizedBox(
@@ -123,7 +119,7 @@ class _CartDialogState extends State<CartDialog> {
                       backgroundColor: Colors.red,
                     ),
                     child: Text(
-                      'Clear All',
+                      AppLocalizations.of(context)!.translate('clear_all'),
                       style: TextStyle(color: Colors.white),
                     ),
                     onPressed: () {
@@ -169,14 +165,14 @@ class _CartDialogState extends State<CartDialog> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color.backgroundColor,
                 ),
-                child: Text(
-                  'Close',
-                  style: TextStyle(color: Colors.white),
-                ),
                 onPressed: isButtonDisabled ? null : () {
                   disableButton();
                   Navigator.of(context).pop();
                 },
+                child: Text(
+                  AppLocalizations.of(context)!.translate('close'),
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
             SizedBox(
@@ -185,10 +181,6 @@ class _CartDialogState extends State<CartDialog> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color.buttonColor,
-                ),
-                child: Text(
-                  'Select Table',
-                  style: TextStyle(color: Colors.white),
                 ),
                 onPressed: !checkIsSelected() || isButtonDisabled ? null : () async {
                   isButtonDisabled = true;
@@ -222,6 +214,10 @@ class _CartDialogState extends State<CartDialog> {
                   // if(!mounted) return;
                   // Navigator.of(context).pop();
                 },
+                child: Text(
+                  AppLocalizations.of(context)!.translate('select_table'),
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],

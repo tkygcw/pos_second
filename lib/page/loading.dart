@@ -98,6 +98,7 @@ class _LoadingPageState extends State<LoadingPage> {
     } else {
       AppSettingModel.instance.setShowSKUStatus(false);
     }
+    appLanguage.changeLanguage(Locale(decodeAction.appLanguageCode));
   }
 
   backToLoginPage(){

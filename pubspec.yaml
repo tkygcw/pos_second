@@ -67,7 +67,7 @@ dependencies:
       url: https://github.com/tkygcw/esc_pos_printer.git
   flutter_usb_printer: ^0.1.0+1
   reorderable_grid_view: ^2.2.6
-  lan_scanner: ^3.5.0
+  lan_scanner: ^4.0.0+1
   network_info_plus: ^4.1.0+1
   percent_indicator: ^4.2.3
   qr_code_scanner: ^1.0.1
