@@ -2075,9 +2075,7 @@ class _CartPageState extends State<CartPage> {
           cart.initialLoad();
         }break;
         default: {
-          clientAction.openReconnectDialog(action: '15', callback: (response){
-            updateAllBranchLinkProductData(response);
-          });
+          clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: responseStatusCheck);
         }
       }
     }

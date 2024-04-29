@@ -302,7 +302,9 @@ class _TypeIpViewState extends State<TypeIpView> {
       case '0':
         {
           await receivedResponse();
-          Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Connection failed, Please check internet connection");
+          if(mounted){
+            Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: AppLocalizations.of(context)!.translate("network_connection_failed"));
+          }
         }
         break;
       case '1':

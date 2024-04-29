@@ -209,10 +209,8 @@ class _CartRemoveDialogState extends State<CartRemoveDialog> {
         return Consumer<TableModel>(builder: (context, TableModel tableModel, child) {
           this.tableModel = tableModel;
           return AlertDialog(
-            title: Text('Confirm remove item ?'),
-            content: Container(
-              child: Text('${widget.cartItem!.product_name} ${AppLocalizations.of(context)?.translate('confirm_delete')}'),
-            ),
+            title: Text(AppLocalizations.of(context)!.translate('confirm_remove_item')),
+            content: Text('${widget.cartItem!.product_name} ${AppLocalizations.of(context)?.translate('confirm_delete')}'),
             actions: <Widget>[
               TextButton(
                   child:

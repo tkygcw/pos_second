@@ -392,6 +392,7 @@
   "printing_error": "Ralat mencetak",
   "product": "Produk",
   "product_edited_report": "Produk Edited Report",
+  "product_price_empty": "Harga produk tidak boleh kosong",
   "product_name": "Nama produk",
   "product_name_empty": "Nama produk kosong",
   "product_name_font_size": "Saiz fon nama produk",

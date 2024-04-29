@@ -338,11 +338,11 @@ class _HomePageState extends State<HomePage> {
               child: SingleChildScrollView(
                 physics: NeverScrollableScrollPhysics(),
                 child: AlertDialog(
-                  title: Text('Exit app'),
+                  title: Text(AppLocalizations.of(context)!.translate('exit_app')),
                   content: SizedBox(
                     height: 100.0,
                     width: 350.0,
-                    child: Text('Are you sure to exit app?'),
+                    child: Text(AppLocalizations.of(context)!.translate('are_you_sure_to_exit_app')),
                   ),
                   actions: <Widget>[
                     TextButton(
