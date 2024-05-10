@@ -8,6 +8,7 @@ import 'package:lan_scanner/lan_scanner.dart';
 import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:provider/provider.dart';
@@ -26,24 +27,22 @@ class ServerIpDialog extends StatefulWidget {
 }
 
 class _ServerIpDialogState extends State<ServerIpDialog> {
-  // late Map branchObject;
+  late SharedPreferences prefs;
   bool isLoaded = false;
 
   @override
   void initState() {
     // TODO: implement initState
-    // getPreferences();
+    getPreferences();
     super.initState();
   }
 
-  // getPreferences() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final String? branch = prefs.getString('branch');
-  //   branchObject = json.decode(branch!);
-  //   setState(() {
-  //     isLoaded = true;
-  //   });
-  // }
+  getPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isLoaded = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +64,8 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                         icon: Icon(Icons.logout))
                   ],
                 ),
-                content: SizedBox(
+                content: isLoaded ?
+                SizedBox(
                   width: 500,
                   child: DefaultTabController(
                     length: 2,
@@ -88,7 +88,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                             child: TabBarView(
                               physics: NeverScrollableScrollPhysics(),
                               children: [
-                                TypeIpView(),
+                                TypeIpView(prefs: prefs),
                                 ScanIpView(isMobile: false),
                               ],
                             ),
@@ -97,7 +97,8 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                       ],
                     ),
                   ),
-                ));
+                ) : CustomProgressBar()
+            );
           } else {
             return AlertDialog(
               title: Row(
@@ -105,7 +106,8 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                   Text(AppLocalizations.of(context)!.translate("connect_server_device")),
                 ],
               ),
-              content: SizedBox(
+              content: isLoaded ?
+              SizedBox(
                 height: 300,
                 width: 500,
                 child: DefaultTabController(
@@ -130,7 +132,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                           child: TabBarView(
                             physics: NeverScrollableScrollPhysics(),
                             children: [
-                              TypeIpView(),
+                              TypeIpView(prefs: prefs),
                               ScanIpView(isMobile: true),
                             ],
                           ),
@@ -139,7 +141,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                     ],
                   ),
                 ),
-              ),
+              ) : CustomProgressBar(),
               actions: [
                 ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -189,7 +191,8 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
 }
 
 class TypeIpView extends StatefulWidget {
-  const TypeIpView({Key? key}) : super(key: key);
+  final SharedPreferences prefs;
+  const TypeIpView({Key? key, required this.prefs}) : super(key: key);
 
   @override
   State<TypeIpView> createState() => _TypeIpViewState();
@@ -197,7 +200,15 @@ class TypeIpView extends StatefulWidget {
 
 class _TypeIpViewState extends State<TypeIpView> {
   final ipTextController = TextEditingController();
+  late SharedPreferences prefs;
   bool isSubmitted = false, waitingResponse = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    prefs = widget.prefs;
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -238,9 +249,23 @@ class _TypeIpViewState extends State<TypeIpView> {
               );
             },
           ),
-          SizedBox(height: 10),
+          Visibility(
+              visible: prefs.getString('server_ip') != null ? true : false,
+              child: ListTile(
+                contentPadding: EdgeInsets.only(left: 10, right: 10),
+                title: Text("${prefs.getString('server_ip')}", style: TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold)),
+                trailing: TextButton(
+                    onPressed: () {
+                      ipTextController.text = prefs.getString('server_ip')!;
+                    },
+                    child: Text(AppLocalizations.of(context)!.translate("add"), style: TextStyle(fontWeight: FontWeight.bold))),
+              )
+          ),
+          SizedBox(height: 5),
           ElevatedButton.icon(
-              style: ButtonStyle(backgroundColor: MaterialStatePropertyAll(color.backgroundColor)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color.backgroundColor
+              ),
               icon: Icon(Icons.wifi),
               onPressed: waitingResponse ? null : _onPressed,
               label: Text(AppLocalizations.of(context)!.translate("connect")))
@@ -311,6 +336,7 @@ class _TypeIpViewState extends State<TypeIpView> {
         {
           print("case 1 called!!!");
           Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoadingPage()));
+          prefs.setString('server_ip', ipTextController.text);
         }
         break;
       case '2':

@@ -132,6 +132,7 @@ class _SettingMenuState extends State<SettingMenu> {
                       footer: SideNavigationBarFooter(
                           label: Column(
                             children: [
+                              Text("IP: ${clientAction.deviceIp}"),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: color.backgroundColor,
