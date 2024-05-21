@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:another_flushbar/flushbar.dart';
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/custom_snackbar.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -174,43 +174,13 @@ class DecodeAction {
   }
 
   showFlushBarAndPlaySound(){
-    Flushbar(
-      icon: Icon(Icons.error, size: 32, color: Colors.white),
-      shouldIconPulse: false,
-      title: "${AppLocalizations.of(_context)?.translate('error')}${AppLocalizations.of(_context)?.translate('kitchen_printer_timeout')}",
-      message: "${AppLocalizations.of(_context)?.translate('please_try_again_later')}",
-      duration: Duration(seconds: 5),
-      backgroundColor: Colors.red,
-      messageColor: Colors.white,
-      flushbarPosition: FlushbarPosition.TOP,
-      maxWidth: 350,
-      margin: EdgeInsets.all(8),
-      borderRadius: BorderRadius.circular(8),
-      padding: EdgeInsets.fromLTRB(40, 20, 40, 20),
-      onTap: (flushbar) {
-        flushbar.dismiss(true);
-      },
-      onStatusChanged: (status) {
-        flushbarStatus = status.toString();
-        print("onStatusChanged: ${status}");
-      },
-    ).show(_context);
-    playSound();
-    Future.delayed(Duration(seconds: 3), () {
-      if(flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") {
-        playSound();
-      }
-    });
+    CustomSnackBar.instance.showSnackBar(
+        title: "${AppLocalizations.of(_context)?.translate('error')}${AppLocalizations.of(_context)?.translate('kitchen_printer_timeout')}",
+        description: "${AppLocalizations.of(_context)?.translate('please_try_again_later')}",
+        playSound: true,
+        playtime: 2,
+        contentType: ContentType.failure
+    );
   }
 
-  playSound() {
-    try {
-      final assetsAudioPlayer = AssetsAudioPlayer();
-      assetsAudioPlayer.open(
-        Audio("audio/review.mp3"),
-      );
-    } catch (e) {
-      print("Play Sound Error: ${e}");
-    }
-  }
 }
