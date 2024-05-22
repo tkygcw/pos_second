@@ -596,6 +596,16 @@ class _ScanIpViewState extends State<ScanIpView> {
     var wifiIP = await NetworkInfo().getWifiIP();
     var wifiName = await NetworkInfo().getWifiName();
 
+    if(wifiIP == null) {
+      List<NetworkInterface> interfaces = await NetworkInterface.list();
+      for (var interface in interfaces) {
+        for (var address in interface.addresses) {
+          wifiIP = address.address;
+          wifiName = "Ethernet";
+        }
+      }
+    }
+
     var subnet = ipToCSubnet(wifiIP!);
 
     final stream = scanner.icmpScan(subnet, progressCallback: (progress) {

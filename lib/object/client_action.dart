@@ -34,7 +34,16 @@ class ClientAction {
   }
 
   Future<String?> getDeviceIp() async {
-    _deviceIp = await networkInfo.getWifiIP();
+    var wifiIP= await networkInfo.getWifiIP();
+    if(wifiIP == null) {
+      List<NetworkInterface> interfaces = await NetworkInterface.list();
+      for (var interface in interfaces) {
+        for (var address in interface.addresses) {
+          wifiIP = address.address;
+        }
+      }
+    }
+    _deviceIp = wifiIP;
     return _deviceIp;
   }
 
