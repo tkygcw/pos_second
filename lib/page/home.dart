@@ -5,13 +5,8 @@ import 'package:flutter/services.dart';
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
-import 'package:optimy_second_device/fragment/network_dialog.dart';
-import 'package:optimy_second_device/fragment/qr_order/qr_main_page.dart';
-import 'package:optimy_second_device/fragment/qr_order/qr_order_page.dart';
 import 'package:optimy_second_device/fragment/reconnect_dialog.dart';
-import 'package:optimy_second_device/fragment/setting/device_setting.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
-import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,7 +21,6 @@ import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
 
-//11
 class HomePage extends StatefulWidget {
   final User? user;
   final bool isNewDay;
