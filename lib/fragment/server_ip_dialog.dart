@@ -50,7 +50,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
       return PopScope(
         canPop: false,
         child: LayoutBuilder(builder: (context, constraints) {
-          if (constraints.maxWidth > 800) {
+          if (constraints.maxWidth > 900 && constraints.maxHeight > 500) {
             return AlertDialog(
                 title: Row(
                   children: [
@@ -341,6 +341,7 @@ class _TypeIpViewState extends State<TypeIpView> {
         break;
       case '2':
         {
+          Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
           await logout();
         }
         break;
@@ -445,7 +446,7 @@ class _ScanIpViewState extends State<ScanIpView> {
                                     elevation: 5,
                                     child: ListTile(
                                       onTap: () async {
-                                        await clientAction.connectServer(ips[index], callback: checkStatus);
+                                        await clientAction.connectServer(ips[index], callback: checkScanStatus);
                                       },
                                       leading: Icon(
                                         Icons.wifi,
@@ -479,7 +480,7 @@ class _ScanIpViewState extends State<ScanIpView> {
                                         elevation: 5,
                                         child: ListTile(
                                           onTap: () async {
-                                            await clientAction.connectServer(ips[index], callback: checkStatus);
+                                            await clientAction.connectServer(ips[index], callback: checkScanStatus);
                                           },
                                           leading: Icon(
                                             Icons.wifi,
@@ -630,7 +631,7 @@ class _ScanIpViewState extends State<ScanIpView> {
     });
   }
 
-  checkStatus(response) async {
+  checkScanStatus(response) async {
     var json = jsonDecode(response);
     print('status: ${json['status']}');
     switch (json['status']) {
@@ -647,6 +648,7 @@ class _ScanIpViewState extends State<ScanIpView> {
         break;
       case '2':
         {
+          Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
           await logout();
         }
         break;
