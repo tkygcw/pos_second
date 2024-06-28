@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/reconnect_dialog.dart';
@@ -35,7 +34,16 @@ class ClientAction {
   }
 
   Future<String?> getDeviceIp() async {
-    _deviceIp = await networkInfo.getWifiIP();
+    var wifiIP= await networkInfo.getWifiIP();
+    if(wifiIP == null) {
+      List<NetworkInterface> interfaces = await NetworkInterface.list();
+      for (var interface in interfaces) {
+        for (var address in interface.addresses) {
+          wifiIP = address.address;
+        }
+      }
+    }
+    _deviceIp = wifiIP;
     return _deviceIp;
   }
 

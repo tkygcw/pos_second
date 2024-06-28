@@ -186,6 +186,7 @@
   "enable_table_order_desc": "You will be redirected to pos pin page, Click 'Yes' to proceed.",
   "enter_admin_pin": "Enter admin PIN",
   "enter_current_user_pin": "Enter Current User PIN",
+  "enter_server_ip": "Enter server IP",
   "enter_yes": "Please type YES to proceed",
   "error": "Error: ",
   "exit_app": "Exit app",

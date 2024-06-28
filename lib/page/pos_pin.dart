@@ -281,23 +281,24 @@ class _PosPinPageState extends State<PosPinPage> {
   -------------------Pos pin checking part---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 
-  userCheck(String pos_pin) async {
+   userCheck(String pos_pin) async {
     List<User>? userList = decodeAction.decodedUserList;
-    // final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     // final int? branch_id = prefs.getInt('branch_id');
     User? user = userList?.firstWhereOrNull((item) => item.pos_pin == pos_pin);  //await PosDatabase.instance.verifyPosPin(pos_pin, branch_id.toString());
     if (user != null) {
       print('log in pos pin success');
-        Navigator.push(
-          context,
-          PageTransition(
-            type: PageTransitionType.fade,
-            child: HomePage(
-              user: user,
-              isNewDay: false,
-            ),
+      await prefs.setString("pos_pin_user", jsonEncode(user));
+      Navigator.push(
+        context,
+        PageTransition(
+          type: PageTransitionType.fade,
+          child: HomePage(
+            user: user,
+            isNewDay: false,
           ),
-        );
+        ),
+      );
     } else {
       Fluttertoast.showToast(backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('wrong_pin_please_insert_valid_pin'));
     }

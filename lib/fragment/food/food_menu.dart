@@ -1,16 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
-import '../../notifier/cart_notifier.dart';
 import '../../notifier/theme_color.dart';
 import '../../object/categories.dart';
 import '../../object/colorCode.dart';
@@ -18,6 +13,7 @@ import '../../object/product.dart';
 import '../../object/search_delegate.dart';
 import '../../page/progress_bar.dart';
 import '../../product/product_order_dialog.dart';
+import '../../translation/AppLocalizations.dart';
 
 class FoodMenu extends StatefulWidget {
 
@@ -29,7 +25,6 @@ class FoodMenu extends StatefulWidget {
 
 class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   final double screenWidth = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.width;
-  late final AppSettingModel appSetting;
   List<Tab> categoryTab = [];
   List<Widget> categoryTabContent = [];
   List<String> categoryList = [];
@@ -46,7 +41,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
 
   @override
   void initState() {
-    appSetting = Provider.of<AppSettingModel>(context, listen: false);
     readAllCategories();
     super.initState();
     //sendRequest();
@@ -66,7 +60,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
 
   getPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? user = prefs.getString('user');
     imagePath = prefs.getString('local_path')!;
   }
 
@@ -79,7 +72,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
           automaticallyImplyLeading: false,
           elevation: 0,
           title: Text(
-            "Menu",
+            AppLocalizations.of(context)!.translate('menu'),
             style: TextStyle(fontSize: 25, color: color.backgroundColor),
           ),
           actions: [
@@ -210,7 +203,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   // }
 
   String getSKU(String sku){
-    if(appSetting.showSKUStatus == true){
+    if(decodeAction.decodedAppSetting!.show_sku == 1){
       return sku;
     }else {
       return '';
@@ -228,9 +221,9 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
     List<Categories> data = initCategory;
     sortCategory(data);
     categoryTab.add(Tab(
-      text: 'All Category',
+      text: AppLocalizations.of(context)!.translate('all_category'),
     ));
-    categoryList.add('All Category');
+    categoryList.add(AppLocalizations.of(context)!.translate('all_category'));
     for (int i = 0; i < data.length; i++) {
       categoryTab.add(Tab(
         text: data[i].name!,
@@ -238,7 +231,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
       categoryList.add(data[i].name!);
     }
     for (int i = 0; i < categoryList.length; i++) {
-      if (categoryList[i] == 'All Category') {
+      if (categoryList[i] == AppLocalizations.of(context)!.translate('all_category')) {
         List<Product> data = initProduct;
         sortProduct(data);
         allProduct = data;

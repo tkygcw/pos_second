@@ -1,14 +1,9 @@
-
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/object/decode_action.dart';
-import 'package:optimy_second_device/object/table.dart';
 import 'package:optimy_second_device/page/loading.dart';
 import 'package:optimy_second_device/page/login.dart';
 import 'package:optimy_second_device/page/second_display.dart';
@@ -35,6 +30,7 @@ final ClientAction clientAction = ClientAction.instance;
 final LCDDisplay lcdDisplay = LCDDisplay();
 final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();
+AppLanguage appLanguage = AppLanguage();
 
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,10 +39,10 @@ void main() async  {
   getDeviceIp();
 
   //init lcd screen
-  initLCDScreen();
+  // initLCDScreen();
 
   //check second screen
-  getSecondScreen();
+  // getSecondScreen();
 
   //device detect
   deviceDetect();
@@ -54,7 +50,6 @@ void main() async  {
   //other method
   statusBarColor();
 
-  AppLanguage appLanguage = AppLanguage();
   await appLanguage.fetchLocale();
   runApp(MyApp(appLanguage: appLanguage));
 }

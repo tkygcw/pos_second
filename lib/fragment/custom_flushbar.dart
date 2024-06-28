@@ -1,4 +1,5 @@
 import 'package:another_flushbar/flushbar.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 
 import '../main.dart';
@@ -28,11 +29,24 @@ class CustomFlushbar {
       onStatusChanged: (status) {
         flushbarStatus = status.toString();
       },
-    )
-        .show(context);
-    // Future.delayed(Duration(seconds: 3), () {
-    //   print("status change: ${flushbarStatus}");
-    //   if (flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") playSound();
-    // });
+    ).show(context);
+    playSound();
+    // if(duration != null){
+    //   Future.delayed(duration, () {
+    //     print("status change: ${flushbarStatus}");
+    //     if (flushbarStatus != "FlushbarStatus.IS_HIDING" && flushbarStatus != "FlushbarStatus.DISMISSED") playSound();
+    //   });
+    // }
+  }
+
+  playSound() {
+    try {
+      final assetsAudioPlayer = AssetsAudioPlayer();
+      assetsAudioPlayer.open(
+        Audio("audio/review.mp3"),
+      );
+    } catch(e) {
+      print("Play Sound Error: ${e}");
+    }
   }
 }

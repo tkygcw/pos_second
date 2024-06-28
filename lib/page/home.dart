@@ -5,13 +5,8 @@ import 'package:flutter/services.dart';
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
-import 'package:optimy_second_device/fragment/network_dialog.dart';
-import 'package:optimy_second_device/fragment/qr_order/qr_main_page.dart';
-import 'package:optimy_second_device/fragment/qr_order/qr_order_page.dart';
 import 'package:optimy_second_device/fragment/reconnect_dialog.dart';
-import 'package:optimy_second_device/fragment/setting/device_setting.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
-import 'package:optimy_second_device/notifier/notification_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,7 +21,6 @@ import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
 
-//11
 class HomePage extends StatefulWidget {
   final User? user;
   final bool isNewDay;
@@ -56,11 +50,11 @@ class _HomePageState extends State<HomePage> {
     //   setupFirebaseMessaging();
     // }
     setScreenLayout();
-    initSecondDisplay();
-    _items = _generateItems;
-    currentPage = 'menu';
-    getRoleName();
-    getBranchName();
+    // initSecondDisplay();
+    // _items = _generateItems;
+    // currentPage = 'menu';
+    // getRoleName();
+    // getBranchName();
     // if (widget.isNewDay) {
     //   WidgetsBinding.instance.addPostFrameCallback((_) {
     //     showDialog(
@@ -72,6 +66,17 @@ class _HomePageState extends State<HomePage> {
     //         });
     //   });
     // }
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    _items = _generateItems;
+    currentPage = 'menu';
+    getRoleName();
+    getBranchName();
+
+    super.didChangeDependencies();
   }
 
   @override
@@ -123,7 +128,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     print("home rebuild!!!");
-    var size = MediaQuery.of(context).size;
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       this.themeColor = color;
       return PopScope(
@@ -149,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                   isCollapsed: true,
                   items: _items,
                   avatarImg: AssetImage("drawable/logo.png"),
-                  title: widget.user!.name! + "\n" + (branchName ?? '') + " - " + role,
+                  title: "${widget.user!.name!}\n${branchName ?? ''} - $role",
                   backgroundColor: color.backgroundColor,
                   selectedTextColor: color.iconColor,
                   textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
@@ -162,7 +166,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         flex: 3,
-                        child: _body(size, context),
+                        child: _body(context),
                       ),
                       //cart page
                       Visibility(
@@ -215,7 +219,7 @@ class _HomePageState extends State<HomePage> {
     CartModel cart = Provider.of<CartModel>(context, listen: false);
     return [
       CollapsibleItem(
-        text: 'Menu',
+        text: AppLocalizations.of(context)!.translate('menu'),
         icon: Icons.add_shopping_cart,
         onPressed: () => setState(() {
           currentPage = 'menu';
@@ -239,7 +243,7 @@ class _HomePageState extends State<HomePage> {
       //   onPressed: () => setState(() => currentPage = 'other_order'),
       // ),
       CollapsibleItem(
-        text: 'Setting',
+        text: AppLocalizations.of(context)!.translate('setting'),
         icon: Icons.settings,
         onPressed: () => setState(() => currentPage = 'setting'),
       ),
@@ -266,7 +270,7 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  Widget _body(Size size, BuildContext context) {
+  Widget _body(BuildContext context) {
     switch (currentPage) {
       case 'menu':
         return OrderPage();
@@ -328,11 +332,11 @@ class _HomePageState extends State<HomePage> {
               child: SingleChildScrollView(
                 physics: NeverScrollableScrollPhysics(),
                 child: AlertDialog(
-                  title: Text('Exit app'),
+                  title: Text(AppLocalizations.of(context)!.translate('exit_app')),
                   content: SizedBox(
                     height: 100.0,
                     width: 350.0,
-                    child: Text('Are you sure to exit app?'),
+                    child: Text(AppLocalizations.of(context)!.translate('are_you_sure_to_exit_app')),
                   ),
                   actions: <Widget>[
                     TextButton(

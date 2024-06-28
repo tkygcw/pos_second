@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
+import 'package:optimy_second_device/fragment/custom_snackbar.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 import '../../main.dart';
@@ -27,14 +29,13 @@ import '../../object/printer.dart';
 import '../../object/promotion.dart';
 import '../../object/table_use.dart';
 import '../../object/tax.dart';
+import '../../object/user.dart';
 import '../../object/variant_group.dart';
 import '../../page/loading_dialog.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
 import 'cart_dialog.dart';
 import 'cart_remove_dialog.dart';
-// import '../settlement/cash_dialog.dart';
-// import '../payment/payment_select_dialog.dart';
 
 class CartPage extends StatefulWidget {
   final String currentPage;
@@ -50,6 +51,7 @@ class _CartPageState extends State<CartPage> {
   late Stream cartStream;
   late CartModel cart;
   final ScrollController _scrollController = ScrollController();
+  late final SharedPreferences prefs;
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<Printer> printerList = [];
   List<Promotion> autoApplyPromotionList = [];
@@ -111,6 +113,7 @@ class _CartPageState extends State<CartPage> {
     cartStream = cartController.stream;
     cart = context.read<CartModel>();
     cart.initBranchLinkDiningOption();
+    getPreferences();
     super.initState();
   }
 
@@ -118,6 +121,10 @@ class _CartPageState extends State<CartPage> {
   void deactivate() {
     //controller.sink.close();
     super.deactivate();
+  }
+
+  getPreferences() async{
+    prefs = await SharedPreferences.getInstance();
   }
 
   preload() async {
@@ -2043,7 +2050,14 @@ class _CartPageState extends State<CartPage> {
 
   ///place order
   callPlaceOrder(CartModel cart, String action) async {
-    await clientAction.connectRequestPort(action: action, param: jsonEncode(cart), callback: responseStatusCheck);
+    final String? pos_user = prefs.getString('pos_pin_user');
+    Map<String, dynamic> userMap = json.decode(pos_user!);
+    User userData = User.fromJson(userMap);
+    Map<String, dynamic> map ={
+      'order_by': userData.name,
+      'cart':cart
+    };
+    await clientAction.connectRequestPort(action: action, param: jsonEncode(map), callback: responseStatusCheck);
   }
 
   void responseStatusCheck(response){
@@ -2065,19 +2079,16 @@ class _CartPageState extends State<CartPage> {
         case '3': {
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
-          Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+          CustomSnackBar.instance.showSnackBar(title: json['error'], contentType: ContentType.failure, playSound: true, playtime: 2);
           cart.initialLoad();
         }break;
         case '4': {
-          // updateBranchLinkProductData(json['data']['tb_branch_link_product']);
-          Fluttertoast.showToast(msg: json['exception']);
           Navigator.of(context).pop();
+          CustomSnackBar.instance.showSnackBar(title: json['exception'], contentType: ContentType.failure, playSound: true, playtime: 2);
           cart.initialLoad();
         }break;
         default: {
-          clientAction.openReconnectDialog(action: '15', callback: (response){
-            updateAllBranchLinkProductData(response);
-          });
+          clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: responseStatusCheck);
         }
       }
     }
