@@ -14,7 +14,8 @@ class ReconnectDialog extends StatefulWidget {
   final String? action;
   final String? param;
   final Function? callback;
-  const ReconnectDialog({Key? key, this.action, this.param, this.callback}) : super(key: key);
+  final bool? keepAliveCall;
+  const ReconnectDialog({Key? key, this.action, this.param, this.keepAliveCall, this.callback}) : super(key: key);
 
   @override
   State<ReconnectDialog> createState() => _ReconnectDialogState();
@@ -25,7 +26,8 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    clientAction.setReconnectDialogStatus = true;
+    print("is dialog open in init state: ${clientAction.isReconnectDialogOpen}");
     super.initState();
   }
 
@@ -63,21 +65,22 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
                   onPressed: isButtonDisable ? null : () async {
                     setState(() {
                       isButtonDisable = true;
-                      clientAction.setReconnectDialogStatus = false;
                     });
                     Navigator.of(context).pop();
-                    print("pass action: ${widget.action}");
-                    if(widget.action != null){
-                      await clientAction.connectRequestPort(action: widget.action!, param: widget.param, callback: widget.callback);
+                    if(widget.keepAliveCall == true){
+                      clientAction.setReconnectDialogStatus = false;
+                      await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
                     } else {
-                      print("else called!!!");
-                      widget.callback!();
+                      clientAction.setReconnectDialogStatus = false;
+                      clientAction.connectServer(clientAction.serverIp!);
+                      print("pass action: ${widget.action}");
+                      if(widget.action != null){
+                        await clientAction.connectRequestPort(action: widget.action!, param: widget.param, callback: widget.callback);
+                      } else {
+                        print("else called!!!");
+                        widget.callback!();
+                      }
                     }
-                    await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
-                    // if(reconnectStatus == true){
-                    //   notificationModel.showReconnectDialog = false;
-                    //   Navigator.of(context).pop();
-                    // }
                   },
                   child: const Text('Quick connect')
               ),
@@ -93,11 +96,14 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
     print('status: ${json['status']}');
     switch(json['status']){
       case '1': {
-        notificationModel.showReconnectDialog = false;
+        print("im revive");
       }break;
       case '2': {
         await logout();
       }break;
+      default: {
+        clientAction.openReconnectDialog(keepAlive: true, callback: checkStatus);
+      }
     }
   }
 

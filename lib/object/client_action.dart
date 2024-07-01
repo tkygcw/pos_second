@@ -70,7 +70,9 @@ class ClientAction {
     }catch(e){
       print('connect server error: $e');
       Map<String, dynamic> result = {'status': '0', 'exception': e.toString()};
-      serverCallBack!(jsonEncode(result));
+      if(serverCallBack != null){
+        serverCallBack!(jsonEncode(result));
+      }
       return;
     }
     serverIp = ips;
@@ -101,14 +103,14 @@ class ClientAction {
     }, cancelOnError: true
         ,onError: (err){
           print('listen error: $err');
-          timer?.cancel();
+          // timer?.cancel();
           socket.destroy();
-          notificationModel.enableReconnectDialog();
+          openReconnectDialog(keepAlive: true);
         },onDone: (){
-          print('client done');
-          timer?.cancel();
+          print('server down');
+          // timer?.cancel();
           socket.destroy();
-          notificationModel.enableReconnectDialog();
+          openReconnectDialog(keepAlive: true);
         });
   }
 
@@ -161,27 +163,6 @@ class ClientAction {
       print("else called");
       return;
     }
-    // timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-    //   print("loading status: $loading");
-    //   print("splitRequest- buffer: ${buffer.toString()}");
-    //   if(loading == false && buffer.toString() != ''){
-    //     print("if called!!!");
-    //     loading = true;
-    //     final messages = buffer.toString().split('\n');
-    //     String firstRequest = messages[0];
-    //     for(int i = 0; i < messages.length; i++){
-    //       if(i != 0){
-    //         buffer.clear();
-    //         buffer.write(messages[i]);
-    //       }
-    //     }
-    //     processData(message: firstRequest, serverSocket: serverSocket);
-    //     loading = false;
-    //   } else {
-    //     print("else called");
-    //     return;
-    //   }
-    // });
   }
 
   processData({message}) {
@@ -192,7 +173,9 @@ class ClientAction {
       if(json['action'] != null){
         return decodeAction.checkAction();
       } else {
-        serverCallBack!(message);
+        if(serverCallBack != null){
+          serverCallBack!(message);
+        }
       }
     } else {
       Map<String, dynamic> result = {'status': '-1'};
@@ -210,8 +193,8 @@ class ClientAction {
   }
 
   connectRequestPort({required String action, String? param, Function? callback}) async {
-    notificationModel.showReconnectDialog = false;
     print("request port called!");
+    notificationModel.showReconnectDialog = false;
     Map<String, dynamic>? result;
     if(param != null){
       result = {'action': action, 'param': param};
@@ -251,17 +234,8 @@ class ClientAction {
           requestSocket.flush();
           requestSocket.destroy();
         }
-      },
-          // onDone: (){
-          //   print("client done");
-          //   socket.destroy();
-          // },
-          // onError: (error){
-          //   print("connection error");
-          //   socket.destroy();
-          // },
-      );
-      await streamSubscription.asFuture<void>().timeout(Duration(seconds: 5));
+      });
+      await streamSubscription.asFuture<void>().timeout(Duration(seconds: getTimeoutLimit(action)));
     } catch(e) {
       print("connect request port error: $e");
       requestSocket.destroy();
@@ -272,34 +246,69 @@ class ClientAction {
     }
   }
 
-  Future<Future<Object?>> openReconnectDialog({String? action, String? param, Function? callback}) async {
-    print("is reconnect dialog opened: ${_isReconnectDialogOpen}");
-    if (!_isReconnectDialogOpen) {
-      _isReconnectDialogOpen = true;
+  int getTimeoutLimit(String action){
+    if(action == '8'){
+      return 30;
+    } else {
+      return 5;
     }
-    return showGeneralDialog(
-        barrierColor: Colors.black.withOpacity(0.5),
-        transitionBuilder: (context, a1, a2, widget) {
-          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
-          return Transform(
-            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
-            child: Opacity(
-              opacity: a1.value,
-              child: ReconnectDialog(
-                action: action,
-                param: param,
-                callback: callback,
+  }
+
+  openReconnectDialog({String? action, String? param, bool? keepAlive, Function? callback}) async {
+    print("is reconnect dialog opened: ${_isReconnectDialogOpen}");
+    if (_isReconnectDialogOpen == false) {
+      _isReconnectDialogOpen = true;
+      return showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
+          transitionBuilder: (context, a1, a2, widget) {
+            final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+            return Transform(
+              transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+              child: Opacity(
+                opacity: a1.value,
+                child: ReconnectDialog(
+                  action: action,
+                  param: param,
+                  callback: callback,
+                  keepAliveCall: keepAlive,
+                ),
               ),
-            ),
-          );
-        },
-        transitionDuration: Duration(milliseconds: 200),
-        barrierDismissible: false,
-        context: MyApp.navigatorKey.currentContext!,
-        pageBuilder: (context, animation1, animation2) {
-          // ignore: null_check_always_fails
-          return null!;
-        });
+            );
+          },
+          transitionDuration: Duration(milliseconds: 200),
+          barrierDismissible: false,
+          context: MyApp.navigatorKey.currentContext!,
+          pageBuilder: (context, animation1, animation2) {
+            // ignore: null_check_always_fails
+            return null!;
+          });
+    } else if (_isReconnectDialogOpen == true && keepAlive == null){
+      Navigator.of(MyApp.navigatorKey.currentContext!).pop();
+      return showGeneralDialog(
+          barrierColor: Colors.black.withOpacity(0.5),
+          transitionBuilder: (context, a1, a2, widget) {
+            final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+            return Transform(
+              transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+              child: Opacity(
+                opacity: a1.value,
+                child: ReconnectDialog(
+                  action: action,
+                  param: param,
+                  callback: callback,
+                  keepAliveCall: keepAlive,
+                ),
+              ),
+            );
+          },
+          transitionDuration: Duration(milliseconds: 200),
+          barrierDismissible: false,
+          context: MyApp.navigatorKey.currentContext!,
+          pageBuilder: (context, animation1, animation2) {
+            // ignore: null_check_always_fails
+            return null!;
+          });
+    }
   }
 
   sendRequest({required String action, String? param}){

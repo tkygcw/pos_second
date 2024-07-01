@@ -63,7 +63,7 @@ class _SettingMenuState extends State<SettingMenu> {
                         label: Column(
                           children: [
                             Text("IP: ${clientAction.deviceIp}"),
-                            ElevatedButton(
+                            ElevatedButton.icon(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.backgroundColor,
                               ),
@@ -75,7 +75,8 @@ class _SettingMenuState extends State<SettingMenu> {
                                       (Route route) => false,
                                 );
                               },
-                              child: Text(AppLocalizations.of(context)!.translate('back_to_pos_pin')),
+                              icon: Icon(Icons.dialpad),
+                              label: Text(AppLocalizations.of(context)!.translate('back_to_pos_pin')),
                             ),
                           ],
                         )),

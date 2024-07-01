@@ -126,6 +126,9 @@ class OrderDetail{
   String? branch_id = '';
   String? order_created_at = '';
   String? failPrintBatch;
+  int? allow_ticket;
+  int? ticket_count;
+  String? ticket_exp;
 
   OrderDetail(
       {this.order_detail_sqlite_id,
@@ -175,6 +178,9 @@ class OrderDetail{
         this.orderModifierDetail,
         this.tableNumber,
         this.failPrintBatch,
+        this.allow_ticket,
+        this.ticket_count,
+        this.ticket_exp,
         bool? isSelected
       }) {
     this.isSelected = isSelected ?? true;
@@ -289,7 +295,10 @@ class OrderDetail{
         orderModifierDetail: orderModifierDetailList,
         tableNumber: tableNumber,
         failPrintBatch: json['failPrintBatch'] as String?,
-        isSelected: json['isSelected'] as bool?
+        isSelected: json['isSelected'] as bool?,
+        allow_ticket: json['allow_ticket'] as int?,
+        ticket_count: json['ticket_count'] as int?,
+        ticket_exp: json['ticket_exp'] as String?
     );
   }
 
@@ -325,7 +334,10 @@ class OrderDetail{
     'order_modifier_detail': orderModifierDetail,
     'tableNumber': tableNumber,
     'failPrintBatch': failPrintBatch,
-    'isSelected': isSelected
+    'isSelected': isSelected,
+    'allow_ticket': allow_ticket,
+    'ticket_count': ticket_count,
+    'ticket_exp': ticket_exp
   };
 
   Map<String, Object?> toInsertJson() => {
