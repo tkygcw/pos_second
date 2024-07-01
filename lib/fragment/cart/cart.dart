@@ -2053,7 +2053,8 @@ class _CartPageState extends State<CartPage> {
     final String? pos_user = prefs.getString('pos_pin_user');
     Map<String, dynamic> userMap = json.decode(pos_user!);
     User userData = User.fromJson(userMap);
-    Map<String, dynamic> map ={
+    Map<String, dynamic> map = {
+      'order_by_user_id': userData.user_id.toString(),
       'order_by': userData.name,
       'cart':cart
     };

@@ -644,6 +644,7 @@ class _CartDialogState extends State<CartDialog> {
   addToCart() {
     getSelectedTable();
     for (int i = 0; i < orderDetailList.length; i++) {
+      print("variant name: ${orderDetailList[i].product_variant_name}");
       cartProductItem value = cartProductItem(
         branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
         product_name: orderDetailList[i].productName!,
@@ -651,17 +652,19 @@ class _CartDialogState extends State<CartDialog> {
         price: orderDetailList[i].price!,
         quantity: int.tryParse(orderDetailList[i].quantity!) != null ? int.parse(orderDetailList[i].quantity!) : double.parse(orderDetailList[i].quantity!),
         orderModifierDetail: orderDetailList[i].orderModifierDetail,
-        //modifier: getModifierGroupItem(orderDetailList[i]),
-        //variant: getVariantGroupItem(orderDetailList[i]),
         productVariantName: orderDetailList[i].product_variant_name,
         remark: orderDetailList[i].remark!,
         unit: orderDetailList[i].unit,
         per_quantity_unit: orderDetailList[i].per_quantity_unit,
         status: 1,
         category_sqlite_id: orderDetailList[i].category_sqlite_id,
+        order_cache_sqlite_id: orderCacheList.last.order_cache_sqlite_id.toString(),
         first_cache_created_date_time: orderCacheList.last.created_at,  //orderCacheList[0].created_at,
         first_cache_batch: orderCacheList.last.batch_id,
         first_cache_order_by: orderCacheList.last.order_by,
+        allow_ticket: orderDetailList[i].allow_ticket,
+        ticket_count: orderDetailList[i].ticket_count,
+        ticket_exp: orderDetailList[i].ticket_exp
       );
       cart.addItem(value);
     }

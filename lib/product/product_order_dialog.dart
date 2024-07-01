@@ -1276,6 +1276,22 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     return value;
   }
 
+  String getProductVariantName(){
+    List<String?> variant = [];
+    String result = '';
+    var length = variantGroup.length;
+    for (int i = 0; i < length; i++) {
+      VariantGroup group = variantGroup[i];
+      for (int j = 0; j < group.child!.length; j++) {
+        if (group.child![j].isSelected!) {
+          variant.add(group.child![j].name!);
+          result = variant.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(",", " |");
+        }
+      }
+    }
+    return result;
+  }
+
   addToCart(CartModel cart){
     //check selected variant
     for (int j = 0; j < variantGroup.length; j++) {
@@ -1307,13 +1323,17 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         checkedModifierItem: checkedModItem,
         modifier: modifierGroup,
         variant: variantGroup,
+        productVariantName: getProductVariantName(),
         remark: remarkController.text,
         status: 0,
         category_sqlite_id: widget.productDetail!.category_sqlite_id,
         base_price: basePrice,
         refColor: Colors.black,
         unit: widget.productDetail!.unit!,
-        per_quantity_unit: widget.productDetail!.unit! != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.per_quantity_unit! : ''
+        per_quantity_unit: widget.productDetail!.unit! != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.per_quantity_unit! : '',
+        allow_ticket: widget.productDetail!.allow_ticket,
+        ticket_count: widget.productDetail!.ticket_count,
+        ticket_exp: widget.productDetail!.ticket_exp
     );
     List<cartProductItem> item = [];
     if(cart.cartNotifierItem.isEmpty){
