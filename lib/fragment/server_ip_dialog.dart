@@ -381,9 +381,10 @@ class _TypeIpViewState extends State<TypeIpView> {
   }
 }
 
+
+
 class ScanIpView extends StatefulWidget {
   final bool isMobile;
-
   const ScanIpView({Key? key, required this.isMobile}) : super(key: key);
 
   @override
@@ -407,7 +408,6 @@ class _ScanIpViewState extends State<ScanIpView> {
     FocusManager.instance.primaryFocus?.unfocus();
     super.initState();
   }
-
   @override
   void dispose() {
     // TODO: implement dispose
@@ -686,3 +686,4 @@ class _ScanIpViewState extends State<ScanIpView> {
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
   }
 }
+
