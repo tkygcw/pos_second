@@ -23,6 +23,9 @@ class ProductFields {
     unit,
     per_quantity_unit,
     sequence_number,
+    allow_ticket,
+    ticket_count,
+    ticket_exp,
     sync_status,
     created_at,
     updated_at,
@@ -50,6 +53,9 @@ class ProductFields {
   static String unit = 'unit';
   static String per_quantity_unit = 'per_quantity_unit';
   static String sequence_number = 'sequence_number';
+  static String allow_ticket = 'allow_ticket';
+  static String ticket_count = 'ticket_count';
+  static String ticket_exp = 'ticket_exp';
   static String sync_status = 'sync_status';
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
@@ -78,6 +84,9 @@ class Product{
   String? unit;
   String? per_quantity_unit;
   String? sequence_number;
+  int? allow_ticket;
+  int? ticket_count;
+  String? ticket_exp;
   int? sync_status;
   String? created_at;
   String? updated_at;
@@ -106,6 +115,9 @@ class Product{
         this.unit,
         this.per_quantity_unit,
         this.sequence_number,
+        this.allow_ticket,
+        this.ticket_count,
+        this.ticket_exp,
         this.sync_status,
         this.created_at,
         this.updated_at,
@@ -135,6 +147,9 @@ class Product{
     String? unit,
     String? per_quantity_unit,
     String? sequence_number,
+    int? allow_ticket,
+    int? ticket_count,
+    String? ticket_exp,
     int? sync_status,
     String? created_at,
     String? updated_at,
@@ -162,38 +177,44 @@ class Product{
           unit: unit ?? this.unit,
           per_quantity_unit: per_quantity_unit ?? this.per_quantity_unit,
           sequence_number: sequence_number ?? this.sequence_number,
+          allow_ticket: allow_ticket ?? this.allow_ticket,
+          ticket_count: ticket_count ?? this.ticket_count,
+          ticket_exp: ticket_exp ?? this.ticket_exp,
           sync_status: sync_status ?? this.sync_status,
           created_at: created_at ?? this.created_at,
           updated_at: updated_at ?? this.updated_at,
           soft_delete: soft_delete ?? this.soft_delete);
 
   static Product fromJson(Map<String, Object?> json) => Product(
-    product_sqlite_id: json[ProductFields.product_sqlite_id] as int?,
-    product_id: json[ProductFields.product_id] as int?,
-    category_sqlite_id: json[ProductFields.category_sqlite_id] as String?,
-    category_id: json[ProductFields.category_id] as String?,
-    company_id: json[ProductFields.company_id] as String?,
-    name: json[ProductFields.name] as String?,
-    price: json[ProductFields.price] as String?,
-    description: json[ProductFields.description] as String?,
-    SKU: json[ProductFields.SKU] as String?,
-    image: json[ProductFields.image] as String?,
-    has_variant: json[ProductFields.has_variant] as int?,
-    stock_type: json[ProductFields.stock_type] as int?,
-    stock_quantity: json[ProductFields.stock_quantity] as String?,
-    available: json[ProductFields.available] as int?,
-    graphic_type: json[ProductFields.graphic_type] as String?,
-    color: json[ProductFields.color] as String?,
-    daily_limit: json[ProductFields.daily_limit] as String?,
-    daily_limit_amount: json[ProductFields.daily_limit_amount] as String?,
-    unit: json[ProductFields.unit] as String?,
-    per_quantity_unit: json[ProductFields.per_quantity_unit] as String?,
-    sequence_number: json[ProductFields.sequence_number] as String?,
-    sync_status: json[ProductFields.sync_status] as int?,
-    created_at: json[ProductFields.created_at] as String?,
-    updated_at: json[ProductFields.updated_at] as String?,
-    soft_delete: json[ProductFields.soft_delete] as String?,
-    category_name: json['category_name'] as String?
+      product_sqlite_id: json[ProductFields.product_sqlite_id] as int?,
+      product_id: json[ProductFields.product_id] as int?,
+      category_sqlite_id: json[ProductFields.category_sqlite_id] as String?,
+      category_id: json[ProductFields.category_id] as String?,
+      company_id: json[ProductFields.company_id] as String?,
+      name: json[ProductFields.name] as String?,
+      price: json[ProductFields.price] as String?,
+      description: json[ProductFields.description] as String?,
+      SKU: json[ProductFields.SKU] as String?,
+      image: json[ProductFields.image] as String?,
+      has_variant: json[ProductFields.has_variant] as int?,
+      stock_type: json[ProductFields.stock_type] as int?,
+      stock_quantity: json[ProductFields.stock_quantity] as String?,
+      available: json[ProductFields.available] as int?,
+      graphic_type: json[ProductFields.graphic_type] as String?,
+      color: json[ProductFields.color] as String?,
+      daily_limit: json[ProductFields.daily_limit] as String?,
+      daily_limit_amount: json[ProductFields.daily_limit_amount] as String?,
+      unit: json[ProductFields.unit] as String?,
+      per_quantity_unit: json[ProductFields.per_quantity_unit] as String?,
+      sequence_number: json[ProductFields.sequence_number] as String?,
+      allow_ticket: json[ProductFields.allow_ticket] as int?,
+      ticket_count: json[ProductFields.ticket_count] as int?,
+      ticket_exp: json[ProductFields.ticket_exp] as String?,
+      sync_status: json[ProductFields.sync_status] as int?,
+      created_at: json[ProductFields.created_at] as String?,
+      updated_at: json[ProductFields.updated_at] as String?,
+      soft_delete: json[ProductFields.soft_delete] as String?,
+      category_name: json['category_name'] as String?
   );
 
   Map<String, Object?> toJson() => {
@@ -218,6 +239,9 @@ class Product{
     ProductFields.unit: unit,
     ProductFields.per_quantity_unit: per_quantity_unit,
     ProductFields.sequence_number: sequence_number,
+    ProductFields.allow_ticket: allow_ticket,
+    ProductFields.ticket_count: ticket_count,
+    ProductFields.ticket_exp: ticket_exp,
     ProductFields.sync_status: sync_status,
     ProductFields.created_at: created_at,
     ProductFields.updated_at: updated_at,
