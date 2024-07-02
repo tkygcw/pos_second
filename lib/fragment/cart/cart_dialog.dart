@@ -375,7 +375,7 @@ class _CartDialogState extends State<CartDialog> {
                                   borderRadius: BorderRadius.circular(5.0)
                               ),
                               child: MediaQuery.of(context).size.height > 500 ? Text(
-                                "Group: ${tableList[index].group}",
+                                "${tableList[index].group}",
                                 style: TextStyle(fontSize: 18, color: fontColor(posTable: tableList[index])),
                               ) : Text(
                                 "${tableList[index].group}",

@@ -92,7 +92,7 @@ class _HomePageState extends State<HomePage> {
 
   initSecondDisplay() async {
     if(notificationModel.hasSecondScreen == true){
-      await displayManager.showSecondaryDisplay(displayId: notificationModel.displays[1]!.displayId, routerName: "presentation");
+      await displayManager.showSecondaryDisplay(displayId: notificationModel.displays[1]!.displayId!, routerName: "presentation");
     }
   }
 

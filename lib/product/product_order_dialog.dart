@@ -104,7 +104,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   productChecking() async {
-    await clientAction.connectRequestPort(action: '2', param: jsonEncode(widget.productDetail!), callback: decodeData);
+    Map<String, dynamic> param = {
+      'product_detail': widget.productDetail!,
+      'dining_option_id': context.read<CartModel>().selectedOptionId
+    };
+    await clientAction.connectRequestPort(action: '2', param: jsonEncode(param), callback: decodeData);
   }
 
   decodeData(response){
@@ -123,6 +127,13 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           getProductPrice(widget.productDetail!.product_sqlite_id.toString());
           getProductDialogStock(widget.productDetail!);
           controller.sink.add("refresh");
+        }break;
+        case '2': {
+          Map<String, dynamic> param = {
+            'product_detail': widget.productDetail!,
+            'dining_option_id': context.read<CartModel>().selectedOptionId
+          };
+          clientAction.openReconnectDialog(action: '2', param: jsonEncode(param), callback: decodeData);
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData);

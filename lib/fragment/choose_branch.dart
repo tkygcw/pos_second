@@ -55,6 +55,20 @@ class _ChooseBranchState extends State<ChooseBranch> {
                       padding: const EdgeInsets.all(10.0),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton2(
+                          isExpanded: true,
+                          buttonStyleData: ButtonStyleData(
+                              padding: const EdgeInsets.only(left: 14, right: 14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30),
+                          )),
+                          dropdownStyleData: DropdownStyleData(
+                            isOverButton: true,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              color: Colors.grey.shade100,
+                            )
+                          ),
                           hint: Row(
                             children: [
                               Icon(
@@ -79,23 +93,23 @@ class _ChooseBranchState extends State<ChooseBranch> {
                             ],
                           ),
                           // dropdownMaxHeight: 200,
-                          iconEnabledColor: color.backgroundColor,
-                          buttonPadding:
-                              const EdgeInsets.only(left: 14, right: 14),
-                          buttonHeight: 55,
-                          isExpanded: true,
-                          dropdownMaxHeight: 200,
-                          scrollbarThickness: 8,
-                          dropdownOverButton: true,
-                          dropdownDecoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: Colors.grey.shade100,
-                          ),
-                          scrollbarRadius: Radius.circular(60),
-                          buttonDecoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: Colors.grey.shade100,
-                          ),
+                          // iconEnabledColor: color.backgroundColor,
+                          // buttonPadding:
+                          //     const EdgeInsets.only(left: 14, right: 14),
+                          // buttonHeight: 55,
+                          // isExpanded: true,
+                          // dropdownMaxHeight: 200,
+                          // scrollbarThickness: 8,
+                          // dropdownOverButton: true,
+                          // dropdownDecoration: BoxDecoration(
+                          //   borderRadius: BorderRadius.circular(30),
+                          //   color: Colors.grey.shade100,
+                          // ),
+                          // scrollbarRadius: Radius.circular(60),
+                          // buttonDecoration: BoxDecoration(
+                          //   borderRadius: BorderRadius.circular(30),
+                          //   color: Colors.grey.shade100,
+                          // ),
                           items: list
                               .map((branch) => DropdownMenuItem<Branch>(
                                     value: branch,
@@ -164,7 +178,7 @@ class _ChooseBranchState extends State<ChooseBranch> {
   showPreviousSelectBranch(){
     setState(() {
       if ( widget.preSelectBranch!= null) {
-        // selectedValue = widget.preSelectBranch;
+        selectedValue = widget.preSelectBranch;
         print(widget.preSelectBranch!.toJson());
         print(list);
       }

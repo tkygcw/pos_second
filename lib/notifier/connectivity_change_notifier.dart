@@ -6,10 +6,10 @@ import 'package:optimy_second_device/main.dart';
 class ConnectivityChangeNotifier extends ChangeNotifier {
   bool _hasInternetAccess = false;
   ConnectivityChangeNotifier() {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async  {
-      _hasInternetAccess = await InternetConnectionChecker().hasConnection;
-      print('has internet access (listeners): ${_hasInternetAccess}');
-      resultHandler(result, _hasInternetAccess);
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
+      // _hasInternetAccess = await InternetConnectionChecker().hasConnection;
+      // print('has internet access (listeners): ${_hasInternetAccess}');
+      resultHandler(result[0], _hasInternetAccess);
 
     });
   }
@@ -21,7 +21,7 @@ class ConnectivityChangeNotifier extends ChangeNotifier {
 
   bool get isConnect => _connection;
 
-  void resultHandler(ConnectivityResult result, bool hasAccess){
+  resultHandler(ConnectivityResult result, bool hasAccess){
     _connectivityResult = result;
     if(hasAccess == true){
       if (result == ConnectivityResult.none) {
@@ -40,9 +40,9 @@ class ConnectivityChangeNotifier extends ChangeNotifier {
   }
 
   void initialLoad() async {
-    ConnectivityResult connectivityResult = await (Connectivity().checkConnectivity());
-    _hasInternetAccess = await InternetConnectionChecker().hasConnection;
-    print('has internet access (initial): ${_hasInternetAccess}');
-    resultHandler(connectivityResult, _hasInternetAccess);
+    List<ConnectivityResult> connectivityResult = await (Connectivity().checkConnectivity());
+    // _hasInternetAccess = await InternetConnectionChecker().hasConnection;
+    // print('has internet access (initial): ${_hasInternetAccess}');
+    resultHandler(connectivityResult[0], _hasInternetAccess);
   }
 }

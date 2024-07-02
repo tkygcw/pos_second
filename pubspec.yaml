@@ -32,73 +32,76 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  http: ^0.13.5
+  http: ^1.2.1
   package_info: ^2.0.2
   shared_preferences: any
-  intl: ^0.18.0
-  url_launcher: ^6.1.10
-  google_fonts: ^4.0.3
-  devicelocale: ^0.6.0
-  provider: ^6.0.5
-  collapsible_sidebar: ^2.0.3+3
-  connectivity_plus: ^5.0.2
-  quantity_input: ^1.0.2
-  grouped_list: ^5.1.2
-  side_navigation: ^1.0.4
-  flutter_material_color_picker: ^1.1.0+2
-  flutter_login: ^4.1.1
-  sqflite: ^2.2.6
-  fluttertoast: ^8.2.1
-  dropdown_button2: ^1.6.2
-  page_transition: ^2.0.9
-  animations: ^2.0.7
-  path_provider: ^2.0.14
+  intl: ^0.19.0
+  url_launcher: ^6.3.0
+  google_fonts: ^6.2.1
+  devicelocale: ^0.7.1
+  provider: ^6.1.2
+  collapsible_sidebar: ^2.0.7
+  connectivity_plus: ^6.0.3
   custom_pin_screen: ^0.3.0
+  quantity_input: ^1.0.2
+  grouped_list: ^6.0.0
+  side_navigation: ^1.0.4
+  flutter_material_color_picker: ^1.2.0
+  flutter_login: ^5.0.0
+  sqflite: ^2.3.3+1
+  fluttertoast: ^8.2.6
+  dropdown_button2: ^2.3.9
+  page_transition: ^2.1.0
+  animations: ^2.0.11
+  path_provider: ^2.1.3
   virtual_keyboard_multi_language: ^1.0.3
   group_radio_button: ^1.3.0
-  confirm_dialog: ^1.0.1
-  image_picker: ^0.8.7
-  path: ^1.8.2
-  checkbox_grouped: ^1.8.2
-  collection: ^1.17.0
+  confirm_dialog: ^1.0.3
+  image_picker: ^1.1.2
+  path: ^1.9.0
+  checkbox_grouped: ^2.0.0
   flutter_native_image: ^0.0.6+1
   esc_pos_printer:
     git:
       url: https://github.com/tkygcw/esc_pos_printer.git
   flutter_usb_printer: ^0.1.0+1
-  reorderable_grid_view: ^2.2.6
+  reorderable_grid_view: ^2.2.8
   lan_scanner: ^4.0.0+1
-  network_info_plus: ^4.1.0+1
+  network_info_plus: ^5.0.3
   percent_indicator: ^4.2.3
   qr_code_scanner: ^1.0.1
   imin: ^0.0.1
-  xml2json: ^5.3.6
-  presentation_displays: ^0.2.3
-  app_settings: ^4.2.0
-  location: ^4.4.0
+  xml2json: ^6.2.3
+  presentation_displays: ^1.0.0
+  app_settings: ^5.1.1
+  location: ^7.0.0
   internet_connection_checker: ^1.0.0+1
-  syncfusion_flutter_datepicker: ^20.4.54
-  device_info_plus: ^8.1.0
-  pdf: ^3.10.1
-  printing: ^5.10.4
+  syncfusion_flutter_datepicker: ^26.1.39
+  device_info_plus: ^10.1.0
+  pdf: ^3.11.0
+  printing: ^5.13.1
   qr_flutter:
     git:
       url: https://github.com/theyakka/qr.flutter.git
-  file: 6.1.4
-  barcode_scan2: ^4.2.4
-  rxdart: ^0.27.7
-  assets_audio_player: ^3.0.6
+  file: ^7.0.0
+  barcode_scan2: ^4.3.1
+  rxdart: ^0.28.0
+  assets_audio_player: ^3.1.1
   another_flushbar: ^1.12.30
   awesome_snackbar_content: ^0.1.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.8
 
 dependency_overrides:
-  image_picker_android: 0.8.6+6
-  intl: 0.18.0
-  image: 4.0.15
+  image_picker_android: ^0.8.12+3
+  intl: ^0.19.0
+  image: ^4.2.0
+  collection: ^1.19.0
+  rxdart: ^0.28.0
+
+
 
 dev_dependencies:
   flutter_test:
@@ -109,7 +112,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
