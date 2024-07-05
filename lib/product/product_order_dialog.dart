@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:provider/provider.dart';
@@ -103,8 +104,18 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     });
   }
 
+  getInitCheckedModItem(){
+    for(final group in modifierGroup){
+      checkedModItem.addAll(group.modifierChild!.where((child) => child.isChecked == true).toList());
+    }
+  }
+
   productChecking() async {
-    await clientAction.connectRequestPort(action: '2', param: jsonEncode(widget.productDetail!), callback: decodeData);
+    Map<String, dynamic> param = {
+      'product_detail': widget.productDetail!,
+      'dining_option_id': context.read<CartModel>().selectedOptionId
+    };
+    await clientAction.connectRequestPort(action: '2', param: jsonEncode(param), callback: decodeData);
   }
 
   decodeData(response){
@@ -118,11 +129,18 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           modifierGroup = List<ModifierGroup>.from(value2.map((json) => ModifierGroup.fromJson(json)));
           Iterable value3 = json['data']['branch_link_product'];
           branchLinkProductList = List<BranchLinkProduct>.from(value3.map((json) => BranchLinkProduct.fromJson(json)));
-
+          getInitCheckedModItem();
           getBranchLinkProductId(widget.productDetail!);
           getProductPrice(widget.productDetail!.product_sqlite_id.toString());
           getProductDialogStock(widget.productDetail!);
           controller.sink.add("refresh");
+        }break;
+        case '2': {
+          Map<String, dynamic> param = {
+            'product_detail': widget.productDetail!,
+            'dining_option_id': context.read<CartModel>().selectedOptionId
+          };
+          clientAction.openReconnectDialog(action: '2', param: jsonEncode(param), callback: decodeData);
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData);
