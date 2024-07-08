@@ -46,7 +46,7 @@ dependencies:
   grouped_list: ^5.1.2
   side_navigation: ^1.0.4
   flutter_material_color_picker: ^1.1.0+2
-  flutter_login: ^4.1.1
+  flutter_login: ^5.0.0
   sqflite: ^2.2.6
   fluttertoast: ^8.2.1
   dropdown_button2: ^1.6.2
