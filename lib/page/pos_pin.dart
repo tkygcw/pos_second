@@ -281,7 +281,7 @@ class _PosPinPageState extends State<PosPinPage> {
     if (user != null) {
       print('log in pos pin success');
       await prefs.setString("pos_pin_user", jsonEncode(user));
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         PageTransition(
           type: PageTransitionType.fade,

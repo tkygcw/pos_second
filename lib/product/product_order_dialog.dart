@@ -122,6 +122,14 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     if(response != null && mounted){
       var json = jsonDecode(response);
       switch(json['status']){
+        case '-1': {
+          variantGroup = [];
+          modifierGroup =[];
+          branchLinkProductList = decodeAction.decodedBranchLinkProductList!;
+          this.branchLinkProduct = branchLinkProductList.first;
+          dialogPrice = '5.00';
+          controller.sink.add("refresh");
+        }break;
         case '1': {
           Iterable value1 = json['data']['variant'];
           variantGroup = List<VariantGroup>.from(value1.map((json) => VariantGroup.fromJson(json)));

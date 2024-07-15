@@ -54,7 +54,9 @@ class ClientAction {
   }
 
   void disconnectFromServer(){
-    socket.destroy();
+    if(serverIp != '0.0.0.0'){
+      socket.destroy();
+    }
   }
 
   connectServer(String ips, {Function? callback}) async {
@@ -65,53 +67,58 @@ class ClientAction {
     StringBuffer buffer = StringBuffer();
     String? receivedData;
     serverCallBack = callback;
-    try{
-      socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
-    }catch(e){
-      print('connect server error: $e');
-      Map<String, dynamic> result = {'status': '0', 'exception': e.toString()};
-      if(serverCallBack != null){
-        serverCallBack!(jsonEncode(result));
-      }
-      return;
-    }
-    serverIp = ips;
-    //send first request to server side
-    result = {'action': '-1', 'param': branchObject['branchID'].toString()};
-    socket.write('${jsonEncode(result)}\n');
-
-    //socket stream listen for data
-    socket.cast<List<int>>().transform(utf8.decoder).listen( (data) async  {
-      // Track the received data
-      receivedData = data;
-      if(receivedData != null){
-        buffer.write(receivedData);
-        if(receivedData!.contains(messageDelimiter)){
-          final messages = buffer.toString().split('\n');
-          String firstRequest = messages[0];
-          for(int i = 0; i < messages.length; i++){
-            if(i != 0){
-              buffer.clear();
-              buffer.write(messages[i]);
-            }
-          }
-          processData(message: firstRequest);
+    if(ips != '0.0.0.0'){
+      try{
+        socket = await Socket.connect(ips, 9999, timeout: const Duration(seconds: 3));
+      }catch(e){
+        print('connect server error: $e');
+        Map<String, dynamic> result = {'status': '0', 'exception': e.toString()};
+        if(serverCallBack != null){
+          serverCallBack!(jsonEncode(result));
         }
+        return;
       }
-      //split request call every 1 sec
-      //splitRequest(buffer: buffer, serverSocket: socket);
-    }, cancelOnError: true
-        ,onError: (err){
-          print('listen error: $err');
-          // timer?.cancel();
-          socket.destroy();
-          openReconnectDialog(keepAlive: true);
-        },onDone: (){
-          print('server down');
-          // timer?.cancel();
-          socket.destroy();
-          openReconnectDialog(keepAlive: true);
-        });
+      serverIp = ips;
+      //send first request to server side
+      result = {'action': '-1', 'param': branchObject['branchID'].toString()};
+      socket.write('${jsonEncode(result)}\n');
+
+      //socket stream listen for data
+      socket.cast<List<int>>().transform(utf8.decoder).listen( (data) async  {
+        // Track the received data
+        receivedData = data;
+        if(receivedData != null){
+          buffer.write(receivedData);
+          if(receivedData!.contains(messageDelimiter)){
+            final messages = buffer.toString().split('\n');
+            String firstRequest = messages[0];
+            for(int i = 0; i < messages.length; i++){
+              if(i != 0){
+                buffer.clear();
+                buffer.write(messages[i]);
+              }
+            }
+            processData(message: firstRequest);
+          }
+        }
+        //split request call every 1 sec
+        //splitRequest(buffer: buffer, serverSocket: socket);
+      }, cancelOnError: true
+          ,onError: (err){
+            print('listen error: $err');
+            // timer?.cancel();
+            socket.destroy();
+            openReconnectDialog(keepAlive: true);
+          },onDone: (){
+            print('server down');
+            // timer?.cancel();
+            socket.destroy();
+            openReconnectDialog(keepAlive: true);
+          });
+    } else {
+      result = {'status': '1'};
+      serverCallBack!(jsonEncode(result));
+    }
   }
 
   showRefresh(){
@@ -201,48 +208,53 @@ class ClientAction {
     } else {
       result = {'action': action, 'param': ''};
     }
-    try{
-      requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
-    }catch(e){
-      print("connect request port error: $e");
-      if(callback != null){
-        result = {'status': '0', 'action': action, 'param': param};
-        callback(jsonEncode(result));
-      }
-      return;
-    }
-    try{
-      final buffer = StringBuffer();
-      String receivedData = '';
-      requestSocket.write('${jsonEncode(result)}\n');
-      //handle data
-      StreamSubscription streamSubscription = requestSocket.cast<List<int>>().transform(utf8.decoder).listen((data) {
-        receivedData = data;
-        buffer.write(receivedData);
-        if (receivedData.endsWith(messageDelimiter)) {
-          final messages = buffer.toString().trim();
-          print("message: ${messages}");
-          response = messages;
-          if(callback != null){
-            callback(response);
-          }
-
-          receivedData = '';
-
-          //Reset buffer
-          buffer.clear();
-          requestSocket.flush();
-          requestSocket.destroy();
+    if(serverIp != '0.0.0.0'){
+      try{
+        requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
+      }catch(e){
+        print("connect request port error: $e");
+        if(callback != null){
+          result = {'status': '0', 'action': action, 'param': param};
+          callback(jsonEncode(result));
         }
-      });
-      await streamSubscription.asFuture<void>().timeout(Duration(seconds: getTimeoutLimit(action)));
-    } catch(e) {
-      print("connect request port error: $e");
-      requestSocket.destroy();
-      if(callback != null){
-        result = {'status': '0', 'action': action, 'param': param};
-        callback(jsonEncode(result));
+        return;
       }
+      try{
+        final buffer = StringBuffer();
+        String receivedData = '';
+        requestSocket.write('${jsonEncode(result)}\n');
+        //handle data
+        StreamSubscription streamSubscription = requestSocket.cast<List<int>>().transform(utf8.decoder).listen((data) {
+          receivedData = data;
+          buffer.write(receivedData);
+          if (receivedData.endsWith(messageDelimiter)) {
+            final messages = buffer.toString().trim();
+            print("message: ${messages}");
+            response = messages;
+            if(callback != null){
+              callback(response);
+            }
+
+            receivedData = '';
+
+            //Reset buffer
+            buffer.clear();
+            requestSocket.flush();
+            requestSocket.destroy();
+          }
+        });
+        await streamSubscription.asFuture<void>().timeout(Duration(seconds: getTimeoutLimit(action)));
+      } catch(e) {
+        print("connect request port error: $e");
+        requestSocket.destroy();
+        if(callback != null){
+          result = {'status': '0', 'action': action, 'param': param};
+          callback(jsonEncode(result));
+        }
+      }
+    } else {
+      result = {'status': '-1'};
+      callback!(jsonEncode(result));
     }
   }
 
