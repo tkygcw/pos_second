@@ -1,7 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../database/domain.dart';
 import '../../notifier/theme_color.dart';
 import '../../object/branch.dart';
@@ -23,13 +22,9 @@ class _DeviceRegisterState extends State<DeviceRegister> {
 
   @override
   void initState() {
-    // selectedValue = widget.preSelectBranch as Branch;
     // TODO: implement initState
     super.initState();
     getBranchDevice();
-    // if ( widget.preSelectBranch!= null) {
-    //   print(widget.preSelectBranch.toString());
-    // }
   }
 
   @override
@@ -57,6 +52,7 @@ class _DeviceRegisterState extends State<DeviceRegister> {
                       padding: const EdgeInsets.all(10.0),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton2(
+                          isExpanded: true,
                           hint: Row(
                             children: [
                               Icon(
@@ -80,22 +76,31 @@ class _DeviceRegisterState extends State<DeviceRegister> {
                               ),
                             ],
                           ),
-                          // dropdownMaxHeight: 200,
-                          iconEnabledColor: color.backgroundColor,
-                          buttonPadding: const EdgeInsets.only(left: 14, right: 14),
-                          buttonHeight: 55,
-                          isExpanded: true,
-                          dropdownMaxHeight: 200,
-                          scrollbarThickness: 8,
-                          dropdownOverButton: true,
-                          dropdownDecoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: Colors.grey.shade100,
+                          buttonStyleData: ButtonStyleData(
+                            height: 55,
+                            padding: const EdgeInsets.only(left: 14, right: 14),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(50),
+                              border: Border.all(
+                                color: Colors.black26,
+                              ),
+                              color: Colors.grey.shade100,
+                            ),
+                            elevation: 2,
                           ),
-                          scrollbarRadius: Radius.circular(60),
-                          buttonDecoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(30),
-                            color: Colors.grey.shade100,
+                          dropdownStyleData: DropdownStyleData(
+                            maxHeight: 200,
+                            isOverButton: true,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              color: Colors.grey.shade100,
+                            ),
+                            scrollbarTheme: ScrollbarThemeData(
+                                radius: const Radius.circular(30),
+                                thickness: WidgetStateProperty.all(8),
+                                mainAxisMargin: 20,
+                                crossAxisMargin: 5
+                            ),
                           ),
                           items: list
                               .map((device) => DropdownMenuItem<Device>(

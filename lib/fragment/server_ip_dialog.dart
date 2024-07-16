@@ -299,8 +299,10 @@ class _TypeIpViewState extends State<TypeIpView> {
         waitingResponse = true;
         FocusManager.instance.primaryFocus?.unfocus();
       });
-      if (errorIp == null) {
+      if (errorIp == null && ipTextController.text != '0.0.0.0') {
         await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+      } else {
+        devTestMode();
       }
     } else {
       Fluttertoast.showToast(msg: AppLocalizations.of(context)!.translate("ip_required"), backgroundColor: Colors.red);
