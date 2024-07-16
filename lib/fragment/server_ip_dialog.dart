@@ -7,7 +7,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:lan_scanner/lan_scanner.dart';
 import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:optimy_second_device/database/mock_data.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/page/pos_pin.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -297,8 +299,10 @@ class _TypeIpViewState extends State<TypeIpView> {
         waitingResponse = true;
         FocusManager.instance.primaryFocus?.unfocus();
       });
-      if (errorIp == null) {
+      if (errorIp == null && ipTextController.text != '0.0.0.0') {
         await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+      } else {
+        devTestMode();
       }
     } else {
       Fluttertoast.showToast(msg: AppLocalizations.of(context)!.translate("ip_required"), backgroundColor: Colors.red);
@@ -312,12 +316,30 @@ class _TypeIpViewState extends State<TypeIpView> {
         waitingResponse = true;
         FocusManager.instance.primaryFocus?.unfocus();
       });
-      if (errorIp == null) {
+      if (errorIp == null && ipTextController.text != '0.0.0.0') {
         await clientAction.connectServer(ipTextController.text, callback: checkStatus);
+      } else {
+        devTestMode();
       }
     } else {
       Fluttertoast.showToast(msg: AppLocalizations.of(context)!.translate("ip_required"), backgroundColor: Colors.red);
     }
+  }
+
+  void devTestMode(){
+    clientAction.serverIp = '0.0.0.0';
+    prefs.setString('server_ip', ipTextController.text);
+    decodeAction.decodedProductList = MockData.instance.productMockData;
+    decodeAction.decodedUserList = MockData.instance.userMockData;
+    decodeAction.decodedCategoryList = [];
+    decodeAction.decodedAppSetting = MockData.instance.mockAppSetting;
+    decodeAction.decodedBranchLinkDiningList = MockData.instance.branchLinkDiningMockData;
+    decodeAction.decodedTaxLinkDiningList = [];
+    decodeAction.decodedBranchPromotionList = [];
+    decodeAction.decodedProductVariantList = [];
+    decodeAction.decodedBranchLinkModifierList = [];
+    decodeAction.decodedBranchLinkProductList = MockData.instance.branchLinkProductMockData;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => PosPinPage()));
   }
 
   void checkStatus(response) async {

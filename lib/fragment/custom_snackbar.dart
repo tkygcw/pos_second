@@ -43,7 +43,7 @@ class CustomSnackBar {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
       ),
-      margin: EdgeInsets.only(bottom: MediaQuery.of(_context).size.height - 120),
+      margin: EdgeInsets.only(bottom: MediaQuery.of(_context).size.height / 1.25),
     ));
     if(playSound != null && playSound == true){
       int k = 0;

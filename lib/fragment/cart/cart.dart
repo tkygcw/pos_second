@@ -2065,6 +2065,11 @@ class _CartPageState extends State<CartPage> {
     if(response != null){
       var json = jsonDecode(response);
       switch(json['status']){
+        case '-1': {
+          CustomSnackBar.instance.showSnackBar(title: 'Place order successful', contentType: ContentType.success);
+          Navigator.of(context).pop();
+          cart.notDineInInitLoad();
+        }break;
         case '1': {
           //place order success
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);

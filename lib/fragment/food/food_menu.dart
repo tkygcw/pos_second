@@ -60,7 +60,9 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
 
   getPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    imagePath = prefs.getString('local_path')!;
+    if(prefs.getString('local_path') != null){
+      imagePath = prefs.getString('local_path')!;
+    }
   }
 
   @override

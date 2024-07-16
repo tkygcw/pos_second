@@ -1,22 +1,15 @@
 import 'dart:convert';
 
 import 'package:animations/animations.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:optimy_second_device/page/pos_pin.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../database/domain.dart';
 import '../fragment/choose_branch.dart';
 import '../fragment/device_register/device_register.dart';
 import '../fragment/server_ip_dialog.dart';
 import '../notifier/theme_color.dart';
 import '../object/branch.dart';
 import '../object/device.dart';
-import '../translation/AppLocalizations.dart';
-import 'device_check_dialog.dart';
-import 'loading.dart';
 import 'login.dart';
 
 class SetupPage extends StatefulWidget {
@@ -31,12 +24,6 @@ class _SetupPageState extends State<SetupPage> {
   Branch? selectedBranch;
   Device? selectedDevice;
   String? token;
-
-  @override
-  void initState() {
-    super.initState();
-    //getToken();
-  }
 
   openIpDialog() {
     return showGeneralDialog(
@@ -59,27 +46,6 @@ class _SetupPageState extends State<SetupPage> {
           return null!;
         });
   }
-
-  // getToken() async {
-  //   try{
-  //     token = await FirebaseMessaging.instance.getToken();
-  //     print('token: ${token}');
-  //     //token = 'testing';
-  //   }catch(e){
-  //     Navigator.of(context).pushAndRemoveUntil(
-  //       // the new route
-  //       MaterialPageRoute(
-  //         builder: (BuildContext context) => LoginPage(),
-  //       ),
-  //
-  //       // this function should return true when we're done removing routes
-  //       // but because we want to remove all other screens, we make it
-  //       // always return false
-  //           (Route route) => false,
-  //     );
-  //   }
-  //   return;
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -227,48 +193,12 @@ class _SetupPageState extends State<SetupPage> {
       } else {
         await saveBranchAndDevice();
         openIpDialog();
-        //checkDeviceLogin();
       }
     }
   }
 
-  // checkDeviceLogin() async {
-  //   if(selectedDevice!.deviceID! != '4'){
-  //     Map response = await Domain().getDeviceLogin(selectedDevice!.deviceID!.toString());
-  //     if(response['status'] == '1'){
-  //       openConfirmDialog();
-  //     } else if (response['status'] == '2'){
-  //       await saveBranchAndDevice();
-  //     }
-  //   } else {
-  //     await saveBranchAndDevice();
-  //   }
-  // }
-
   saveBranchAndDevice() async  {
-    // Navigator.of(context).pushReplacement(
-    //     MaterialPageRoute(builder: (context) => LoadingPage()));
     await savePref();
-    // Obtain shared preferences.
-
-    // if(this.token != null){
-    //   savePref();
-    //   await PosDatabase.instance.insertBranch(selectedBranch!);
-    //   await updateBranchToken();
-    // } else {
-    //   Fluttertoast.showToast(msg: '${AppLocalizations.of(context)?.translate('fail_get_token')}');
-    //   Navigator.of(context).pushAndRemoveUntil(
-    //     // the new route
-    //     MaterialPageRoute(
-    //       builder: (BuildContext context) => LoginPage(),
-    //     ),
-    //
-    //     // this function should return true when we're done removing routes
-    //     // but because we want to remove all other screens, we make it
-    //     // always return false
-    //         (Route route) => false,
-    //   );
-    // }
   }
 
   savePref() async {
@@ -276,55 +206,5 @@ class _SetupPageState extends State<SetupPage> {
     await prefs.setInt('branch_id', selectedBranch!.branchID!);
     await prefs.setInt('device_id', selectedDevice!.deviceID!);
     await prefs.setString("branch", json.encode(selectedBranch!));
-    //Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoadingPage()));
   }
-
-//   updateBranchToken() async {
-//     try{
-//       var connectivityResult = await (Connectivity().checkConnectivity());
-//       await PosDatabase.instance.updateBranchNotificationToken(Branch(
-//           notification_token: this.token,
-//           branchID: selectedBranch!.branchID
-//       ));
-// /*
-//       ------------------------sync to cloud--------------------------------
-// */
-//       if (connectivityResult == ConnectivityResult.mobile || connectivityResult == ConnectivityResult.wifi) {
-//         Map response = await Domain().updateBranchNotificationToken(this.token, selectedBranch!.branchID);
-//         if (response['status'] == '1') {
-//           Navigator.of(context).pushReplacement(
-//               MaterialPageRoute(builder: (context) => LoadingPage()));
-//         } else {
-//           Fluttertoast.showToast(msg: '${AppLocalizations.of(context)?.translate('fail_get_token')}');
-//           Navigator.of(context).pushAndRemoveUntil(
-//             // the new route
-//             MaterialPageRoute(
-//               builder: (BuildContext context) => LoginPage(),
-//             ),
-//
-//             // this function should return true when we're done removing routes
-//             // but because we want to remove all other screens, we make it
-//             // always return false
-//                 (Route route) => false,
-//           );
-//         }
-//       }
-//     }catch(e){
-//       print('update token error: ${e}');
-//       Fluttertoast.showToast(msg: '${AppLocalizations.of(context)?.translate('fail_get_token')}');
-//       Navigator.of(context).pushAndRemoveUntil(
-//         // the new route
-//         MaterialPageRoute(
-//           builder: (BuildContext context) => LoginPage(),
-//         ),
-//
-//         // this function should return true when we're done removing routes
-//         // but because we want to remove all other screens, we make it
-//         // always return false
-//             (Route route) => false,
-//       );
-//     }
-//     return;
-//
-//   }
 }

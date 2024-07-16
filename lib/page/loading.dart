@@ -76,6 +76,11 @@ class _LoadingPageState extends State<LoadingPage> {
     if(response != null){
       var json = jsonDecode(response);
       switch(json['status']){
+        case '-1': {
+          Future.delayed(Duration(seconds: 2), () {
+          controller.sink.add("done");
+          });
+        }break;
         case '1': {
           decodeAction.decodeAllFunction(response);
           initAppSetting();
