@@ -239,7 +239,7 @@ class _TypeIpViewState extends State<TypeIpView> {
                 autofocus: true,
                 enabled: waitingResponse ? false : true,
                 controller: ipTextController,
-                keyboardType: TextInputType.numberWithOptions(),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 onSubmitted: _onSubmitted,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(borderSide: BorderSide(color: color.backgroundColor)),
