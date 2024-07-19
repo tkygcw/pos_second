@@ -1,22 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/server_ip_dialog.dart';
-import 'package:optimy_second_device/main.dart';
-import 'package:optimy_second_device/page/pos_pin.dart';
+import 'package:optimy_second_device/page/UpdateAppDialog.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:optimy_second_device/page/setup.dart';
+import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:version/version.dart';
 import '../database/domain.dart';
 import '../fragment/network_dialog.dart';
 import '../notifier/theme_color.dart';
 import 'package:flutter_login/flutter_login.dart';
+import 'dart:io' as Platform;
 
 import 'loading.dart';
 
@@ -28,6 +31,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  late SharedPreferences prefs;
+  List response = [];
+  String latestVersion = '';
   bool toNextPage = true;
   bool isLoaded = false;
   @override
@@ -158,29 +164,97 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   loginCheck() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? user = prefs.getString('user');
-    final int? branch_id = prefs.getInt('branch_id');
-    final int? device_id = prefs.getInt('device_id');
-    if (user != '' && user != null && branch_id != '' && branch_id != null && device_id != '' && device_id != null) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => ServerIpDialog(),
-      ));
-      return;
-    }
+    prefs = await SharedPreferences.getInstance();
+    // final String? user = prefs.getString('user');
+    // final int? branch_id = prefs.getInt('branch_id');
+    // final int? device_id = prefs.getInt('device_id');
+    // if (user != '' && user != null && branch_id != '' && branch_id != null && device_id != '' && device_id != null) {
+    //   Navigator.of(context).pushReplacement(MaterialPageRoute(
+    //     builder: (context) => ServerIpDialog(),
+    //   ));
+    //   return;
+    // }
     bool hasInternetAccess = await Domain().isHostReachable();
     print('host reach: ${hasInternetAccess}');
     if(!hasInternetAccess){
       openLogOutDialog();
       return;
+    } else {
+      await checkVersion();
     }
+  }
+
+  loginCallBack() {
+    final String? user = prefs.getString('user');
+    final int? branch_id = prefs.getInt('branch_id');
+    final int? device_id = prefs.getInt('device_id');
     if(mounted){
-      Timer(Duration(seconds: 3), () {
+      if (user != '' && user != null && branch_id != '' && branch_id != null && device_id != '' && device_id != null) {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (context) => ServerIpDialog(),
+        ));
+      } else {
         setState(() {
           isLoaded = true;
         });
-      });
+      }
     }
+  }
+
+  checkVersion() async {
+    await getLatestVersion();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String version = packageInfo.version;
+    if(latestVersion != ''){
+      Version newVersion = Version.parse(latestVersion);
+      Version currentVersion = Version.parse(version);
+      if(currentVersion < newVersion){
+        openUpdateDialog();
+      } else {
+        loginCallBack();
+      }
+    } else {
+      loginCallBack();
+    }
+    print('current version: $version');
+  }
+
+  getLatestVersion() async {
+    if(defaultTargetPlatform == TargetPlatform.android){
+      Map data =  await Domain().getAppVersion('0');
+      if(data['status'] == '1'){
+        response = data['app_version'];
+        latestVersion = response[0]['version'];
+      }
+    } else if(defaultTargetPlatform == TargetPlatform.iOS) {
+      Map data =  await Domain().getAppVersion('1');
+      if(data['status'] == '1'){
+        response = data['app_version'];
+        latestVersion = response[0]['version'];
+      }
+    }
+  }
+
+  Future<Future<Object?>> openUpdateDialog() async {
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+                opacity: a1.value,
+                child: UpdateAppDialog(versionData: response, callBack: loginCallBack)
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
   }
 
   Future<Future<Object?>> openLogOutDialog() async {

@@ -138,10 +138,8 @@ class _LoadingPageState extends State<LoadingPage> {
     final directory = await _localPath;
     final path = '$directory/assets/$folderName';
     final pathImg = Directory(path);
-    if(await pathImg.exists() == false){
-      pathImg.create();
-      await prefs.setString('local_path', path);
-    }
+    pathImg.create();
+    await prefs.setString('local_path', path);
     await downloadProductImage(pathImg.path);
   }
 
