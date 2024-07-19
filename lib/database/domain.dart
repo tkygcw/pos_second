@@ -10,6 +10,22 @@ class Domain {
   static Uri login = Uri.parse('${domain}mobile-api/login/index.php');
   static Uri device = Uri.parse('${domain}mobile-api/device/index.php');
   static Uri branch = Uri.parse('${domain}mobile-api/branch/index.php');
+  static Uri app_version = Uri.parse('${domain}mobile-api/app_version_sub_pos/index.php');
+
+/*
+  get app version
+*/
+  getAppVersion(String platform) async {
+    try{
+      var response = await http.post(Domain.app_version, body: {
+        'getAppVersion': '1',
+        'platform': platform,
+      });
+      return jsonDecode(response.body);
+    } catch(e){
+      Fluttertoast.showToast(msg: e.toString());
+    }
+  }
 
   /*
   * login
