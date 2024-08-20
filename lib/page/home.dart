@@ -140,7 +140,51 @@ class _HomePageState extends State<HomePage> {
         child: Scaffold(
             resizeToAvoidBottomInset: false,
             body: SafeArea(
-              child: Stack(
+              child: isLandscapeOrien() ? CollapsibleSidebar(
+                  sidebarBoxShadow: [
+                    BoxShadow(
+                      color: Colors.transparent,
+                    ),
+                  ],
+                  // maxWidth: 80,
+                  isCollapsed: true,
+                  items: _items,
+                  avatarImg: AssetImage("drawable/logo.png"),
+                  title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                  backgroundColor: color.backgroundColor,
+                  selectedTextColor: color.iconColor,
+                  textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                  titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                  toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  customItemOffsetX: 20,
+                  selectedIconColor: color.iconColor,
+                  selectedIconBox: color.buttonColor,
+                  unselectedIconColor: Colors.white,
+                  body: Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: _body(context),
+                      ),
+                      //cart page
+                      Visibility(
+                        visible: currentPage != 'product' &&
+                            currentPage != 'setting' &&
+                            currentPage != 'settlement' &&
+                            currentPage != 'qr_order' &&
+                            currentPage != 'setting' &&
+                            currentPage != 'report'
+                            ? true
+                            : false,
+                        child: Expanded(
+                            flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                            child: CartPage(
+                              currentPage: currentPage,
+                            )),
+                      )
+                    ],
+                  ))
+                  : Stack(
                 children: [
                   _buildBody(context),
                   Positioned(
@@ -150,37 +194,13 @@ class _HomePageState extends State<HomePage> {
                     child: ValueListenableBuilder<bool>(
                       valueListenable: isCollapsedNotifier,
                       builder: (context, isCollapsed, child) {
-                        return isLandscapeOrien() ? CollapsibleSidebar(
-                          sidebarBoxShadow: [
-                            BoxShadow(
-                              color: Colors.transparent,
-                            ),
-                          ],
-                          badgeBackgroundColor: Colors.red,
-                          isCollapsed: isCollapsed,
-                          items: _items,
-                          avatarImg: AssetImage("drawable/logo.png"),
-                          title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
-                          backgroundColor: color.backgroundColor,
-                          selectedTextColor: color.iconColor,
-                          textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                          titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                          toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          customItemOffsetX: 20,
-                          selectedIconColor: color.iconColor,
-                          selectedIconBox: color.buttonColor,
-                          unselectedIconColor: Colors.white,
-                          body: Container(),
-                        )
-                        // for portrait mode
-                        : CollapsibleSidebar(
+                        return CollapsibleSidebar(
                           sidebarBoxShadow: [
                             BoxShadow(
                               color: Colors.transparent,
                             ),
                           ],
                           minWidth: 0,
-                          badgeBackgroundColor: Colors.red,
                           isCollapsed: isCollapsed,
                           items: _items,
                           avatarImg: AssetImage("drawable/logo.png"),

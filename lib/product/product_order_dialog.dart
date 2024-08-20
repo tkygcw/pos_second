@@ -610,7 +610,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           ],
                         ),
                         content: SizedBox(
-                          height: MediaQuery.of(context).size.height /2.5, // Change as per your requirement
+                          height: MediaQuery.of(context).size.height /2.5,
                           width: MediaQuery.of(context).size.width / 1.5,
                           child: SingleChildScrollView(
                             child: Column(
@@ -776,7 +776,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                           SizedBox(width: 10),
                                           // quantity input text field
                                           SizedBox(
-                                            width: 273,
+                                            width: isLandscapeOrien() ? 273 : constraints.maxWidth / 3,
                                             child: TextField(
                                               autofocus: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? true : false,
                                               controller: quantityController,
@@ -866,8 +866,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                         ),
                         actions: <Widget>[
                           SizedBox(
-                            width: MediaQuery.of(context).size.width / 2.5,
-                            height: MediaQuery.of(context).size.height / 10,
+                            width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2.5 : MediaQuery.of(context).size.width / 3,
+                            height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 10 : MediaQuery.of(context).size.height / 20,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
                               onPressed: isButtonDisabled ? null : () {
@@ -881,8 +881,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                             ),
                           ),
                           SizedBox(
-                            width: MediaQuery.of(context).size.width / 2.5,
-                            height: MediaQuery.of(context).size.height / 10,
+                            width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2.5 : MediaQuery.of(context).size.width / 3,
+                            height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 10 : MediaQuery.of(context).size.height / 20,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: color.buttonColor,
@@ -1400,5 +1400,18 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     }
     cart.resetCount();
     decodeAction.cartProductController.sink.add(cart);
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
   }
 }

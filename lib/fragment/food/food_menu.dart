@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/notifier/notification_notifier.dart';
+import 'package:optimy_second_device/page/home.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
@@ -81,7 +82,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
             IconButton(
               color: color.buttonColor,
               onPressed: (){
-                showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath));
+                // showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath));
+                isCollapsedNotifier.value = !isCollapsedNotifier.value;
               },
               icon: Icon(Icons.search),
             )
@@ -237,9 +239,13 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         List<Product> data = initProduct;
         sortProduct(data);
         allProduct = data;
+        print("MediaQuery.height: ${MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height}");
+        print("MediaQuery.width: ${MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width}");
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
-            crossAxisCount: MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height > 500 && MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width > 900 ? 5 : 3,
+            crossAxisCount: isLandscapeOrien() ?
+            MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height > 500 && MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width > 900 ? 5 : 3
+            : MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width < 530 ? 3 : 4,
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(
@@ -284,7 +290,9 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
             padding: const EdgeInsets.all(10),
-            crossAxisCount: MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height > 500 && MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width > 900 ? 5 : 3,
+            crossAxisCount: isLandscapeOrien() ?
+            MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height > 500 && MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width > 900 ? 5 : 3
+                : MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width < 530 ? 3 : 4,
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(
@@ -378,6 +386,19 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
       }
     });
     return list;
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
   }
 
   // getPreferences() async {

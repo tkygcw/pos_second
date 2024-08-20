@@ -51,7 +51,8 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   Widget buildTitle(BuildContext context){
     return Row(
       children: [
-        Text(AppLocalizations.of(context)!.translate('fail_print_order_detail')),
+        Text(AppLocalizations.of(context)!.translate('fail_print_order_detail'),
+            style: TextStyle(fontSize: 18)),
         Spacer(),
         Visibility(
           visible: model.failPrintOrderDetails.isEmpty ? false : true,
@@ -219,8 +220,8 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   List<Widget> buildAction(BuildContext context){
     return [
       SizedBox(
-        width: MediaQuery.of(context).size.width / 4,
-        height: MediaQuery.of(context).size.height / 12,
+        width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 4 : MediaQuery.of(context).size.width / 3,
+        height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 12 : MediaQuery.of(context).size.height / 20,
         child: ElevatedButton(
             onPressed: isButtonDisable || model.failPrintOrderDetails.isEmpty  ? null : () async {
               //List<String> keyList = reprintFunc.groupOrder().keys.toList();
@@ -235,8 +236,8 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
             child: Text(AppLocalizations.of(context)!.translate('reprint'))),
       ),
       SizedBox(
-          width: MediaQuery.of(context).size.width / 4,
-          height: MediaQuery.of(context).size.height / 12,
+          width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 4 : MediaQuery.of(context).size.width / 3,
+          height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 12 : MediaQuery.of(context).size.height / 20,
           child: ElevatedButton(
               onPressed: closeButtonDisable ? null : (){
                 setState(() {
@@ -281,5 +282,18 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   closeDialog(){
     reprintFunc.resetOrderDetail();
     Navigator.of(context).pop();
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
   }
 }
