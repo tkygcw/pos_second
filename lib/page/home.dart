@@ -21,6 +21,8 @@ import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
 
+ValueNotifier<bool> isCollapsedNotifier = ValueNotifier<bool>(true);
+
 class HomePage extends StatefulWidget {
   final User? user;
   final bool isNewDay;
@@ -132,64 +134,130 @@ class _HomePageState extends State<HomePage> {
       this.themeColor = color;
       return PopScope(
         canPop: willPop,
-        onPopInvoked: (didPop){
+        onPopInvoked: (didPop) {
           showSecondDialog(context, color);
         },
-        // onWillPop: () async {
-        //   showSecondDialog(context, color);
-        //   return willPop;
-        // },
         child: Scaffold(
             resizeToAvoidBottomInset: false,
             body: SafeArea(
-              //side nav bar
-              child: CollapsibleSidebar(
-                  sidebarBoxShadow: [
-                    BoxShadow(
-                      color: Colors.transparent,
-                    ),
-                  ],
-                  // maxWidth: 80,
-                  isCollapsed: true,
-                  items: _items,
-                  avatarImg: AssetImage("drawable/logo.png"),
-                  title: "${widget.user!.name!}\n${branchName ?? ''} - $role",
-                  backgroundColor: color.backgroundColor,
-                  selectedTextColor: color.iconColor,
-                  textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                  titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                  toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  selectedIconColor: color.iconColor,
-                  selectedIconBox: color.buttonColor,
-                  unselectedIconColor: Colors.white,
-                  body: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _body(context),
-                      ),
-                      //cart page
-                      Visibility(
-                        visible: currentPage != 'product' &&
-                            currentPage != 'setting' &&
-                            currentPage != 'settlement' &&
-                            currentPage != 'qr_order' &&
-                            currentPage != 'setting' &&
-                            currentPage != 'report'
-                            ? true
-                            : false,
-                        child: Expanded(
-                            flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                            child: CartPage(
-                              currentPage: currentPage,
-                            )),
-                      )
-                    ],
-                  )),
+              child: Stack(
+                children: [
+                  _buildBody(context),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isCollapsedNotifier,
+                      builder: (context, isCollapsed, child) {
+                        return isLandscapeOrien() ? CollapsibleSidebar(
+                          sidebarBoxShadow: [
+                            BoxShadow(
+                              color: Colors.transparent,
+                            ),
+                          ],
+                          badgeBackgroundColor: Colors.red,
+                          isCollapsed: isCollapsed,
+                          items: _items,
+                          avatarImg: AssetImage("drawable/logo.png"),
+                          title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                          backgroundColor: color.backgroundColor,
+                          selectedTextColor: color.iconColor,
+                          textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                          titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                          toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          customItemOffsetX: 20,
+                          selectedIconColor: color.iconColor,
+                          selectedIconBox: color.buttonColor,
+                          unselectedIconColor: Colors.white,
+                          body: Container(),
+                        )
+                        // for portrait mode
+                        : CollapsibleSidebar(
+                          sidebarBoxShadow: [
+                            BoxShadow(
+                              color: Colors.transparent,
+                            ),
+                          ],
+                          minWidth: 0,
+                          badgeBackgroundColor: Colors.red,
+                          isCollapsed: isCollapsed,
+                          items: _items,
+                          avatarImg: AssetImage("drawable/logo.png"),
+                          title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 20) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                          backgroundColor: color.backgroundColor,
+                          selectedTextColor: color.iconColor,
+                          textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                          titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                          toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          customItemOffsetX: 20,
+                          iconSize: 30,
+                          screenPadding: 0,
+                          selectedIconColor: color.iconColor,
+                          selectedIconBox: color.buttonColor,
+                          unselectedIconColor: Colors.white,
+                          body: Container(),
+                        );
+                      },
+                    ),)
+                ],
+
+              ),
             )),
       );
     });
+  }
 
+  Widget _buildBody(BuildContext context) {
+    if (isLandscapeOrien()) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: _body(context),
+          ),
+          Visibility(
+            visible: currentPage != 'product' &&
+                currentPage != 'setting' &&
+                currentPage != 'settlement' &&
+                currentPage != 'qr_order' &&
+                currentPage != 'setting' &&
+                currentPage != 'report'
+                ? true
+                : false,
+            child: Expanded(
+                flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                child: CartPage(
+                  currentPage: currentPage,
+                )),
+          )
+        ],
+      );
+    } else {
+      return Column(
+        children: [
+          Expanded(
+            flex: 1,
+            child: _body(context),
+          ),
+          Visibility(
+            visible: currentPage != 'product' &&
+                currentPage != 'setting' &&
+                currentPage != 'settlement' &&
+                currentPage != 'qr_order' &&
+                currentPage != 'setting' &&
+                currentPage != 'report'
+                ? true
+                : false,
+            child: Expanded(
+                flex: 1,
+                child: CartPage(
+                  currentPage: currentPage,
+                )),
+          )
+        ],
+      );
+    }
   }
 
   Future<Future<Object?>> openDialog() async {
@@ -361,6 +429,27 @@ class _HomePageState extends State<HomePage> {
         }
     );
   }
+
+  String _truncateTitle(String title, int? maxLength) {
+    if (title.length > maxLength!) {
+      return title.substring(0, maxLength) + '...';
+    }
+    return title;
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
+  }
+
 
   /*
   *
