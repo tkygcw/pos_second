@@ -1359,7 +1359,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         per_quantity_unit: widget.productDetail!.unit! != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.per_quantity_unit! : '',
         allow_ticket: widget.productDetail!.allow_ticket,
         ticket_count: widget.productDetail!.ticket_count,
-        ticket_exp: widget.productDetail!.ticket_exp
+        ticket_exp: widget.productDetail!.ticket_exp,
+        product_sku: widget.productDetail!.SKU
     );
     List<cartProductItem> item = [];
     if(cart.cartNotifierItem.isEmpty){

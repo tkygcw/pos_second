@@ -39,6 +39,7 @@ class cartProductItem{
   int? allow_ticket;
   int? ticket_count;
   String? ticket_exp;
+  String? product_sku;
 
   cartProductItem(
       {
@@ -73,7 +74,8 @@ class cartProductItem{
         this.order_queue,
         this.allow_ticket,
         this.ticket_count,
-        this.ticket_exp
+        this.ticket_exp,
+        this.product_sku
       });
 
   static cartProductItem fromJson(Map<String, Object?> json) {
@@ -117,7 +119,8 @@ class cartProductItem{
         order_queue: json['order_queue'] as String?,
         allow_ticket: json['allow_ticket'] as int?,
         ticket_count: json['ticketCount'] as int?,
-        ticket_exp: json['ticket_exp'] as String
+        ticket_exp: json['ticket_exp'] as String?,
+        product_sku: json['product_sku'] as String?
     );
   }
 
@@ -153,7 +156,8 @@ class cartProductItem{
     'order_queue': order_queue,
     'allow_ticket': allow_ticket,
     'ticket_count': ticket_count,
-    'ticket_exp': ticket_exp
+    'ticket_exp': ticket_exp,
+    'product_sku': product_sku
   };
 
 }

@@ -644,7 +644,6 @@ class _CartDialogState extends State<CartDialog> {
   addToCart() {
     getSelectedTable();
     for (int i = 0; i < orderDetailList.length; i++) {
-      print("variant name: ${orderDetailList[i].product_variant_name}");
       cartProductItem value = cartProductItem(
         branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
         product_name: orderDetailList[i].productName!,
@@ -664,7 +663,8 @@ class _CartDialogState extends State<CartDialog> {
         first_cache_order_by: orderCacheList.last.order_by,
         allow_ticket: orderDetailList[i].allow_ticket,
         ticket_count: orderDetailList[i].ticket_count,
-        ticket_exp: orderDetailList[i].ticket_exp
+        ticket_exp: orderDetailList[i].ticket_exp,
+        product_sku: orderDetailList[i].product_sku
       );
       cart.addItem(value);
     }
