@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:provider/provider.dart';
@@ -264,9 +263,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                       ],
                     ),
                     content: SizedBox(
-                      // constraints: BoxConstraints(
-                      //   maxHeight: MediaQuery.of(context).size.height > 500 ? 500.0 : MediaQuery.of(context).size.height / 2.5,
-                      // ),
                       height: MediaQuery.of(context).size.height,
                       width: MediaQuery.of(context).size.width / 3,
                       child: SingleChildScrollView(
@@ -274,6 +270,13 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Visibility(
+                              visible: decodeAction.decodedAppSetting!.show_product_desc == 1 ? true : false,
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 15.0),
+                                child: Text(widget.productDetail!.description!),
+                              ),
+                            ),
                             Visibility(
                               visible: widget.productDetail!.unit == 'each_c' ? true : false,
                               child: Column(

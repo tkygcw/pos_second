@@ -40,7 +40,7 @@ dependencies:
   google_fonts: ^4.0.3
   devicelocale: ^0.6.0
   provider: ^6.0.5
-  collapsible_sidebar: ^2.0.3+3
+  collapsible_sidebar: ^2.0.7
   connectivity_plus: ^5.0.2
   quantity_input: ^1.0.2
   grouped_list: ^5.1.2
@@ -101,6 +101,7 @@ dependency_overrides:
   image_picker_android: 0.8.6+6
   intl: 0.18.0
   image: 4.0.15
+  win32: ^5.5.4
 
 dev_dependencies:
   flutter_test:

@@ -19,9 +19,6 @@ import '../database/domain.dart';
 import '../fragment/network_dialog.dart';
 import '../notifier/theme_color.dart';
 import 'package:flutter_login/flutter_login.dart';
-import 'dart:io' as Platform;
-
-import 'loading.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -35,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
   List response = [];
   String latestVersion = '';
   bool toNextPage = true;
-  bool isLoaded = false;
+  bool isLoaded = false, isLoggedIn = false;
   @override
   void initState() {
     // TODO: implement initState
@@ -125,10 +122,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 scrollable: false,
                 logo: const AssetImage("drawable/logo.png"),
-                //NetworkImage('${Domain.domain}asset/logo.png'),
-                // File('data/user/0/com.example.pos_system/files/assets/img/logo1.jpg').existsSync() == false
-                //     ? NetworkImage("https://channelsoft.com.my/wp-content/uploads/2020/02/logo1.jpg")
-                //     : FileImage(File('data/user/0/com.example.pos_system/files/assets/img/logo1.jpg')),
                 onLogin: _authUser,
                 onSubmitAnimationCompleted: () {
                   if(toNextPage == true){
@@ -159,44 +152,36 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  toLoadingPage(){
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoadingPage()));
-  }
-
   loginCheck() async {
     prefs = await SharedPreferences.getInstance();
-    // final String? user = prefs.getString('user');
-    // final int? branch_id = prefs.getInt('branch_id');
-    // final int? device_id = prefs.getInt('device_id');
-    // if (user != '' && user != null && branch_id != '' && branch_id != null && device_id != '' && device_id != null) {
-    //   Navigator.of(context).pushReplacement(MaterialPageRoute(
-    //     builder: (context) => ServerIpDialog(),
-    //   ));
-    //   return;
-    // }
-    bool hasInternetAccess = await Domain().isHostReachable();
-    print('host reach: ${hasInternetAccess}');
-    if(!hasInternetAccess){
-      openLogOutDialog();
-      return;
-    } else {
-      await checkVersion();
-    }
-  }
-
-  loginCallBack() {
     final String? user = prefs.getString('user');
     final int? branch_id = prefs.getInt('branch_id');
     final int? device_id = prefs.getInt('device_id');
     if(mounted){
-      if (user != '' && user != null && branch_id != '' && branch_id != null && device_id != '' && device_id != null) {
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => ServerIpDialog(),
-        ));
+      if (user != '' && user != null && branch_id != null && device_id != null) {
+        isLoggedIn = true;
       } else {
-        setState(() {
-          isLoaded = true;
-        });
+        isLoggedIn = false;
+      }
+      //check internet access
+      checkInternetAccess();
+    }
+  }
+
+  checkInternetAccess() async {
+    bool hasInternetAccess = await Domain().isHostReachable();
+    print('host reach: ${hasInternetAccess}');
+    if(isLoggedIn){
+      if(!hasInternetAccess){
+        toServerDialogPage();
+      } else {
+        await checkVersion();
+      }
+    } else {
+      if(!hasInternetAccess){
+        openLogOutDialog();
+      } else {
+        await checkVersion();
       }
     }
   }
@@ -233,6 +218,26 @@ class _LoginPageState extends State<LoginPage> {
         latestVersion = response[0]['version'];
       }
     }
+  }
+
+  loginCallBack() {
+    if(isLoggedIn){
+      toServerDialogPage();
+    } else {
+      doneLoading();
+    }
+  }
+
+  toServerDialogPage(){
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (context) => ServerIpDialog(),
+    ));
+  }
+
+  doneLoading(){
+    setState(() {
+      isLoaded = true;
+    });
   }
 
   Future<Future<Object?>> openUpdateDialog() async {
