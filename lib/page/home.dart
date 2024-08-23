@@ -193,35 +193,36 @@ class _HomePageState extends State<HomePage> {
                     bottom: 0,
                     child: ValueListenableBuilder<bool>(
                       valueListenable: isCollapsedNotifier,
-                      builder: (context, isCollapsed, child) {
-                        return CollapsibleSidebar(
-                          sidebarBoxShadow: [
-                            BoxShadow(
-                              color: Colors.transparent,
-                            ),
-                          ],
-                          minWidth: 0,
-                          isCollapsed: isCollapsed,
-                          items: _items,
-                          avatarImg: AssetImage("drawable/logo.png"),
-                          title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 20) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
-                          backgroundColor: color.backgroundColor,
-                          selectedTextColor: color.iconColor,
-                          textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                          titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                          toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                          customItemOffsetX: 20,
-                          iconSize: 30,
-                          screenPadding: 0,
-                          selectedIconColor: color.iconColor,
-                          selectedIconBox: color.buttonColor,
-                          unselectedIconColor: Colors.white,
-                          body: Container(),
+                      builder: (context, isCollapsedNotifier, child) {
+                        return SizedBox(
+                          child: CollapsibleSidebar(
+                            sidebarBoxShadow: [
+                              BoxShadow(
+                                color: Colors.transparent,
+                              ),
+                            ],
+                            minWidth: 0,
+                            isCollapsed: isCollapsedNotifier,
+                            items: _items,
+                            avatarImg: AssetImage("drawable/logo.png"),
+                            title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 20) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                            backgroundColor: color.backgroundColor,
+                            selectedTextColor: color.iconColor,
+                            textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                            titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                            toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            customItemOffsetX: 20,
+                            iconSize: 30,
+                            screenPadding: 0,
+                            selectedIconColor: color.iconColor,
+                            selectedIconBox: color.buttonColor,
+                            unselectedIconColor: Colors.white,
+                            body: Container(),
+                          ),
                         );
                       },
-                    ),)
+                    ))
                 ],
-
               ),
             )),
       );
@@ -312,6 +313,7 @@ class _HomePageState extends State<HomePage> {
         onPressed: () => setState(() {
           currentPage = 'menu';
           cart.initialLoad();
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
         isSelected: true,
       ),
@@ -333,7 +335,10 @@ class _HomePageState extends State<HomePage> {
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('setting'),
         icon: Icons.settings,
-        onPressed: () => setState(() => currentPage = 'setting'),
+        onPressed: () => setState(() {
+          currentPage = 'setting';
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
+        }),
       ),
       // CollapsibleItem(
       //   text: 'Counter',

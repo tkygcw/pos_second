@@ -581,7 +581,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                   )),
                             ),
                             Spacer(),
-                            Column(
+                            isLandscapeOrien() ? Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ?
@@ -606,7 +606,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                 )
 
                               ],
-                            )
+                            ) : Container()
                           ],
                         ),
                         content: SizedBox(
@@ -617,6 +617,35 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                isLandscapeOrien() ? Container() :Padding(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ?
+                                      Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.per_quantity_unit!}${widget.productDetail!.unit!}",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          )) :
+                                      Text("RM ${Utils.convertTo2Dec(dialogPrice)} / each",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                      Visibility(
+                                        visible: dialogStock != '' ? true : false,
+                                        child: Text("${AppLocalizations.of(context)!.translate('in_stock')}: $dialogStock${widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? widget.productDetail!.unit : ''}",
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: dialogStock == '0' ? Colors.red : Colors.black
+                                            )),
+                                      )
+
+                                    ],
+                                  ),
+                                ),
                                 Visibility(
                                   visible: widget.productDetail!.unit == 'each_c' ? true : false,
                                   child: Column(
@@ -634,12 +663,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 400,
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            SizedBox(
-                                              width: 273,
+                                            Expanded(
                                               child: TextField(
                                                 autofocus: false,
                                                 controller: nameController,
@@ -685,12 +712,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                         ),
                                       ),
                                       SizedBox(
-                                        width: 400,
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            SizedBox(
-                                              width: 273,
+                                            Expanded(
                                               child: TextField(
                                                 autofocus: true,
                                                 controller: priceController,
@@ -749,84 +774,93 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           // quantity input remove button
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: color.backgroundColor,
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(Icons.remove, color: Colors.white), // Set the icon color to white.
-                                              onPressed: () {
-                                                if(simpleIntInput >= 1){
-                                                  setState(() {
-                                                    simpleIntInput -= 1;
-                                                    quantityController.text = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
-                                                    simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
-                                                  });
-                                                } else{
-                                                  setState(() {
-                                                    simpleIntInput = 0;
-                                                    quantityController.text =  widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
-                                                    simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
-                                                  });
-                                                }
-                                              },
+                                          Expanded(
+                                            flex: 1,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: color.backgroundColor,
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                              child: IconButton(
+                                                icon: Icon(Icons.remove, color: Colors.white), // Set the icon color to white.
+                                                onPressed: () {
+                                                  if(simpleIntInput >= 1){
+                                                    setState(() {
+                                                      simpleIntInput -= 1;
+                                                      quantityController.text = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
+                                                      simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
+                                                    });
+                                                  } else{
+                                                    setState(() {
+                                                      simpleIntInput = 0;
+                                                      quantityController.text =  widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? simpleIntInput.toStringAsFixed(2) : simpleIntInput.toString();
+                                                      simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? double.parse(quantityController.text.replaceAll(',', '')) : int.parse(quantityController.text.replaceAll(',', ''));
+                                                    });
+                                                  }
+                                                },
+                                              ),
                                             ),
                                           ),
                                           SizedBox(width: 10),
                                           // quantity input text field
-                                          SizedBox(
-                                            width: isLandscapeOrien() ? 273 : constraints.maxWidth / 3,
-                                            child: TextField(
-                                              autofocus: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? true : false,
-                                              controller: quantityController,
-                                              keyboardType: TextInputType.number,
-                                              inputFormatters: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
-                                                  : <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
-                                              textAlign: TextAlign.center,
-                                              decoration: InputDecoration(
-                                                focusedBorder: OutlineInputBorder(
-                                                  borderSide: BorderSide(color: color.backgroundColor),
+                                          Expanded(
+                                            flex: 4,
+                                            child: SizedBox(
+                                              width: isLandscapeOrien() ? 273 : constraints.maxWidth / 3,
+                                              child: TextField(
+                                                autofocus: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? true : false,
+                                                controller: quantityController,
+                                                keyboardType: TextInputType.number,
+                                                inputFormatters: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? <TextInputFormatter>[FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}'))]
+                                                    : <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                                                textAlign: TextAlign.center,
+                                                decoration: InputDecoration(
+                                                  focusedBorder: OutlineInputBorder(
+                                                    borderSide: BorderSide(color: color.backgroundColor),
+                                                  ),
                                                 ),
+                                                onChanged: (value) {
+                                                  if(value != ''){
+                                                    setState(() => simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? double.parse(value.replaceAll(',', '')): int.parse(value.replaceAll(',', '')));
+                                                  } else {
+                                                    simpleIntInput = 0;
+                                                  }
+                                                },
+                                                onSubmitted: _onSubmitted,
                                               ),
-                                              onChanged: (value) {
-                                                if(value != ''){
-                                                  setState(() => simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? double.parse(value.replaceAll(',', '')): int.parse(value.replaceAll(',', '')));
-                                                } else {
-                                                  simpleIntInput = 0;
-                                                }
-                                              },
-                                              onSubmitted: _onSubmitted,
                                             ),
                                           ),
                                           SizedBox(width: 10),
                                           // quantity input add button
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: color.backgroundColor,
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(Icons.add, color: Colors.white),
-                                              onPressed: () {
-                                                // stock disable or in stock
-                                                if(dialogStock == '' || simpleIntInput+1 < int.parse(dialogStock)) {
-                                                  setState(() {
-                                                    simpleIntInput += 1;
-                                                    quantityController.text = simpleIntInput.toString();
-                                                    simpleIntInput =  int.parse(quantityController.text.replaceAll(',', ''));
-                                                  });
-                                                } else{
-                                                  setState(() {
-                                                    simpleIntInput = int.parse(dialogStock);
-                                                    quantityController.text = simpleIntInput.toString();
-                                                    simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
-                                                  });
-                                                  if(dialogStock == '0'){
-                                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+                                          Expanded(
+                                            flex: 1,
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: color.backgroundColor,
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                              child: IconButton(
+                                                icon: Icon(Icons.add, color: Colors.white),
+                                                onPressed: () {
+                                                  // stock disable or in stock
+                                                  if(dialogStock == '' || simpleIntInput+1 < int.parse(dialogStock)) {
+                                                    setState(() {
+                                                      simpleIntInput += 1;
+                                                      quantityController.text = simpleIntInput.toString();
+                                                      simpleIntInput =  int.parse(quantityController.text.replaceAll(',', ''));
+                                                    });
+                                                  } else{
+                                                    setState(() {
+                                                      simpleIntInput = int.parse(dialogStock);
+                                                      quantityController.text = simpleIntInput.toString();
+                                                      simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
+                                                    });
+                                                    if(dialogStock == '0'){
+                                                      Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+                                                    }
                                                   }
-                                                }
-                                              },
+                                                },
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -865,37 +899,48 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           ),
                         ),
                         actions: <Widget>[
-                          SizedBox(
-                            width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2.5 : MediaQuery.of(context).size.width / 3,
-                            height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 10 : MediaQuery.of(context).size.height / 20,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
-                              onPressed: isButtonDisabled ? null : () {
-                                // Disable the button after it has been pressed
-                                setState(() {
-                                  isButtonDisabled = true;
-                                });
-                                Navigator.of(context).pop();
-                              },
-                              child: Text('${AppLocalizations.of(context)?.translate('close')}'),
-                            ),
-                          ),
-                          SizedBox(
-                            width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2.5 : MediaQuery.of(context).size.width / 3,
-                            height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 10 : MediaQuery.of(context).size.height / 20,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: color.buttonColor,
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: SizedBox(
+                                  width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2.5 : MediaQuery.of(context).size.width / 3,
+                                  height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 10 : MediaQuery.of(context).size.height / 20,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(backgroundColor: color.backgroundColor),
+                                    onPressed: isButtonDisabled ? null : () {
+                                      // Disable the button after it has been pressed
+                                      setState(() {
+                                        isButtonDisabled = true;
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('${AppLocalizations.of(context)?.translate('close')}'),
+                                  ),
+                                ),
                               ),
-                              onPressed: isButtonDisabled ? null : () {
-                                if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
-                                  Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
-                                } else {
-                                  _productStockStatusAction();
-                                }
-                              },
-                              child: Text('${AppLocalizations.of(context)?.translate('add')}'),
-                            ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                flex: 1,
+                                child: SizedBox(
+                                  width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2.5 : MediaQuery.of(context).size.width / 3,
+                                  height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 10 : MediaQuery.of(context).size.height / 20,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: color.buttonColor,
+                                    ),
+                                    onPressed: isButtonDisabled ? null : () {
+                                      if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
+                                        Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
+                                      } else {
+                                        _productStockStatusAction();
+                                      }
+                                    },
+                                    child: Text('${AppLocalizations.of(context)?.translate('add')}'),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

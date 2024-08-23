@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/page/home.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 
@@ -49,6 +50,12 @@ class _SettingMenuState extends State<SettingMenu> {
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
                 automaticallyImplyLeading: false,
+                leading: isLandscapeOrien() ? null : IconButton(
+                  icon: Icon(Icons.menu, color: color.buttonColor),
+                  onPressed: () {
+                    isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                  },
+                ),
                 title: Text(AppLocalizations.of(context)!.translate('setting'),
                     style: TextStyle(fontSize: 25, color: Colors.black)),
                 backgroundColor: Color(0xffFAFAFA),
@@ -118,6 +125,12 @@ class _SettingMenuState extends State<SettingMenu> {
               resizeToAvoidBottomInset: false,
               appBar: AppBar(
                 automaticallyImplyLeading: false,
+                leading: isLandscapeOrien() ? null : IconButton(
+                  icon: Icon(Icons.menu, color: color.buttonColor),
+                  onPressed: () {
+                    isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                  },
+                ),
                 title: Text(AppLocalizations.of(context)!.translate('setting'),
                     style: TextStyle(fontSize: 25, color: Colors.black)),
                 backgroundColor: Color(0xffFAFAFA),
@@ -186,5 +199,18 @@ class _SettingMenuState extends State<SettingMenu> {
         }
       });
     });
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
   }
 }

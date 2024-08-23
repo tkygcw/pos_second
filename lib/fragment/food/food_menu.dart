@@ -74,6 +74,12 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           elevation: 0,
+          leading: isLandscapeOrien() ? null : IconButton(
+            icon: Icon(Icons.menu, color: color.buttonColor),
+            onPressed: () {
+              isCollapsedNotifier.value = !isCollapsedNotifier.value;
+            },
+          ),
           title: Text(
             AppLocalizations.of(context)!.translate('menu'),
             style: TextStyle(fontSize: 25, color: color.backgroundColor),
@@ -82,8 +88,8 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
             IconButton(
               color: color.buttonColor,
               onPressed: (){
-                // showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath));
-                isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath));
+                // isCollapsedNotifier.value = !isCollapsedNotifier.value;
               },
               icon: Icon(Icons.search),
             )
@@ -239,8 +245,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         List<Product> data = initProduct;
         sortProduct(data);
         allProduct = data;
-        print("MediaQuery.height: ${MediaQuery.of(MyApp.navigatorKey.currentContext!).size.height}");
-        print("MediaQuery.width: ${MediaQuery.of(MyApp.navigatorKey.currentContext!).size.width}");
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
             crossAxisCount: isLandscapeOrien() ?
