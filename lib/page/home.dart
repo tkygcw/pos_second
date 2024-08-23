@@ -43,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   int count = 0;
   late ThemeColor themeColor;
   List<AppSetting> appSettingList = [];
+  bool isCartExpanded = false;
 
   @override
   void initState() {
@@ -230,55 +231,87 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBody(BuildContext context) {
-    if (isLandscapeOrien()) {
-      return Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: _body(context),
-          ),
-          Visibility(
-            visible: currentPage != 'product' &&
-                currentPage != 'setting' &&
-                currentPage != 'settlement' &&
-                currentPage != 'qr_order' &&
-                currentPage != 'setting' &&
-                currentPage != 'report'
-                ? true
-                : false,
-            child: Expanded(
-                flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                child: CartPage(
-                  currentPage: currentPage,
-                )),
-          )
-        ],
-      );
-    } else {
-      return Column(
-        children: [
-          Expanded(
-            flex: 1,
-            child: _body(context),
-          ),
-          Visibility(
-            visible: currentPage != 'product' &&
-                currentPage != 'setting' &&
-                currentPage != 'settlement' &&
-                currentPage != 'qr_order' &&
-                currentPage != 'setting' &&
-                currentPage != 'report'
-                ? true
-                : false,
-            child: Expanded(
-                flex: 1,
-                child: CartPage(
-                  currentPage: currentPage,
-                )),
-          )
-        ],
-      );
-    }
+    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
+      if (isLandscapeOrien()) {
+        return Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: _body(context),
+            ),
+            Visibility(
+              visible: currentPage != 'product' &&
+                  currentPage != 'setting' &&
+                  currentPage != 'settlement' &&
+                  currentPage != 'qr_order' &&
+                  currentPage != 'setting' &&
+                  currentPage != 'report'
+                  ? true
+                  : false,
+              child: Expanded(
+                  flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                  child: CartPage(
+                    currentPage: currentPage,
+                  )),
+            )
+          ],
+        );
+      } else {
+        return Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: _body(context),
+                ),
+                Visibility(
+                  visible: currentPage != 'product' &&
+                      currentPage != 'setting' &&
+                      currentPage != 'settlement' &&
+                      currentPage != 'qr_order' &&
+                      currentPage != 'report',
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 700),
+                    curve: Curves.fastOutSlowIn,
+                    height: isCartExpanded ? MediaQuery.of(context).size.height * 0.8 : 0,
+                    child: isCartExpanded
+                        ? Column(
+                      children: [
+                        Expanded(
+                          child: CartPage(
+                            currentPage: currentPage,
+                          ),
+                        ),
+                      ],
+                    )
+                        : SizedBox.shrink(),
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: SizedBox(
+                height: 50,
+                width: 50,
+                child: FloatingActionButton(
+                  backgroundColor: color.backgroundColor,
+                  onPressed: () {
+                    setState(() {
+                      isCartExpanded = !isCartExpanded;
+                    });
+                  },
+                  child: Icon(Icons.shopping_cart),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+    });
+
   }
 
   Future<Future<Object?>> openDialog() async {

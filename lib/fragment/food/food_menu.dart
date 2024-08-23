@@ -89,7 +89,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
               color: color.buttonColor,
               onPressed: (){
                 showSearch(context: context, delegate: ProductSearchDelegate(productList: allProduct, imagePath: imagePath));
-                // isCollapsedNotifier.value = !isCollapsedNotifier.value;
               },
               icon: Icon(Icons.search),
             )
