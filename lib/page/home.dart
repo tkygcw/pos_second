@@ -21,6 +21,8 @@ import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
 
+ValueNotifier<bool> isCollapsedNotifier = ValueNotifier<bool>(true);
+
 class HomePage extends StatefulWidget {
   final User? user;
   final bool isNewDay;
@@ -41,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   int count = 0;
   late ThemeColor themeColor;
   List<AppSetting> appSettingList = [];
+  bool isCartExpanded = false;
 
   @override
   void initState() {
@@ -49,7 +52,7 @@ class _HomePageState extends State<HomePage> {
     // if(notificationModel.notificationStarted == false){
     //   setupFirebaseMessaging();
     // }
-    setScreenLayout();
+    // setScreenLayout();
     // initSecondDisplay();
     // _items = _generateItems;
     // currentPage = 'menu';
@@ -81,12 +84,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
     super.dispose();
   }
 
@@ -98,8 +95,10 @@ class _HomePageState extends State<HomePage> {
 
   setScreenLayout() {
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
     ]);
   }
 
@@ -132,18 +131,13 @@ class _HomePageState extends State<HomePage> {
       this.themeColor = color;
       return PopScope(
         canPop: willPop,
-        onPopInvoked: (didPop){
+        onPopInvoked: (didPop) {
           showSecondDialog(context, color);
         },
-        // onWillPop: () async {
-        //   showSecondDialog(context, color);
-        //   return willPop;
-        // },
         child: Scaffold(
             resizeToAvoidBottomInset: false,
             body: SafeArea(
-              //side nav bar
-              child: CollapsibleSidebar(
+              child: isLandscapeOrien() ? CollapsibleSidebar(
                   sidebarBoxShadow: [
                     BoxShadow(
                       color: Colors.transparent,
@@ -153,12 +147,13 @@ class _HomePageState extends State<HomePage> {
                   isCollapsed: true,
                   items: _items,
                   avatarImg: AssetImage("drawable/logo.png"),
-                  title: "${widget.user!.name!}\n${branchName ?? ''} - $role",
+                  title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
                   backgroundColor: color.backgroundColor,
                   selectedTextColor: color.iconColor,
                   textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
                   titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
                   toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  customItemOffsetX: 20,
                   selectedIconColor: color.iconColor,
                   selectedIconBox: color.buttonColor,
                   unselectedIconColor: Colors.white,
@@ -185,9 +180,199 @@ class _HomePageState extends State<HomePage> {
                             )),
                       )
                     ],
-                  )),
+                  ))
+                  : Stack(
+                children: [
+                  Stack(
+                    children: [
+                      _buildBody(context),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: isCollapsedNotifier,
+                          builder: (context, isCollapsed, child) {
+                            return !isCollapsed ? GestureDetector(
+                              child: Container(
+                                color: Colors.black.withOpacity(0.5),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                                });
+                              },
+                            ) : Container();
+                          }
+                        ),
+                    ],
+                  ),
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isCollapsedNotifier,
+                      builder: (context, isCollapsedNotifier, child) {
+                        return SizedBox(
+                          child: CollapsibleSidebar(
+                            sidebarBoxShadow: [
+                              BoxShadow(
+                                color: Colors.transparent,
+                              ),
+                            ],
+                            minWidth: 0,
+                            isCollapsed: isCollapsedNotifier,
+                            items: _items,
+                            avatarImg: AssetImage("drawable/logo.png"),
+                            title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 20) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                            backgroundColor: color.backgroundColor,
+                            selectedTextColor: color.iconColor,
+                            textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                            titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                            toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            customItemOffsetX: 20,
+                            iconSize: 30,
+                            screenPadding: 0,
+                            selectedIconColor: color.iconColor,
+                            selectedIconBox: color.buttonColor,
+                            unselectedIconColor: Colors.white,
+                            body: Container(),
+                          ),
+                        );
+                      },
+                    ))
+                ],
+              ),
             )),
       );
+    });
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
+      return Consumer<CartModel>(builder: (context, CartModel cart, child) {
+        if (isLandscapeOrien()) {
+          return Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: _body(context),
+              ),
+              Visibility(
+                visible: currentPage != 'product' &&
+                    currentPage != 'setting' &&
+                    currentPage != 'settlement' &&
+                    currentPage != 'qr_order' &&
+                    currentPage != 'setting' &&
+                    currentPage != 'report'
+                    ? true
+                    : false,
+                child: Expanded(
+                    flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                    child: CartPage(
+                      currentPage: currentPage,
+                    )),
+              )
+            ],
+          );
+        } else {
+          return Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Stack(
+                      children: [
+                        _body(context),
+                        if (isCartExpanded)
+                          GestureDetector(
+                            child: Container(
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                isCartExpanded = !isCartExpanded;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                  Visibility(
+                    visible: currentPage != 'product' &&
+                        currentPage != 'setting' &&
+                        currentPage != 'settlement' &&
+                        currentPage != 'qr_order' &&
+                        currentPage != 'report',
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 0),
+                      height: isCartExpanded ? MediaQuery.of(context).size.height * 0.85 : 0,
+                      child: isCartExpanded
+                          ? Column(
+                        children: [
+                          AppBar(
+                            automaticallyImplyLeading: false,
+                            elevation: 0,
+                            centerTitle: true,
+                            title: Text(
+                              AppLocalizations.of(context)!.translate('cart'),
+                              style: TextStyle(fontSize: 25, color: color.backgroundColor),
+                            ),
+                            backgroundColor: Colors.white,
+                            actions: [
+                              IconButton(
+                                color: color.buttonColor,
+                                onPressed: (){
+                                  setState(() {
+                                    isCartExpanded = false;
+                                  });
+                                },
+                                icon: Icon(Icons.close),
+                              )
+                            ],
+
+                          ),
+                          Expanded(
+                            child: CartPage(
+                              currentPage: currentPage,
+                            ),
+                          ),
+                        ],
+                      )
+                          : SizedBox.shrink(),
+                    ),
+                  ),
+                ],
+              ),
+              Visibility(
+                visible: !isCartExpanded && currentPage == 'menu',
+                child: Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: color.backgroundColor,
+                    child: IconButton(
+                      tooltip: 'cart',
+                      icon: Badge(
+                        isLabelVisible: cart.cartNotifierItem.isEmpty ? false : true,
+                        label: Text("${cart.cartNotifierItem.length}"),
+                        child: const Icon(
+                          Icons.shopping_cart,
+                        ),
+                      ),
+                      color: Colors.white,
+                      onPressed: () {
+                        setState(() {
+                          isCartExpanded = !isCartExpanded;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+      });
     });
 
   }
@@ -224,6 +409,7 @@ class _HomePageState extends State<HomePage> {
         onPressed: () => setState(() {
           currentPage = 'menu';
           cart.initialLoad();
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
         isSelected: true,
       ),
@@ -245,7 +431,10 @@ class _HomePageState extends State<HomePage> {
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('setting'),
         icon: Icons.settings,
-        onPressed: () => setState(() => currentPage = 'setting'),
+        onPressed: () => setState(() {
+          currentPage = 'setting';
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
+        }),
       ),
       // CollapsibleItem(
       //   text: 'Counter',
@@ -361,6 +550,27 @@ class _HomePageState extends State<HomePage> {
         }
     );
   }
+
+  String _truncateTitle(String title, int? maxLength) {
+    if (title.length > maxLength!) {
+      return title.substring(0, maxLength) + '...';
+    }
+    return title;
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
+  }
+
 
   /*
   *

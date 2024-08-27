@@ -111,8 +111,8 @@ class _CartDialogState extends State<CartDialog> {
               Visibility(
                 visible: checkIsSelected(),
                 child: SizedBox(
-                  width: MediaQuery.of(context).size.width / 10,
-                  height: MediaQuery.of(context).size.height / 20,
+                  width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 10 : MediaQuery.of(context).size.width / 5,
+                  height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 20 : MediaQuery.of(context).size.height / 25,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
@@ -136,16 +136,17 @@ class _CartDialogState extends State<CartDialog> {
           ),
           content: isLoad ?
           SizedBox(
-              height: 650,
-              width: MediaQuery.of(context).size.width / 2,
+              height: isLandscapeOrien() ? 650 : MediaQuery.of(context).size.height / 3,
+              width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 2 : MediaQuery.of(context).size.width,
               child: Column(
                 children: [
                   Expanded(
                     child: ReorderableGridView.count(
                       padding: EdgeInsets.zero,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      crossAxisCount: MediaQuery.of(context).size.height > 500 ? 4 : 3,
+                      crossAxisSpacing: isLandscapeOrien() ? 10 : 0,
+                      mainAxisSpacing: isLandscapeOrien() ? 10 : 0,
+                      crossAxisCount: isLandscapeOrien() ? MediaQuery.of(context).size.height > 500 ? 4 : 3
+                                      : MediaQuery.of(context).size.width < 530 ? 3 : 4,
                       children: tableList.asMap().map((index, posTable) => MapEntry(index, tableItem(cart, color, index))).values.toList(),
                       onReorder: (int oldIndex, int newIndex) {
                         if (oldIndex != newIndex) {
@@ -159,8 +160,8 @@ class _CartDialogState extends State<CartDialog> {
               : CustomProgressBar(),
           actions: <Widget>[
             SizedBox(
-              width: MediaQuery.of(context).size.width / 4,
-              height: MediaQuery.of(context).size.height / 12,
+              width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 4 : MediaQuery.of(context).size.width / 3,
+              height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 12 : MediaQuery.of(context).size.height / 20,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color.backgroundColor,
@@ -176,8 +177,8 @@ class _CartDialogState extends State<CartDialog> {
               ),
             ),
             SizedBox(
-              width: MediaQuery.of(context).size.width / 4,
-              height: MediaQuery.of(context).size.height / 12,
+              width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 4 : MediaQuery.of(context).size.width / 3,
+              height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 12 : MediaQuery.of(context).size.height / 20,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color.buttonColor,
@@ -374,10 +375,14 @@ class _CartDialogState extends State<CartDialog> {
                                   Colors.white,
                                   borderRadius: BorderRadius.circular(5.0)
                               ),
-                              child: MediaQuery.of(context).size.height > 500 ? Text(
+                              child: isMergeButtonDisabled ? MediaQuery.of(context).size.height > 500 ? Text(
                                 "Group: ${tableList[index].group}",
                                 style: TextStyle(fontSize: 18, color: fontColor(posTable: tableList[index])),
                               ) : Text(
+                                "${tableList[index].group}",
+                                style: TextStyle(fontSize: 14, color: fontColor(posTable: tableList[index])),
+                              )
+                              : Text(
                                 "${tableList[index].group}",
                                 style: TextStyle(fontSize: 14, color: fontColor(posTable: tableList[index])),
                               ),
@@ -721,6 +726,19 @@ class _CartDialogState extends State<CartDialog> {
       default: {
         clientAction.openReconnectDialog(action: '7', callback: decodeData);
       }
+    }
+  }
+
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
     }
   }
 

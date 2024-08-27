@@ -200,6 +200,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ],
                 ),
+                toolbarHeight: isLandscapeOrien() ? null : MediaQuery.of(context).size.height * 0.06,
                 backgroundColor: Colors.white,
                 actions: [
                   Visibility(
@@ -244,22 +245,6 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ),
                   ),
-                  // Visibility(
-                  //   visible: widget.currentPage == 'menu' ||
-                  //           widget.currentPage == 'qr_order' ||
-                  //           widget.currentPage == 'bill'
-                  //       ? false
-                  //       : true,
-                  //   child: IconButton(
-                  //     tooltip: 'promotion',
-                  //     icon: Icon(Icons.discount),
-                  //     color: color.backgroundColor,
-                  //     onPressed: () {
-                  //       print('choose promotion');
-                  //       //openPromotionDialog();
-                  //     },
-                  //   ),
-                  // ),
                   Visibility(
                     visible: widget.currentPage == 'menu' ? true : false,
                     child: Expanded(
@@ -276,17 +261,6 @@ class _CartPageState extends State<CartPage> {
                       ),
                     ),
                   ),
-                  // PopupMenuButton<Text>(
-                  //     icon: Icon(Icons.more_vert, color: color.backgroundColor),
-                  //     itemBuilder: (context) {
-                  //       return [
-                  //         PopupMenuItem(
-                  //           child: Text(
-                  //             'test',
-                  //           ),
-                  //         ),
-                  //       ];
-                  //     })
                 ],
               ),
               body: StreamBuilder(
@@ -296,7 +270,7 @@ class _CartPageState extends State<CartPage> {
                       return Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          border: Border.all(color: Colors.grey.shade100, width: 3.0),
+                          border: isLandscapeOrien() ? Border.all(color: Colors.grey.shade100, width: 3.0) : null,
                         ),
                         child: Column(
                           children: [
@@ -307,7 +281,7 @@ class _CartPageState extends State<CartPage> {
                                   shrinkWrap: true,
                                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 3,
-                                    childAspectRatio: 1.8,
+                                    childAspectRatio: isLandscapeOrien() ? 1.8 : MediaQuery.of(context).size.height * 0.004,
                                   ),
                                   children: List.generate(diningList.length, (index) {
                                     return InkWell(
@@ -316,6 +290,7 @@ class _CartPageState extends State<CartPage> {
                                           cart.removeAllTable();
                                           cart.selectedOption = diningList[index].name!;
                                           cart.selectedOptionId = diningList[index].dining_id!;
+
                                         }) : cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem[0].status != 1 && cart.selectedOption != diningList[index].name! ?
                                         setState(() {
                                           showSecondDialog(context, color, cart, diningList[index]);
@@ -460,7 +435,7 @@ class _CartPageState extends State<CartPage> {
                                     }),
                               ),
                             ),
-                            SizedBox(height: MediaQuery.of(context).size.height > 500 ? 20 : 5),
+                            SizedBox(height: MediaQuery.of(context).size.height > 500 ? isLandscapeOrien() ? 20 : 10 : 5),
                             Divider(
                               color: Colors.grey,
                               height: 1,
@@ -468,10 +443,10 @@ class _CartPageState extends State<CartPage> {
                               indent: 20,
                               endIndent: 20,
                             ),
-                            SizedBox(height: MediaQuery.of(context).size.height > 500 ? 10 : 5),
+                            SizedBox(height: MediaQuery.of(context).size.height > 500 ? isLandscapeOrien() ? 10 : 0 : 5),
                             SizedBox(
                               height: MediaQuery.of(context).size.height > 500 ?
-                              widget.currentPage == 'menu' || widget.currentPage == 'table' ? 130 :
+                              widget.currentPage == 'menu' || widget.currentPage == 'table' ? isLandscapeOrien() ? 130 : 100 :
                               null : 25,
                               // widget.currentPage == 'menu' || widget.currentPage == 'table' && MediaQuery.of(context).size.height > 500
                               //     ? 130
@@ -644,7 +619,7 @@ class _CartPageState extends State<CartPage> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: 10),
+                            SizedBox(height: isLandscapeOrien() ? 10 : 0),
                             Divider(
                               color: Colors.grey,
                               height: 1,
@@ -709,81 +684,7 @@ class _CartPageState extends State<CartPage> {
                                               }
                                             }
                                           }
-                                          // if (_isSettlement == true) {
-                                          //   //open cash in dialog
-                                          //   showDialog(
-                                          //       barrierDismissible: false,
-                                          //       context: context,
-                                          //       builder: (BuildContext context) {
-                                          //         return WillPopScope(
-                                          //             child: CashDialog(isCashIn: true, callBack: () {}, isCashOut: false, isNewDay: true), onWillPop: () async => false);
-                                          //       });
-                                          //   _isSettlement = false;
-                                          // } else {
-                                          // }
                                         }
-                                        // else if (widget.currentPage == 'table') {
-                                        //   if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
-                                        //     if (total == 0.0 && double.parse(finalAmount) == 0.0 || total != 0.0 && double.parse(finalAmount) != 0.0) {
-                                        //       if (cart.selectedTable.length > 1 && mounted) {
-                                        //         if (await confirm(
-                                        //           context,
-                                        //           title: Text('${AppLocalizations.of(context)
-                                        //               ?.translate('confirm_merge_bill')}'),
-                                        //           content: Text('${AppLocalizations.of(context)
-                                        //               ?.translate('to_merge_bill')}'),
-                                        //           textOK: Text('${AppLocalizations.of(context)
-                                        //               ?.translate('yes')}'),
-                                        //           textCancel: Text('${AppLocalizations.of(
-                                        //               context)?.translate('no')}'),
-                                        //         )) {
-                                        //           paymentAddToCart(cart);
-                                        //           return openPaymentSelect(cart);
-                                        //         }
-                                        //       } else {
-                                        //         paymentAddToCart(cart);
-                                        //         openPaymentSelect(cart);
-                                        //       }
-                                        //     } else {
-                                        //       Fluttertoast.showToast(
-                                        //           backgroundColor: Colors.red,
-                                        //           msg: "Payment not match");
-                                        //     }
-                                        //   } else {
-                                        //     Fluttertoast.showToast(backgroundColor: Colors.red,
-                                        //         msg: "${AppLocalizations.of(context)?.translate(
-                                        //             'empty_cart')}");
-                                        //   }
-                                        // }
-                                        // else {
-                                        //   if (cart.cartNotifierItem.isNotEmpty) {
-                                        //     if (total == 0.0 && double.parse(finalAmount) == 0.0 || total != 0.0 && double.parse(finalAmount) != 0.0) {
-                                        //       paymentAddToCart(cart);
-                                        //       //openPaymentSelect(cart);
-                                        //     } else {
-                                        //       Fluttertoast.showToast(
-                                        //           backgroundColor: Colors.red,
-                                        //           msg: "Payment not match");
-                                        //     }
-                                        //   } else {
-                                        //     Fluttertoast.showToast(backgroundColor: Colors.red,
-                                        //         msg: "${AppLocalizations.of(context)?.translate(
-                                        //             'empty_cart')}");
-                                        //   }
-                                        // }
-                                        // else {
-                                        //   if (cart.cartNotifierItem.isNotEmpty) {
-                                        //     int printStatus = await printReceipt.printCartReceiptList(printerList, cart, localOrderId);
-                                        //     checkPrinterStatus(printStatus);
-                                        //     cart.initialLoad();
-                                        //     cart.changInit(true);
-                                        //   } else {
-                                        //     Fluttertoast.showToast(backgroundColor: Colors.red,
-                                        //         msg: "${AppLocalizations.of(context)?.translate(
-                                        //             'empty_cart')}");
-                                        //   }
-                                        // }
-                                        //enableButton();
                                       },
                                       child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
                                       Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM $finalAmount)') :
@@ -791,78 +692,6 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                   ),
                                   //some spacing for second button
-                                  // Visibility(
-                                  //     child: SizedBox(
-                                  //       width: 10,
-                                  //     ),
-                                  //     visible: widget.currentPage == "table" ||
-                                  //         widget.currentPage == "other_order"
-                                  //         ? true
-                                  //         : widget.currentPage == "menu"
-                                  //         ? cart.cartNotifierItem.any((item) => item.status == 1)
-                                  //         ? true
-                                  //         : false
-                                  //         : false),
-                                  //reprint check list
-                                  // Visibility(
-                                  //   visible: widget.currentPage == "menu" &&
-                                  //       cart.cartNotifierItem.isNotEmpty &&
-                                  //       cart.cartNotifierItem[0].status == 1 ? true : false,
-                                  //   child: Expanded(
-                                  //     child: ElevatedButton(
-                                  //       style: ElevatedButton.styleFrom(
-                                  //         backgroundColor: color.backgroundColor,
-                                  //         minimumSize: const Size.fromHeight(50),
-                                  //       ),
-                                  //       onPressed: () {
-                                  //         bool hasNotPlacedOrder = cart.cartNotifierItem.any((
-                                  //             item) => item.status == 0);
-                                  //         if (hasNotPlacedOrder) {
-                                  //           Fluttertoast.showToast(
-                                  //               backgroundColor: Colors.red,
-                                  //               msg: AppLocalizations.of(context)!.translate(
-                                  //                   'make_sure_all_product_is_placed_order'));
-                                  //         } else {
-                                  //           openReprintDialog(printerList, cart);
-                                  //         }
-                                  //       },
-                                  //       child: Text(AppLocalizations.of(context)!.translate(
-                                  //           'print_check_list')),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  //print review receipt
-                                  // Visibility(
-                                  //   visible: widget.currentPage == "table" || widget.currentPage == "other_order" ? true : false,
-                                  //   child: Expanded(
-                                  //       child: ElevatedButton(
-                                  //           style: ElevatedButton.styleFrom(
-                                  //             backgroundColor: color.backgroundColor,
-                                  //             minimumSize: const Size.fromHeight(50),
-                                  //           ),
-                                  //           onPressed: cart.cartNotifierItem.isEmpty || isLoading
-                                  //               ? null
-                                  //               : () async {
-                                  //             setState(() {
-                                  //               isLoading = true;
-                                  //             });
-                                  //             paymentAddToCart(cart);
-                                  //             int printStatus = await printReceipt
-                                  //                 .printReviewReceipt(
-                                  //                 printerList, cart.selectedTable, cart, context);
-                                  //             checkPrinterStatus(printStatus);
-                                  //             setState(() {
-                                  //               isLoading = false;
-                                  //             });
-                                  //           },
-                                  //           child: isLoading ?
-                                  //           CircularProgressIndicator(
-                                  //             color: Colors.white,
-                                  //             strokeWidth: 3,
-                                  //           )
-                                  //               : Text(AppLocalizations.of(context)!.translate(
-                                  //               'print_receipt')))),
-                                  // )
                                 ],
                               ),
                             ),
@@ -2255,5 +2084,16 @@ class _CartPageState extends State<CartPage> {
     }
   }
 
-
+  bool isLandscapeOrien() {
+    try {
+      if(MediaQuery.of(context).orientation == Orientation.landscape) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch(e) {
+      print("isLandscapeOrien error: $e");
+      return false;
+    }
+  }
 }

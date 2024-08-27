@@ -133,6 +133,7 @@ class CartModel extends ChangeNotifier {
       }
     }
     cartNotifierItem.removeWhere((element) => removeItem.contains(element));
+    notifyListeners();
   }
 
   void addTable(PosTable posTable){
