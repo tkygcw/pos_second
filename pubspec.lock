@@ -156,10 +156,11 @@ packages:
   collapsible_sidebar:
     dependency: "direct main"
     description:
-      name: collapsible_sidebar
-      sha256: cdaa339abbd14ded6c23ce7b4577767e444029be487659bfe97f4a88d8cb47d7
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "2a625f5e289ffea140418612d1a71dfaf21b6b91"
+      url: "https://github.com/tkygcw/flutter_collapsible_sidebar.git"
+    source: git
     version: "2.0.7"
   collection:
     dependency: "direct main"
@@ -228,10 +229,11 @@ packages:
   custom_pin_screen:
     dependency: "direct main"
     description:
-      name: custom_pin_screen
-      sha256: f4312585a7363eb1b37700c4d2fc5765e30a94307906618a9a51a099537ae411
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "0881309cb2f509b270cfa73781ba6aa800e1d709"
+      url: "https://github.com/tkygcw/custom_pin_screen.git"
+    source: git
     version: "0.3.0"
   dart_ping:
     dependency: transitive

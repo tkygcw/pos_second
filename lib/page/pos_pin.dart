@@ -42,13 +42,16 @@ class _PosPinPageState extends State<PosPinPage> {
 
   @override
   dispose() {
+    super.dispose();
+  }
+
+  setScreenLayout() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    super.dispose();
   }
 
   preload() {
