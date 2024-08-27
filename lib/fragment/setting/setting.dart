@@ -140,7 +140,7 @@ class _SettingMenuState extends State<SettingMenu> {
                 children: [
                   /// Pretty similar to the BottomNavigationBar!
                   Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: SideNavigationBar(
                       expandable: false,
                       footer: SideNavigationBarFooter(
@@ -189,7 +189,7 @@ class _SettingMenuState extends State<SettingMenu> {
 
                   /// Make it take the rest of the available width
                   Expanded(
-                    flex: 2,
+                    flex: 3,
                     child: views.elementAt(selectedIndex),
                   )
                 ],

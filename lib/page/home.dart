@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
     // if(notificationModel.notificationStarted == false){
     //   setupFirebaseMessaging();
     // }
-    setScreenLayout();
+    // setScreenLayout();
     // initSecondDisplay();
     // _items = _generateItems;
     // currentPage = 'menu';
@@ -84,12 +84,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
     super.dispose();
   }
 
@@ -101,8 +95,10 @@ class _HomePageState extends State<HomePage> {
 
   setScreenLayout() {
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
     ]);
   }
 
@@ -187,7 +183,26 @@ class _HomePageState extends State<HomePage> {
                   ))
                   : Stack(
                 children: [
-                  _buildBody(context),
+                  Stack(
+                    children: [
+                      _buildBody(context),
+                        ValueListenableBuilder<bool>(
+                          valueListenable: isCollapsedNotifier,
+                          builder: (context, isCollapsed, child) {
+                            return !isCollapsed ? GestureDetector(
+                              child: Container(
+                                color: Colors.black.withOpacity(0.5),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                                });
+                              },
+                            ) : Container();
+                          }
+                        ),
+                    ],
+                  ),
                   Positioned(
                     left: 0,
                     top: 0,
@@ -232,84 +247,132 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildBody(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      if (isLandscapeOrien()) {
-        return Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: _body(context),
-            ),
-            Visibility(
-              visible: currentPage != 'product' &&
-                  currentPage != 'setting' &&
-                  currentPage != 'settlement' &&
-                  currentPage != 'qr_order' &&
-                  currentPage != 'setting' &&
-                  currentPage != 'report'
-                  ? true
-                  : false,
-              child: Expanded(
-                  flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                  child: CartPage(
-                    currentPage: currentPage,
-                  )),
-            )
-          ],
-        );
-      } else {
-        return Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: _body(context),
-                ),
-                Visibility(
-                  visible: currentPage != 'product' &&
-                      currentPage != 'setting' &&
-                      currentPage != 'settlement' &&
-                      currentPage != 'qr_order' &&
-                      currentPage != 'report',
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 700),
-                    curve: Curves.fastOutSlowIn,
-                    height: isCartExpanded ? MediaQuery.of(context).size.height * 0.8 : 0,
-                    child: isCartExpanded
-                        ? Column(
+      return Consumer<CartModel>(builder: (context, CartModel cart, child) {
+        if (isLandscapeOrien()) {
+          return Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: _body(context),
+              ),
+              Visibility(
+                visible: currentPage != 'product' &&
+                    currentPage != 'setting' &&
+                    currentPage != 'settlement' &&
+                    currentPage != 'qr_order' &&
+                    currentPage != 'setting' &&
+                    currentPage != 'report'
+                    ? true
+                    : false,
+                child: Expanded(
+                    flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                    child: CartPage(
+                      currentPage: currentPage,
+                    )),
+              )
+            ],
+          );
+        } else {
+          return Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Stack(
                       children: [
-                        Expanded(
-                          child: CartPage(
-                            currentPage: currentPage,
+                        _body(context),
+                        if (isCartExpanded)
+                          GestureDetector(
+                            child: Container(
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                isCartExpanded = !isCartExpanded;
+                              });
+                            },
                           ),
-                        ),
                       ],
-                    )
-                        : SizedBox.shrink(),
+                    ),
+                  ),
+                  Visibility(
+                    visible: currentPage != 'product' &&
+                        currentPage != 'setting' &&
+                        currentPage != 'settlement' &&
+                        currentPage != 'qr_order' &&
+                        currentPage != 'report',
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 0),
+                      height: isCartExpanded ? MediaQuery.of(context).size.height * 0.85 : 0,
+                      child: isCartExpanded
+                          ? Column(
+                        children: [
+                          AppBar(
+                            automaticallyImplyLeading: false,
+                            elevation: 0,
+                            centerTitle: true,
+                            title: Text(
+                              AppLocalizations.of(context)!.translate('cart'),
+                              style: TextStyle(fontSize: 25, color: color.backgroundColor),
+                            ),
+                            backgroundColor: Colors.white,
+                            actions: [
+                              IconButton(
+                                color: color.buttonColor,
+                                onPressed: (){
+                                  setState(() {
+                                    isCartExpanded = false;
+                                  });
+                                },
+                                icon: Icon(Icons.close),
+                              )
+                            ],
+
+                          ),
+                          Expanded(
+                            child: CartPage(
+                              currentPage: currentPage,
+                            ),
+                          ),
+                        ],
+                      )
+                          : SizedBox.shrink(),
+                    ),
+                  ),
+                ],
+              ),
+              Visibility(
+                visible: !isCartExpanded && currentPage == 'menu',
+                child: Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: color.backgroundColor,
+                    child: IconButton(
+                      tooltip: 'cart',
+                      icon: Badge(
+                        isLabelVisible: cart.cartNotifierItem.isEmpty ? false : true,
+                        label: Text("${cart.cartNotifierItem.length}"),
+                        child: const Icon(
+                          Icons.shopping_cart,
+                        ),
+                      ),
+                      color: Colors.white,
+                      onPressed: () {
+                        setState(() {
+                          isCartExpanded = !isCartExpanded;
+                        });
+                      },
+                    ),
                   ),
                 ),
-              ],
-            ),
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: SizedBox(
-                height: 50,
-                width: 50,
-                child: FloatingActionButton(
-                  backgroundColor: color.backgroundColor,
-                  onPressed: () {
-                    setState(() {
-                      isCartExpanded = !isCartExpanded;
-                    });
-                  },
-                  child: Icon(Icons.shopping_cart),
-                ),
               ),
-            ),
-          ],
-        );
-      }
+            ],
+          );
+        }
+      });
     });
 
   }

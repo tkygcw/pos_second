@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:lan_scanner/lan_scanner.dart';
 import 'package:location/location.dart';
@@ -36,6 +37,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
   void initState() {
     // TODO: implement initState
     getPreferences();
+    // setScreenLayout();
     super.initState();
   }
 
@@ -44,6 +46,15 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
     setState(() {
       isLoaded = true;
     });
+  }
+
+  setScreenLayout() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
   }
 
   @override
@@ -69,6 +80,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                 content: isLoaded ?
                 SizedBox(
                   width: 500,
+                  height: MediaQuery.of(context).size.height/2,
                   child: DefaultTabController(
                     length: 2,
                     child: Column(
@@ -102,55 +114,59 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                 ) : CustomProgressBar()
             );
           } else {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  Text(AppLocalizations.of(context)!.translate("connect_server_device")),
-                ],
-              ),
-              content: isLoaded ?
-              SizedBox(
-                height: 300,
-                width: 500,
-                child: DefaultTabController(
-                  length: 2,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            return Center(
+              child: SingleChildScrollView(
+                child: AlertDialog(
+                  title: Row(
                     children: [
-                      if (!Platform.isIOS) // Check if platform is not iOS
-                        TabBar(
-                          isScrollable: false,
-                          unselectedLabelColor: Colors.black,
-                          labelColor: color.buttonColor,
-                          indicatorColor: color.buttonColor,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          tabs: [Tab(icon: Icon(Icons.keyboard_alt_outlined)), Tab(icon: Icon(Icons.radar_outlined))],
-                        ),
-                      SizedBox(height: 15),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: TabBarView(
-                            physics: NeverScrollableScrollPhysics(),
-                            children: [
-                              TypeIpView(prefs: prefs),
-                              ScanIpView(isMobile: true),
-                            ],
-                          ),
-                        ),
-                      ),
+                      Text(AppLocalizations.of(context)!.translate("connect_server_device")),
                     ],
                   ),
+                  content: isLoaded ?
+                  SizedBox(
+                    height: 300,
+                    width: 500,
+                    child: DefaultTabController(
+                      length: 2,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!Platform.isIOS) // Check if platform is not iOS
+                            TabBar(
+                              isScrollable: false,
+                              unselectedLabelColor: Colors.black,
+                              labelColor: color.buttonColor,
+                              indicatorColor: color.buttonColor,
+                              indicatorSize: TabBarIndicatorSize.tab,
+                              tabs: [Tab(icon: Icon(Icons.keyboard_alt_outlined)), Tab(icon: Icon(Icons.radar_outlined))],
+                            ),
+                          SizedBox(height: 15),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: TabBarView(
+                                physics: NeverScrollableScrollPhysics(),
+                                children: [
+                                  TypeIpView(prefs: prefs),
+                                  ScanIpView(isMobile: true),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ) : CustomProgressBar(),
+                  actions: [
+                    ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        onPressed: logout,
+                        icon: Icon(Icons.logout),
+                        label: Text(AppLocalizations.of(context)!.translate("logout")))
+                  ],
                 ),
-              ) : CustomProgressBar(),
-              actions: [
-                ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    onPressed: logout,
-                    icon: Icon(Icons.logout),
-                    label: Text(AppLocalizations.of(context)!.translate("logout")))
-              ],
+              ),
             );
           }
         }),

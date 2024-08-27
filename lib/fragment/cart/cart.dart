@@ -290,6 +290,7 @@ class _CartPageState extends State<CartPage> {
                                           cart.removeAllTable();
                                           cart.selectedOption = diningList[index].name!;
                                           cart.selectedOptionId = diningList[index].dining_id!;
+
                                         }) : cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem[0].status != 1 && cart.selectedOption != diningList[index].name! ?
                                         setState(() {
                                           showSecondDialog(context, color, cart, diningList[index]);
@@ -445,7 +446,7 @@ class _CartPageState extends State<CartPage> {
                             SizedBox(height: MediaQuery.of(context).size.height > 500 ? isLandscapeOrien() ? 10 : 0 : 5),
                             SizedBox(
                               height: MediaQuery.of(context).size.height > 500 ?
-                              widget.currentPage == 'menu' || widget.currentPage == 'table' ? isLandscapeOrien() ? 130 : 60 :
+                              widget.currentPage == 'menu' || widget.currentPage == 'table' ? isLandscapeOrien() ? 130 : 100 :
                               null : 25,
                               // widget.currentPage == 'menu' || widget.currentPage == 'table' && MediaQuery.of(context).size.height > 500
                               //     ? 130
