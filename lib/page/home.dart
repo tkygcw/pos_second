@@ -82,12 +82,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  initSecondDisplay() async {
-    if(notificationModel.hasSecondScreen == true){
-      await displayManager.showSecondaryDisplay(displayId: notificationModel.displays[1]!.displayId, routerName: "presentation");
-    }
-  }
-
   setScreenLayout() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,

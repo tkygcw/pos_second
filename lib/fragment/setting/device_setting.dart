@@ -116,10 +116,12 @@ class _DeviceSettingState extends State<DeviceSetting> {
     prefs.clear();
     deleteDirectory();
     clientAction.disconnectFromServer();
-    // displayManager.transferDataToPresentation("refresh_img");
-    //deleteFile2();
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => LoginPage()));
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (BuildContext context) => LoginPage(),
+      ),
+          (Route route) => false,
+    );
   }
 
   Future<Directory> get _localDirectory async {

@@ -105,7 +105,7 @@ dependency_overrides:
   image_picker_android: 0.8.6+6
   intl: 0.18.0
   image: 4.0.15
-  win32: ^5.5.4
+  win32: 5.5.4
 
 dev_dependencies:
   flutter_test:
