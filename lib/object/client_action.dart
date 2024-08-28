@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/reconnect_dialog.dart';
@@ -60,6 +61,7 @@ class ClientAction {
   }
 
   connectServer(String ips, {Function? callback}) async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Map branchObject = await getPreferences();
     notificationModel.showReconnectDialog = false;
     int i = 0;
@@ -80,7 +82,11 @@ class ClientAction {
       }
       serverIp = ips;
       //send first request to server side
-      result = {'action': '-1', 'param': branchObject['branchID'].toString()};
+      Map<String, dynamic> param = {
+        'branch_id': branchObject['branchID'].toString(),
+        'app_version': packageInfo.version
+      };
+      result = {'action': '-1', 'param': jsonEncode(param)};
       socket.write('${jsonEncode(result)}\n');
 
       //socket stream listen for data

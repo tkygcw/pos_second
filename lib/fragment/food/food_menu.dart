@@ -19,9 +19,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    print("height: ${size.height}");
-    print("width: ${size.width}");
-    print("is landscape: ${isLandscapeOrien()}");
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Scaffold(
         appBar: AppBar(
@@ -54,7 +51,6 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
         return false;
       }
     } catch(e) {
-      print("isLandscapeOrien error: $e");
       return false;
     }
   }

@@ -383,6 +383,14 @@ class _TypeIpViewState extends State<TypeIpView> {
           await logout();
         }
         break;
+      case '3':
+        {
+          Fluttertoast.showToast(
+              backgroundColor: Colors.redAccent,
+              msg: "Sub POS version not supported, please update to latest version");
+          await logout();
+        }
+        break;
       default:
         {
           await receivedResponse();
@@ -401,7 +409,6 @@ class _TypeIpViewState extends State<TypeIpView> {
     try {
       final folder = await _localDirectory;
       folder.delete(recursive: true);
-      print("delete successful");
       return 1;
     } catch (e) {
       print(e);
@@ -414,12 +421,10 @@ class _TypeIpViewState extends State<TypeIpView> {
     prefs.clear();
     deleteDirectory();
     displayManager.transferDataToPresentation("refresh_img");
-    //deleteFile2();
+    clientAction.disconnectFromServer();
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
   }
 }
-
-
 
 class ScanIpView extends StatefulWidget {
   final bool isMobile;
@@ -687,6 +692,14 @@ class _ScanIpViewState extends State<ScanIpView> {
       case '2':
         {
           Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
+          await logout();
+        }
+        break;
+      case '3':
+        {
+          Fluttertoast.showToast(
+              backgroundColor: Colors.redAccent,
+              msg: "Sub POS version not supported, please update to latest version");
           await logout();
         }
         break;
