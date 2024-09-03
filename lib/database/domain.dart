@@ -90,10 +90,12 @@ class Domain {
 
   isHostReachable() async {
     try {
-      await http.post(Uri.parse("https://www.google.com/")).timeout(Duration(seconds: 3), onTimeout: ()=> throw TimeoutException("Timeout"));
+      await http.post(Domain.login).timeout(Duration(seconds: 3), onTimeout: ()=> throw TimeoutException("Timeout"));
       return true;
-    } catch (e) {
-      Fluttertoast.showToast(msg: "is host reachable domain: ${Domain.login}", backgroundColor: Colors.red);
+    } on TimeoutException catch(_){
+      Fluttertoast.showToast(msg: "Request timeout, please check internet connection", backgroundColor: Colors.red);
+    }
+    catch (e) {
       Fluttertoast.showToast(msg: "is host reachable error: ${e}");
       return false;
     }

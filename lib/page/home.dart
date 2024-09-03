@@ -5,16 +5,12 @@ import 'package:flutter/services.dart';
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
-import 'package:optimy_second_device/fragment/reconnect_dialog.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/cart/cart.dart';
 import '../fragment/order/order.dart';
-import '../fragment/other_order/other_order.dart';
-import '../fragment/table/table_page.dart';
-import '../main.dart';
 import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
 import '../object/app_setting.dart';
@@ -78,19 +74,12 @@ class _HomePageState extends State<HomePage> {
     currentPage = 'menu';
     getRoleName();
     getBranchName();
-
     super.didChangeDependencies();
   }
 
   @override
   dispose() {
     super.dispose();
-  }
-
-  initSecondDisplay() async {
-    if(notificationModel.hasSecondScreen == true){
-      await displayManager.showSecondaryDisplay(displayId: notificationModel.displays[1]!.displayId, routerName: "presentation");
-    }
   }
 
   setScreenLayout() {
@@ -102,38 +91,13 @@ class _HomePageState extends State<HomePage> {
     ]);
   }
 
-  // Future<Future<Object?>> openLogOutDialog() async {
-  //   return showGeneralDialog(
-  //       barrierColor: Colors.black.withOpacity(0.5),
-  //       transitionBuilder: (context, a1, a2, widget) {
-  //         final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
-  //         return Transform(
-  //           transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
-  //           child: Opacity(
-  //             opacity: a1.value,
-  //             child: LogoutConfirmDialog(),
-  //           ),
-  //         );
-  //       },
-  //       transitionDuration: Duration(milliseconds: 200),
-  //       barrierDismissible: false,
-  //       context: context,
-  //       pageBuilder: (context, animation1, animation2) {
-  //         // ignore: null_check_always_fails
-  //         return null!;
-  //       });
-  // }
-
   @override
   Widget build(BuildContext context) {
-    print("home rebuild!!!");
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       this.themeColor = color;
       return PopScope(
         canPop: willPop,
-        onPopInvoked: (didPop) {
-          showSecondDialog(context, color);
-        },
+        onPopInvokedWithResult: (didPop, result) => showSecondDialog(context, color),
         child: Scaffold(
             resizeToAvoidBottomInset: false,
             body: SafeArea(
@@ -377,28 +341,6 @@ class _HomePageState extends State<HomePage> {
 
   }
 
-  Future<Future<Object?>> openDialog() async {
-    print("open dialog called");
-    return showGeneralDialog(
-        barrierColor: Colors.black.withOpacity(0.5),
-        transitionBuilder: (context, a1, a2, widget) {
-          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
-          return Transform(
-            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
-            child: Opacity(
-              opacity: a1.value,
-              child: ReconnectDialog(),
-            ),
-          );
-        },
-        transitionDuration: Duration(milliseconds: 200),
-        barrierDismissible: false,
-        context: context,
-        pageBuilder: (context, animation1, animation2) {
-          // ignore: null_check_always_fails
-          return null!;
-        });
-  }
 
   List<CollapsibleItem> get _generateItems {
     CartModel cart = Provider.of<CartModel>(context, listen: false);
@@ -413,21 +355,6 @@ class _HomePageState extends State<HomePage> {
         }),
         isSelected: true,
       ),
-      // CollapsibleItem(
-      //   text: 'Table',
-      //   icon: Icons.table_restaurant,
-      //   onPressed: () => setState(() => currentPage = 'table'),
-      // ),
-      // CollapsibleItem(
-      //   text: 'Qr Order',
-      //   icon: Icons.qr_code_2,
-      //   onPressed: () => setState(() => currentPage = 'qr_order'),
-      // ),
-      // CollapsibleItem(
-      //   text: 'Other Order',
-      //   icon: Icons.delivery_dining,
-      //   onPressed: () => setState(() => currentPage = 'other_order'),
-      // ),
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('setting'),
         icon: Icons.settings,
@@ -436,26 +363,6 @@ class _HomePageState extends State<HomePage> {
           isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
       ),
-      // CollapsibleItem(
-      //   text: 'Counter',
-      //   icon: Icons.point_of_sale,
-      //   onPressed: () => setState(() => currentPage = 'settlement'),
-      // ),
-      // CollapsibleItem(
-      //   text: 'Report',
-      //   icon: Icons.monetization_on,
-      //   onPressed: () => setState(() => currentPage = 'report'),
-      // ),
-      // CollapsibleItem(
-      //   text: 'Product',
-      //   icon: Icons.fastfood,
-      //   onPressed: () => setState(() => currentPage = 'product'),
-      // ),
-      // CollapsibleItem(
-      //   text: 'Setting',
-      //   icon: Icons.settings,
-      //   onPressed: () => setState(() => currentPage = 'setting'),
-      // ),
     ];
   }
 
@@ -463,22 +370,8 @@ class _HomePageState extends State<HomePage> {
     switch (currentPage) {
       case 'menu':
         return OrderPage();
-      // case 'product':
-      //   return ProductPage();
-      case 'table':
-        return TablePage();
-      // case 'qr_order':
-      //   return QrOrderPage();
-      // case 'bill':
-      //   return BillPage();
-      case 'other_order':
-        return OtherOrderPage();
       case 'setting':
         return SettingMenu();
-      // case 'report':
-      //   return InitReportPage();
-      // case 'settlement':
-      //   return SettlementPage();
       default:
         return OrderPage();
     }
@@ -497,18 +390,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   getBranchName() async {
-    // branchName = "testing";
     final prefs = await SharedPreferences.getInstance();
     final String? branch = prefs.getString('branch');
     Map branchObject = json.decode(branch!);
     setState(() {
       branchName = branchObject['name'];
     });
-    // Branch? data = await PosDatabase.instance.readBranchName(branch_id.toString());
-    // setState(() {
-    //   branchName = data!.name!;
-    // });
-    // print('branch name : $branchName');
   }
 
   Future showSecondDialog(BuildContext context, ThemeColor color) {
