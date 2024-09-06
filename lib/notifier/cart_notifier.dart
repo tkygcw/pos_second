@@ -40,12 +40,14 @@ class CartModel extends ChangeNotifier {
 
   void initBranchLinkDiningOption() {
     List<BranchLinkDining> data = decodeAction.decodedBranchLinkDiningList!;
-    if (data.length == 3) {
-      selectedOption = 'Dine in';
-    } else {
-      selectedOption = "Take Away";
+    if(selectedOptionId == '') {
+      if (data.length == 3) {
+        selectedOption = 'Dine in';
+      } else {
+        selectedOption = "Take Away";
+      }
+      selectedOptionId = data.firstWhere((e) => e.name == selectedOption).dining_id!;
     }
-    selectedOptionId = data.firstWhere((e) => e.name == selectedOption).dining_id!;
   }
 
   void initialLoad() {

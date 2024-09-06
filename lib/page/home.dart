@@ -327,6 +327,9 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {
                         setState(() {
                           isCartExpanded = !isCartExpanded;
+                          print('cart.selectedOption: ${cart.selectedOption}');
+                          print('cart.selectedOptionId: ${cart.selectedOptionId}');
+
                         });
                       },
                     ),

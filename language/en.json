@@ -1,5 +1,7 @@
 {
+  "about": "About",
   "active": "Active",
+  "active_until": "Active until",
   "add": "Add",
   "add_new_device": "Add New Device",
   "add_printer": "Add Printer",
@@ -145,6 +147,7 @@
   "data_to_transfer": "Data to transfer",
   "date": "Date",
   "date_time": "Date Time",
+  "days": "Days",
   "default_order_starting_number": "Default order starting number (reset after settlement)",
   "delete": "Delete",
   "delete_cash_record_error:": "Delete cash record error:",

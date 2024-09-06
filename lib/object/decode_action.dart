@@ -11,6 +11,7 @@ import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/promotion.dart';
+import 'package:optimy_second_device/object/subscription.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/object/user.dart';
 
@@ -39,6 +40,7 @@ class DecodeAction {
   List<ProductVariant>? decodedProductVariantList = [];
   List<BranchLinkDining>? decodedBranchLinkDiningList = [];
   List<TaxLinkDining> decodedTaxLinkDiningList = [];
+  List<Subscription> decodedSubscription = [];
   List<User>? decodedUserList = [];
   List<Promotion>? decodedBranchPromotionList = [];
   AppSetting? decodedAppSetting;
@@ -79,6 +81,8 @@ class DecodeAction {
     Iterable value10 = json['data']['branchPromotionList'];
     decodedBranchPromotionList =  List<Promotion>.from(value10.map((json) => Promotion.fromJson(json)));
     appLanguageCode = json['data']['app_language_code'];
+    var value12 = json['data']['subscription_data'];
+    decodedSubscription = [Subscription.fromJson(value12)];
     ///image part
     // Iterable value7 = json['data']['image_list'];
     // decodedBase64ImageList = List.from(value7);

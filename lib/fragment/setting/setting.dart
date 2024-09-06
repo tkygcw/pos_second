@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/setting/about.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/page/home.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,7 @@ class _SettingMenuState extends State<SettingMenu> {
   getView(){
     views = [
       DeviceSetting(),
+      About()
     ];
     setState(() {
       isLoaded = true;
@@ -100,6 +102,10 @@ class _SettingMenuState extends State<SettingMenu> {
                       SideNavigationBarItem(
                         icon: Icons.devices_other,
                         label: AppLocalizations.of(context)!.translate("device_setting"),
+                      ),
+                      SideNavigationBarItem(
+                        icon: Icons.info,
+                        label: AppLocalizations.of(context)!.translate("about"),
                       ),
                     ],
                     onTap: (index) {
@@ -177,6 +183,10 @@ class _SettingMenuState extends State<SettingMenu> {
                         SideNavigationBarItem(
                           icon: Icons.devices_other,
                           label: AppLocalizations.of(context)!.translate("device_setting"),
+                        ),
+                        SideNavigationBarItem(
+                          icon: Icons.info,
+                          label: AppLocalizations.of(context)!.translate("about"),
                         ),
                       ],
                       onTap: (index) {
