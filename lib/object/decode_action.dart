@@ -81,8 +81,11 @@ class DecodeAction {
     Iterable value10 = json['data']['branchPromotionList'];
     decodedBranchPromotionList =  List<Promotion>.from(value10.map((json) => Promotion.fromJson(json)));
     appLanguageCode = json['data']['app_language_code'];
-    var value12 = json['data']['subscription_data'];
-    decodedSubscription = [Subscription.fromJson(value12)];
+    if(json['data']['flushbar_status'] != null){
+      var value12 = json['data']['subscription_data'];
+      decodedSubscription = [Subscription.fromJson(value12)];
+    }
+
     ///image part
     // Iterable value7 = json['data']['image_list'];
     // decodedBase64ImageList = List.from(value7);

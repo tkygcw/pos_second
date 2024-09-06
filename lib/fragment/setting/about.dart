@@ -87,16 +87,20 @@ class _AboutState extends State<About> {
 
   getSubscriptionDate() async {
     DateFormat dateFormat = DateFormat("yyyy-MM-dd");
-    DateTime subscriptionEnd = dateFormat.parse(subscriptionData.first.end_date!);
-    Duration difference = subscriptionEnd.difference(DateTime.now());
-    setState(() {
-      subscriptionEndDate = DateFormat("dd/MM/yyyy").format(subscriptionEnd);
-      daysLeft = difference.inDays +1;
-    });
+    if(subscriptionData.isNotEmpty) {
+      DateTime subscriptionEnd = dateFormat.parse(subscriptionData.first.end_date!);
+      Duration difference = subscriptionEnd.difference(DateTime.now());
+      setState(() {
+        subscriptionEndDate = DateFormat("dd/MM/yyyy").format(subscriptionEnd);
+        daysLeft = difference.inDays +1;
+      });
+    }
   }
 
   getAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    appVersion = "v${packageInfo.version}";
+    setState(() {
+      appVersion = "v${packageInfo.version}";
+    });
   }
 }
