@@ -1,3 +1,4 @@
+import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/food/food_menu_content.dart';
 import 'package:optimy_second_device/fragment/food/food_menu_content_mobile.dart';

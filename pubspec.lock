@@ -85,10 +85,10 @@ packages:
     dependency: "direct main"
     description:
       name: awesome_snackbar_content
-      sha256: a94407ad596ac4b2f925b032c11f390cd3b3e640a9799f4983b86be0bc17f62b
+      sha256: a99f229d5e9404c69d172d9a6256961743eb9bc68b0a7905185eacd206b27984
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.3"
+    version: "0.1.4"
   barcode:
     dependency: transitive
     description:
@@ -109,10 +109,10 @@ packages:
     dependency: transitive
     description:
       name: bidi
-      sha256: "1a7d0c696324b2089f72e7671fd1f1f64fef44c980f3cebc84e803967c597b63"
+      sha256: "9a712c7ddf708f7c41b1923aa83648a3ed44cfd75b04f72d598c45e5be287f9d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.10"
+    version: "2.0.12"
   boolean_selector:
     dependency: transitive
     description:
@@ -158,7 +158,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: "2a625f5e289ffea140418612d1a71dfaf21b6b91"
+      resolved-ref: ac9db872eb4760ea37c92f2078e21b95bff2b163
       url: "https://github.com/tkygcw/flutter_collapsible_sidebar.git"
     source: git
     version: "2.0.7"
@@ -296,17 +296,18 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: dc474e96fda2c2a3a0cfb61049aa2cbdd578c81b
+      resolved-ref: c57af1d85a816a6914798fdbd55f146896a3c0fd
       url: "https://github.com/tkygcw/esc_pos_printer.git"
     source: git
     version: "4.1.0"
   esc_pos_utils:
     dependency: transitive
     description:
-      name: esc_pos_utils
-      sha256: "8ec0013d7a7f1e790ced6b09b95ce3bf2c6f9468a3e2bc49ece000761d86c6f8"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "331e4646a84cb4baad50702f2c803841598386f0"
+      url: "https://github.com/tkygcw/esc_pos_utils.git"
+    source: git
     version: "1.1.0"
   fake_async:
     dependency: transitive
@@ -418,10 +419,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_plugin_android_lifecycle
-      sha256: "9d98bd47ef9d34e803d438f17fd32b116d31009f534a6fa5ce3a1167f189a6de"
+      sha256: "9ee02950848f61c4129af3d6ec84a1cfc0e47931abc746b03e7a3bc3e8ff6eda"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.21"
+    version: "2.0.22"
   flutter_svg:
     dependency: transitive
     description:
@@ -764,10 +765,10 @@ packages:
     dependency: transitive
     description:
       name: mime
-      sha256: "2e123074287cc9fd6c09de8336dae606d1ddb88d9ac47358826db698c176a1f2"
+      sha256: "801fd0b26f14a4a58ccb09d5892c3fbdeff209594300a542492cf13fba9d247a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.5"
+    version: "1.0.6"
   nested:
     dependency: transitive
     description:
@@ -1005,10 +1006,10 @@ packages:
     dependency: transitive
     description:
       name: quiver
-      sha256: b1c1ac5ce6688d77f65f3375a9abb9319b3cb32486bdc7a1e0fdf004d7ba4e47
+      sha256: ea0b925899e64ecdfbf9c7becb60d5b50e706ade44a85b2363be2a22d88117d2
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.1"
+    version: "3.2.2"
   reorderable_grid_view:
     dependency: "direct main"
     description:
@@ -1037,10 +1038,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: a7e8467e9181cef109f601e3f65765685786c1a738a83d7fbbde377589c0d974
+      sha256: "480ba4345773f56acda9abf5f50bd966f581dac5d514e5fc4a18c62976bbba7e"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.1"
+    version: "2.3.2"
   shared_preferences_foundation:
     dependency: transitive
     description:
