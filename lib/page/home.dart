@@ -17,8 +17,6 @@ import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
 
-ValueNotifier<bool> isCollapsedNotifier = ValueNotifier<bool>(true);
-
 class HomePage extends StatefulWidget {
   final User? user;
   final bool isNewDay;
