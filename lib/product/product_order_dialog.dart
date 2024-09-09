@@ -625,7 +625,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                 isLandscapeOrien() ? Container() :Padding(
                                   padding: const EdgeInsets.only(bottom: 20),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ?
                                       Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.per_quantity_unit!}${widget.productDetail!.unit!}",
