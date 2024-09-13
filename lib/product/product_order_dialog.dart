@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:optimy_second_device/fragment/food/food_menu_content.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +46,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   List<BranchLinkModifier> branchLinkModifierList = decodeAction.decodedBranchLinkModifierList!;
   AppSetting appSetting = decodeAction.decodedAppSetting!;
   Categories? categories;
-  late BranchLinkProduct branchLinkProduct;
+  BranchLinkProduct? branchLinkProduct;
   String basePrice = '';
   String finalPrice = '';
   String dialogPrice = '', dialogStock = '', productName = '';
@@ -623,7 +625,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                 isLandscapeOrien() ? Container() :Padding(
                                   padding: const EdgeInsets.only(bottom: 20),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ?
                                       Text("RM ${Utils.convertTo2Dec(dialogPrice)} / ${widget.productDetail!.per_quantity_unit!}${widget.productDetail!.unit!}",
@@ -1005,8 +1007,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         this.branchLinkProduct = branchLinkProduct;
       } else {
         String productVariantId = getProductVariant(product.product_sqlite_id.toString());
-        BranchLinkProduct branchLinkProduct =
-        branchLinkProductList.firstWhere((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
+        BranchLinkProduct? branchLinkProduct =
+        branchLinkProductList.firstWhereOrNull((item) => item.product_sqlite_id == product.product_sqlite_id.toString() && item.product_variant_sqlite_id == productVariantId);
         this.branchLinkProduct = branchLinkProduct;
       }
     }
@@ -1065,11 +1067,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   int checkProductStockStatus(Product product, CartModel cart) {
     int stockStatus = 0;
     try{
-      if (product.has_variant == 0) {
-        switch(branchLinkProduct.stock_type){
+      if (branchLinkProduct != null) {
+        switch(branchLinkProduct!.stock_type){
           case '1' :{
-            if (int.parse(branchLinkProduct.daily_limit!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit!)) {
-              num stockLeft = int.parse(branchLinkProduct.daily_limit!) - checkCartProductQuantity(cart, branchLinkProduct);
+            if (int.parse(branchLinkProduct!.daily_limit!) > 0 && simpleIntInput <= int.parse(branchLinkProduct!.daily_limit!)) {
+              num stockLeft = int.parse(branchLinkProduct!.daily_limit!) - checkCartProductQuantity(cart, branchLinkProduct!);
               bool isQtyNotExceed = simpleIntInput <= stockLeft;
               if(isQtyNotExceed){
                 stockStatus = 0;
@@ -1081,8 +1083,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
             }
           }break;
           case '2': {
-            if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
-              num stockLeft = int.parse(branchLinkProduct.stock_quantity!) - checkCartProductQuantity(cart, branchLinkProduct);
+            if (int.parse(branchLinkProduct!.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct!.stock_quantity!)) {
+              num stockLeft = int.parse(branchLinkProduct!.stock_quantity!) - checkCartProductQuantity(cart, branchLinkProduct!);
               bool isQtyNotExceed = simpleIntInput <= stockLeft;
               if(isQtyNotExceed){
                 stockStatus = 0;
@@ -1098,37 +1100,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
           }
         }
       } else {
-        switch(branchLinkProduct.stock_type){
-          case '1' :{
-            if (int.parse(branchLinkProduct.daily_limit!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.daily_limit!)) {
-              num stockLeft =  int.parse(branchLinkProduct.daily_limit!) - checkCartProductQuantity(cart, branchLinkProduct);
-              bool isQtyNotExceed = simpleIntInput <= stockLeft;
-              if(isQtyNotExceed){
-                stockStatus = 0;
-              } else {
-                stockStatus = 2;
-              }
-            } else {
-              stockStatus = 1;
-            }
-          }break;
-          case '2': {
-            if (int.parse(branchLinkProduct.stock_quantity!) > 0 && simpleIntInput <= int.parse(branchLinkProduct.stock_quantity!)) {
-              num stockLeft =  int.parse(branchLinkProduct.stock_quantity!) - checkCartProductQuantity(cart, branchLinkProduct);
-              bool isQtyNotExceed = simpleIntInput <= stockLeft;
-              if(isQtyNotExceed){
-                stockStatus = 0;
-              } else {
-                stockStatus = 2;
-              }
-            } else {
-              stockStatus = 1;
-            }
-          }break;
-          default: {
-            stockStatus = 0;
-          }
-        }
+        stockStatus = 1;
       }
     } catch(e){
       print("check product stock error: $e");
@@ -1208,50 +1180,21 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
 
   void getProductPrice(String? productLocalId){
     double totalBasePrice = 0.0;
-    double totalModPrice = 0.0;
     try {
-      if(widget.productDetail!.unit == 'each_c'){
-        if(priceController.value.text.isNotEmpty || priceController.value.text != ''){
-          basePrice = priceController.value.text;
+      if(branchLinkProduct != null){
+        if(widget.productDetail!.unit == 'each_c'){
+          if(priceController.value.text.isNotEmpty || priceController.value.text != ''){
+            basePrice = priceController.value.text;
+          } else {
+            basePrice = "0.00";
+          }
         } else {
-          basePrice = "0.00";
+          basePrice = branchLinkProduct!.price!;
         }
-      } else {
-        basePrice = branchLinkProduct.price!;
-      }
-      if (branchLinkProduct.has_variant == '0') {
         totalBasePrice = double.parse(basePrice) + getTotalCheckedModItem();
         finalPrice = totalBasePrice.toStringAsFixed(2);
-        //check product mod group
-        // for (int j = 0; j < modifierGroup.length; j++) {
-        //   ModifierGroup group = modifierGroup[j];
-        //   //loop mod group child
-        //   for (int k = 0; k < group.modifierChild!.length; k++) {
-        //     if (group.modifierChild![k].isChecked == true) {
-        //       BranchLinkModifier branchLinkModifier = branchLinkModifierList.firstWhere((item) => item.mod_item_id == group.modifierChild![k].mod_item_id.toString());
-        //       totalModPrice += double.parse(branchLinkModifier.price!);
-        //       totalBasePrice = double.parse(branchLinkProduct.price!) + totalModPrice;
-        //       finalPrice = totalBasePrice.toStringAsFixed(2);
-        //     }
-        //   }
-        // }
       } else {
-        totalBasePrice = double.parse(basePrice) + getTotalCheckedModItem();
-        finalPrice = totalBasePrice.toStringAsFixed(2);
-
-        //loop has variant product modifier group
-        // for (int j = 0; j < modifierGroup.length; j++) {
-        //   ModifierGroup group = modifierGroup[j];
-        //   //loop mod group child
-        //   for (int k = 0; k < group.modifierChild!.length; k++) {
-        //     if (group.modifierChild![k].isChecked == true) {
-        //       BranchLinkModifier branchLinkModifier = branchLinkModifierList.firstWhere((item) => item.mod_item_id == group.modifierChild![k].mod_item_id.toString());
-        //       totalModPrice += double.parse(branchLinkModifier.price!);
-        //       totalBasePrice = double.parse(branchLinkProduct.price!) + totalModPrice;
-        //       finalPrice = totalBasePrice.toStringAsFixed(2);
-        //     }
-        //   }
-        // }
+        finalPrice = '0.00';
       }
     } catch (error) {
       print('Get product base price error $error');
@@ -1261,30 +1204,20 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   void getProductDialogStock(Product product){
-    if (product.has_variant == 0) {
-      switch(branchLinkProduct.stock_type){
+    if (branchLinkProduct != null) {
+      switch(branchLinkProduct!.stock_type){
         case '1': {
-          dialogStock = branchLinkProduct.daily_limit.toString();
+          dialogStock = branchLinkProduct!.daily_limit.toString();
         }break;
         case '2': {
-          dialogStock = branchLinkProduct.stock_quantity.toString();
+          dialogStock = branchLinkProduct!.stock_quantity.toString();
         }break;
         default:{
           dialogStock = '';
         }
       }
     } else {
-      switch(branchLinkProduct.stock_type){
-        case '1': {
-          dialogStock = branchLinkProduct.daily_limit.toString();
-        }break;
-        case '2': {
-          dialogStock = branchLinkProduct.stock_quantity.toString();
-        }break;
-        default:{
-          dialogStock = '';
-        }
-      }
+      dialogStock = '0';
     }
   }
 
@@ -1387,7 +1320,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     }
 
     var value = cartProductItem(
-        branch_link_product_sqlite_id: branchLinkProduct.branch_link_product_sqlite_id.toString(),
+        branch_link_product_sqlite_id: branchLinkProduct!.branch_link_product_sqlite_id.toString(),
         product_name: productName,
         category_id: widget.productDetail!.category_id!,
         category_name: categories != null ? categories!.name : '',

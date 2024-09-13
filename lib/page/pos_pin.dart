@@ -284,6 +284,19 @@ class _PosPinPageState extends State<PosPinPage> {
     if (user != null) {
       print('log in pos pin success');
       await prefs.setString("pos_pin_user", jsonEncode(user));
+
+      if (MediaQuery.of(context).orientation == Orientation.portrait) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown
+        ]);
+      } else {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight
+        ]);
+      }
+
       Navigator.pushReplacement(
         context,
         PageTransition(
