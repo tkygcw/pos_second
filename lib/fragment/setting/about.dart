@@ -40,6 +40,20 @@ class _AboutState extends State<About> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        appBar:  MediaQuery.of(context).orientation == Orientation.portrait ? AppBar(
+          elevation: 1,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios, color: Colors.blueGrey),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          backgroundColor: Colors.white,
+          title: Text(AppLocalizations.of(context)!.translate('about'),
+              style: TextStyle(fontSize: 20, color: Colors.blueGrey)),
+          centerTitle: false,
+        )
+            : null,
         body: SingleChildScrollView(
           physics: NeverScrollableScrollPhysics(),
           padding: EdgeInsets.all(8.0),

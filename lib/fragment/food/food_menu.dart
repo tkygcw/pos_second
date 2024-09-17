@@ -33,7 +33,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
           ),
           title: Text(
             AppLocalizations.of(context)!.translate('menu'),
-            style: TextStyle(fontSize: 25, color: color.backgroundColor),
+            style: TextStyle(fontSize: 20, color: color.backgroundColor),
           ),
         ),
         resizeToAvoidBottomInset: false,

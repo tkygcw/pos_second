@@ -161,7 +161,7 @@ class _FoodMenuContentState extends State<FoodMenuContent> with TickerProviderSt
             })));
       } else {
         List<Product> data = initProduct.where((item) => item.category_name == categoryList[i]).toList();//specificProduct;
-        sortProduct(data);
+        data = sortProduct(data);
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
             crossAxisCount: 5,

@@ -125,7 +125,7 @@ class _SettingMenuState extends State<SettingMenu> {
           );
         } else {
           ///mobile layout
-          return Padding(
+          return MediaQuery.of(context).orientation == Orientation.landscape ? Padding(
             padding: EdgeInsets.fromLTRB(0, 0, 8, 15),
             child: this.isLoaded ?
             Scaffold(
@@ -205,6 +205,79 @@ class _SettingMenuState extends State<SettingMenu> {
                   )
                 ],
               ),
+            ) : CustomProgressBar(),
+          ) :
+        Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 8, 15),
+            child: this.isLoaded ?
+            Scaffold(
+              resizeToAvoidBottomInset: false,
+              appBar: AppBar(
+                automaticallyImplyLeading: false,
+                leading: IconButton(
+                  icon: Icon(Icons.menu, color: color.buttonColor),
+                  onPressed: () {
+                    isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                  },
+                ),
+                title: Text(AppLocalizations.of(context)!.translate('setting'),
+                    style: TextStyle(fontSize: 20, color: color.backgroundColor)),
+                centerTitle: false,
+                backgroundColor: Color(0xffFAFAFA),
+                elevation: 1,
+              ),
+              body: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  ListTile(
+                    leading: Icon(Icons.devices_other),
+                    title: Text(AppLocalizations.of(context)!.translate("device_setting")),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => views.elementAt(0),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.info),
+                    title: Text(AppLocalizations.of(context)!.translate("about")),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => views.elementAt(1),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+                bottomNavigationBar: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text("IP: ${clientAction.deviceIp}"),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color.backgroundColor,
+                      ),
+                      onPressed: () async {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => PosPinPage(),
+                          ),
+                              (Route route) => false,
+                        );
+
+                      },
+                      child: Text(AppLocalizations.of(context)!.translate('back_to_pos_pin')),
+                    ),
+
+                  ],
+                )
             ) : CustomProgressBar(),
           );
         }

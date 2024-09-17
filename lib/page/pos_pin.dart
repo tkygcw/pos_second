@@ -37,6 +37,7 @@ class _PosPinPageState extends State<PosPinPage> {
   void initState() {
     super.initState();
     //readAllPrinters();
+    setScreenLayout();
     preload();
   }
 
@@ -45,13 +46,29 @@ class _PosPinPageState extends State<PosPinPage> {
     super.dispose();
   }
 
-  setScreenLayout() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
+  setScreenLayout() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int? orientation = prefs.getInt('orientation');
+    if(orientation == null || orientation == 0) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } else {
+      if (orientation == 1) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight
+        ]);
+      } else {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown
+        ]);
+      }
+    }
   }
 
   preload() {
@@ -279,23 +296,40 @@ class _PosPinPageState extends State<PosPinPage> {
    userCheck(String pos_pin) async {
     List<User>? userList = decodeAction.decodedUserList;
     final prefs = await SharedPreferences.getInstance();
+    final int? orientation = prefs.getInt('orientation');
     // final int? branch_id = prefs.getInt('branch_id');
     User? user = userList?.firstWhereOrNull((item) => item.pos_pin == pos_pin);  //await PosDatabase.instance.verifyPosPin(pos_pin, branch_id.toString());
     if (user != null) {
       print('log in pos pin success');
       await prefs.setString("pos_pin_user", jsonEncode(user));
 
-      if (MediaQuery.of(context).orientation == Orientation.portrait) {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown
-        ]);
+      print("initial orientation: ${orientation}");
+      if(orientation == null || orientation == 0) {
+        if (MediaQuery.of(context).orientation == Orientation.portrait) {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown
+          ]);
+        } else {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight
+          ]);
+        }
       } else {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
-        ]);
+        if (orientation == 1) {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight
+          ]);
+        } else {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown
+          ]);
+        }
       }
+
 
       Navigator.pushReplacement(
         context,
