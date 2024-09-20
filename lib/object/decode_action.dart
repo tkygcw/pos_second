@@ -81,7 +81,7 @@ class DecodeAction {
     Iterable value10 = json['data']['branchPromotionList'];
     decodedBranchPromotionList =  List<Promotion>.from(value10.map((json) => Promotion.fromJson(json)));
     appLanguageCode = json['data']['app_language_code'];
-    if(json['data']['flushbar_status'] != null){
+    if(json['data']['subscription_data'] != null){
       var value12 = json['data']['subscription_data'];
       decodedSubscription = [Subscription.fromJson(value12)];
     }

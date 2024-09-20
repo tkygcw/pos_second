@@ -1025,7 +1025,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
             msg: "Quantity input exceed stock amount");
       }break;
       default: {
-        if (cart.selectedOption == 'Dine in'&& appSetting.table_order == 1) {
+        if (cart.selectedOption == 'Dine in' && (appSetting.table_order == 1 || appSetting.table_order == 2)) {
           if (simpleIntInput > 0) {
             if (cart.selectedTable.isNotEmpty) {
               // Disable the button after it has been pressed

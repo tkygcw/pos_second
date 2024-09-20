@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
 import 'package:optimy_second_device/fragment/custom_snackbar.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
+import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:provider/provider.dart';
@@ -102,6 +103,7 @@ class _CartPageState extends State<CartPage> {
   Color font = Colors.black45;
   int myCount = 0;
   bool placingOrder = false, isFirstLoad = false, isButtonDisabled = false;
+  AppSetting appSetting = decodeAction.decodedAppSetting!;
 
   void _scrollDown() {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
@@ -649,7 +651,7 @@ class _CartPageState extends State<CartPage> {
                                           //disableButton();
                                           if(cart.cartNotifierItem.isNotEmpty){
                                             openLoadingDialogBox();
-                                            if (cart.selectedOption == 'Dine in') {
+                                            if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
                                               if (cart.selectedTable.isNotEmpty) {
                                                 if (cart.cartNotifierItem[0].status == 1 && hasNewItem == true) {
                                                   await callPlaceOrder(cart, '9');
@@ -674,6 +676,7 @@ class _CartPageState extends State<CartPage> {
                                               }
                                             } else {
                                               // not dine in call
+                                              print('not dine in');
                                               cart.removeAllTable();
                                               if (cart.cartNotifierItem.isNotEmpty) {
                                                 await callPlaceOrder(cart, '8');
