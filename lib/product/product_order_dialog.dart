@@ -1320,6 +1320,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     }
 
     var value = cartProductItem(
+        branch_link_product_id: branchLinkProduct!.branch_link_product_id,
         branch_link_product_sqlite_id: branchLinkProduct!.branch_link_product_sqlite_id.toString(),
         product_name: productName,
         category_id: widget.productDetail!.category_id!,
