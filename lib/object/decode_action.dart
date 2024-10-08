@@ -1,9 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
-import 'package:optimy_second_device/fragment/custom_snackbar.dart';
+import 'package:optimy_second_device/fragment/custom_toastification.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -17,7 +16,6 @@ import 'package:optimy_second_device/object/user.dart';
 
 import '../main.dart';
 import '../notifier/notification_notifier.dart';
-import '../translation/AppLocalizations.dart';
 import 'app_setting.dart';
 import 'branch_link_modifier.dart';
 import 'branch_link_product.dart';
@@ -181,13 +179,7 @@ class DecodeAction {
   }
 
   showFlushBarAndPlaySound(){
-    CustomSnackBar.instance.showSnackBar(
-        title: "${AppLocalizations.of(_context)?.translate('error')}${AppLocalizations.of(_context)?.translate('kitchen_printer_timeout')}",
-        description: "${AppLocalizations.of(_context)?.translate('please_try_again_later')}",
-        playSound: true,
-        playtime: 2,
-        contentType: ContentType.failure
-    );
+    ShowFailedPrintKitchenToast.showToast();
   }
 
 }
