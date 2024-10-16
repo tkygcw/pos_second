@@ -12,6 +12,8 @@ class ModifierGroupFields {
     name,
     dining_id,
     compulsory,
+    min_select,
+    max_select,
     created_at,
     updated_at,
     soft_delete
@@ -22,6 +24,8 @@ class ModifierGroupFields {
   static String name = 'name';
   static String dining_id = 'dining_id';
   static String compulsory = 'compulsory';
+  static String min_select = 'min_select';
+  static String max_select = 'max_select';
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
@@ -34,6 +38,8 @@ class ModifierGroup{
   String? name;
   String? dining_id;
   String? compulsory;
+  int? min_select;
+  int? max_select;
   int? modifier_item_id;
   List<ModifierItem>? modifierChild;
   String? created_at;
@@ -50,6 +56,8 @@ class ModifierGroup{
         this.modifierChild,
         this.dining_id,
         this.compulsory,
+        this.min_select,
+        this.max_select,
         this.name,
         this.created_at,
         this.updated_at,
@@ -64,6 +72,8 @@ class ModifierGroup{
     String? name,
     String? dining_id,
     String? compulsory,
+    int? min_select,
+    int? max_select,
     String? created_at,
     String? updated_at,
     String? soft_delete,
@@ -74,6 +84,8 @@ class ModifierGroup{
           name: name ?? this.name,
           dining_id: dining_id ?? this.dining_id,
           compulsory: compulsory ?? this.compulsory,
+          min_select: min_select ?? this.min_select,
+          max_select: max_select ?? this.max_select,
           created_at: created_at ?? this.created_at,
           updated_at: updated_at ?? this.updated_at,
           soft_delete: soft_delete ?? this.soft_delete);
@@ -101,6 +113,8 @@ class ModifierGroup{
         name: json[ModifierGroupFields.name] as String?,
         dining_id: json[ModifierGroupFields.dining_id] as String?,
         compulsory: json[ModifierGroupFields.compulsory] as String?,
+        min_select: json[ModifierGroupFields.min_select] as int?,
+        max_select: json[ModifierGroupFields.max_select] as int?,
         created_at: json[ModifierGroupFields.created_at] as String?,
         updated_at: json[ModifierGroupFields.updated_at] as String?,
         soft_delete: json[ModifierGroupFields.soft_delete] as String?,
@@ -117,6 +131,8 @@ class ModifierGroup{
       ModifierGroupFields.name: name,
       ModifierGroupFields.dining_id: dining_id,
       ModifierGroupFields.compulsory: compulsory,
+      ModifierGroupFields.min_select: min_select,
+      ModifierGroupFields.max_select: max_select,
       ModifierGroupFields.created_at: created_at,
       ModifierGroupFields.updated_at: updated_at,
       ModifierGroupFields.soft_delete: soft_delete,
