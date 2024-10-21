@@ -1918,7 +1918,7 @@ class _CartPageState extends State<CartPage> {
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
           CustomSnackBar.instance.showSnackBar(title: json['error'], contentType: ContentType.failure, playSound: true, playtime: 2);
-          cart.initialLoad();
+          // cart.initialLoad();
         }break;
         case '4': {
           Navigator.of(context).pop();
