@@ -94,6 +94,7 @@ class Domain {
       return true;
     } on TimeoutException catch(_){
       Fluttertoast.showToast(msg: "Request timeout, please check internet connection", backgroundColor: Colors.red);
+      return false;
     }
     catch (e) {
       Fluttertoast.showToast(msg: "is host reachable error: ${e}");

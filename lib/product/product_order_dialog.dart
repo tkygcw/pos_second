@@ -112,6 +112,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   productChecking() async {
+    categories = decodeAction.decodedCategoryList?.firstWhere((e) => widget.productDetail!.category_id! == e.category_id!.toString());
     Map<String, dynamic> param = {
       'product_detail': widget.productDetail!,
       'dining_option_id': context.read<CartModel>().selectedOptionId
@@ -1318,7 +1319,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       checkedModifierLength = 0;
       checkedModItem = [];
     }
-
     var value = cartProductItem(
         branch_link_product_sqlite_id: branchLinkProduct!.branch_link_product_sqlite_id.toString(),
         product_name: productName,
