@@ -9,6 +9,7 @@ import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/reconnect_dialog.dart';
+import 'branch.dart';
 
 class ClientAction {
   final NetworkInfo networkInfo = NetworkInfo();
@@ -48,7 +49,7 @@ class ClientAction {
     return _deviceIp;
   }
 
-  Future<Map> getPreferences() async {
+  Future<Map<String, dynamic>> getPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final String? branch = prefs.getString('branch');
     return json.decode(branch!);
@@ -62,7 +63,8 @@ class ClientAction {
 
   connectServer(String ips, {Function? callback}) async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    Map branchObject = await getPreferences();
+    Map<String, dynamic> branchMap = await getPreferences();
+    Branch branchObject = Branch.fromJson(branchMap);
     notificationModel.showReconnectDialog = false;
     int i = 0;
     Map<String, dynamic>? result;
@@ -83,7 +85,7 @@ class ClientAction {
       serverIp = ips;
       //send first request to server side
       Map<String, dynamic> param = {
-        'branch_id': branchObject['branchID'].toString(),
+        'branch_id': branchObject.branch_id.toString(),
         'app_version': packageInfo.version
       };
       result = {'action': '-1', 'param': jsonEncode(param)};

@@ -7,6 +7,7 @@ import 'modifier_item.dart';
 import 'order_modifier_detail.dart';
 
 class cartProductItem{
+  int? branch_link_product_id;
   String? branch_link_product_sqlite_id;
   String? product_name;
   String? category_id;
@@ -43,6 +44,7 @@ class cartProductItem{
 
   cartProductItem(
       {
+        this.branch_link_product_id,
         this.branch_link_product_sqlite_id,
         this.product_name,
         this.category_id,
@@ -83,11 +85,12 @@ class cartProductItem{
     var modJson = json['modifier'] as List?;
     var variantJson = json['variant'] as List?;
     var orderModDetail = json['orderModifierDetail'] as List?;
-    List<ModifierItem>? modItem = modItemJson != null ? modItemJson.map((tagJson) => ModifierItem.fromJson(tagJson)).toList() : null;
-    List<ModifierGroup>? modGroup = modJson != null ? modJson.map((tagJson) => ModifierGroup.fromJson(tagJson)).toList() : null;
-    List<VariantGroup>? variantGroup = variantJson != null ? variantJson.map((tagJson) => VariantGroup.fromJson(tagJson)).toList() : null;
-    List<OrderModifierDetail>? orderModifierDetailList = orderModDetail != null ? orderModDetail.map((tagJson) => OrderModifierDetail.fromJson(tagJson)).toList() : null;
+    List<ModifierItem>? modItem = modItemJson?.map((tagJson) => ModifierItem.fromJson(tagJson)).toList();
+    List<ModifierGroup>? modGroup = modJson?.map((tagJson) => ModifierGroup.fromJson(tagJson)).toList();
+    List<VariantGroup>? variantGroup = variantJson?.map((tagJson) => VariantGroup.fromJson(tagJson)).toList();
+    List<OrderModifierDetail>? orderModifierDetailList = orderModDetail?.map((tagJson) => OrderModifierDetail.fromJson(tagJson)).toList();
     return cartProductItem(
+        branch_link_product_id: json['branch_link_product_id'] as int?,
         branch_link_product_sqlite_id: json['branch_link_product_sqlite_id'] as String?,
         product_name: json['product_name'] as String?,
         category_id: json['category_id'] as String?,
@@ -125,6 +128,7 @@ class cartProductItem{
   }
 
   Map<String, Object?> toJson() => {
+    'branch_link_product_id': branch_link_product_id,
     'branch_link_product_sqlite_id': branch_link_product_sqlite_id,
     'product_name': product_name,
     'category_id': category_id,

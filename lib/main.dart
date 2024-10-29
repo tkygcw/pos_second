@@ -12,6 +12,7 @@ import 'package:optimy_second_device/translation/appLanguage.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
 import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
 
 import 'notifier/cart_notifier.dart';
 import 'notifier/connectivity_change_notifier.dart';
@@ -101,53 +102,55 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: Consumer<AppLanguage>(builder: (context, model, child) {
-        return MaterialApp(
-          navigatorKey: MyApp.navigatorKey,
-          scaffoldMessengerKey: snackBarKey,
-          locale: model.appLocal,
-          supportedLocales: [
-            Locale('en', ''),
-            Locale('zh', ''),
-            Locale('ms', ''),
-          ],
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            DefaultCupertinoLocalizations.delegate
-          ],
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-              useMaterial3: false,
-              appBarTheme: AppBarTheme(
-                backgroundColor: Colors.white24,
-                titleTextStyle: TextStyle(color: Colors.black),
-                iconTheme: IconThemeData(color: Colors.orange), //
-              ),
-              primarySwatch: Colors.teal,
-              inputDecorationTheme: InputDecorationTheme(
-                focusColor: Colors.black,
-                labelStyle: TextStyle(
-                  color: Colors.black54,
+        return ToastificationWrapper(
+          child: MaterialApp(
+            navigatorKey: MyApp.navigatorKey,
+            scaffoldMessengerKey: snackBarKey,
+            locale: model.appLocal,
+            supportedLocales: [
+              Locale('en', ''),
+              Locale('zh', ''),
+              Locale('ms', ''),
+            ],
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              DefaultCupertinoLocalizations.delegate
+            ],
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+                useMaterial3: false,
+                appBarTheme: AppBarTheme(
+                  backgroundColor: Colors.white24,
+                  titleTextStyle: TextStyle(color: Colors.black),
+                  iconTheme: IconThemeData(color: Colors.orange), //
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.black26,
+                primarySwatch: Colors.teal,
+                inputDecorationTheme: InputDecorationTheme(
+                  focusColor: Colors.black,
+                  labelStyle: TextStyle(
+                    color: Colors.black54,
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Colors.orangeAccent,
-                    width: 2.0,
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.black26,
+                    ),
                   ),
-                ),
-              )),
-          routes: {
-            '/loading': (context) => LoadingPage(),
-            '/': (context) => LoginPage(),
-            'presentation': (context) => SecondDisplay(),
-          },
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.orangeAccent,
+                      width: 2.0,
+                    ),
+                  ),
+                )),
+            routes: {
+              '/loading': (context) => LoadingPage(),
+              '/': (context) => LoginPage(),
+              'presentation': (context) => SecondDisplay(),
+            },
+          ),
         );
       }),
     );

@@ -3,9 +3,7 @@ import 'dart:convert';
 import 'package:confirm_dialog/confirm_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_function.dart';
-import 'package:optimy_second_device/fragment/custom_flushbar.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
-import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
 import 'package:provider/provider.dart';
 
@@ -25,16 +23,7 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   ReprintKitchenListFunction reprintFunc = ReprintKitchenListFunction();
   late FailPrintModel model;
   late ThemeColor color;
-  //List<OrderDetail> orderDetail = [];
   bool isButtonDisable = false, closeButtonDisable = false;
-  // Set<String> selectedOrder = {};
-
-  @override
-  void initState() {
-    super.initState();
-    // orderDetail.addAll(FailPrintModel.instance.failedPrintOrderDetail);
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -224,13 +213,6 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
         height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 12 : MediaQuery.of(context).size.height / 20,
         child: ElevatedButton(
             onPressed: isButtonDisable || model.failPrintOrderDetails.isEmpty  ? null : () async {
-              //List<String> keyList = reprintFunc.groupOrder().keys.toList();
-              // for(int i = 0; i < keyList.length; i++){
-              //   List<OrderDetail>? orderDetail = reprintFunc.groupOrder()[keyList[i]];
-              //   print("order detail length: ${orderDetail!.length}");
-              // }
-
-              //disableButton();
               await callPrinter();
             },
             child: Text(AppLocalizations.of(context)!.translate('reprint'))),
@@ -254,12 +236,10 @@ class _ReprintKitchenListDialogState extends State<ReprintKitchenListDialog> {
   }
 
   callPrinter() async {
-    //List<OrderDetail> selectedList = model.failPrintOrderDetails.where((e) => e.isSelected == true).toList();
     List<OrderDetail> batchOrderDetailList = [];
     batchOrderDetailList.addAll(model.failPrintOrderDetails);
     model.removeAllFailedOrderDetail();
     Navigator.of(context).pop();
-    //print("order detail batch: ${batchOrderDetailList[0].failPrintBatch}");
     await clientAction.connectRequestPort(action: '14', param: jsonEncode(batchOrderDetailList), callback: responseStatusCheck);
   }
 

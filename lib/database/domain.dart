@@ -88,9 +88,9 @@ class Domain {
     }
   }
 
-  isHostReachable() async {
+  Future<bool> isHostReachable() async {
     try {
-      await http.post(Domain.login).timeout(Duration(seconds: 3), onTimeout: ()=> throw TimeoutException("Timeout"));
+      await http.post(Domain.login).timeout(Duration(seconds: 20), onTimeout: ()=> throw TimeoutException("Timeout"));
       return true;
     } on TimeoutException catch(_){
       Fluttertoast.showToast(msg: "Request timeout, please check internet connection", backgroundColor: Colors.red);

@@ -357,6 +357,7 @@
   "pin_not_match": "用户PIN不匹配",
   "place_order": "下单",
   "place_order_payment": "下单后付款",
+  "place_order_success": "下单成功",
   "placing_order_please_wait": "正在下订单，请稍等...",
   "please_check_your_email_or_password": "请检查您的电子邮件或密码",
   "please_enable_direct_payment": "请启用下单后付款功能",
