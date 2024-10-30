@@ -112,7 +112,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   productChecking() async {
-    categories = decodeAction.decodedCategoryList?.firstWhere((e) => widget.productDetail!.category_id! == e.category_id!.toString());
+    categories = decodeAction.decodedCategoryList?.firstWhereOrNull((e) => widget.productDetail!.category_id! == e.category_id!.toString());
     Map<String, dynamic> param = {
       'product_detail': widget.productDetail!,
       'dining_option_id': context.read<CartModel>().selectedOptionId
