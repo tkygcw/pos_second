@@ -148,6 +148,13 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void overrideSelectedTable(List<PosTable> tableList, {bool? notify = true}){
+    selectedTable = tableList.toList();
+    if(notify == true){
+      notifyListeners();
+    }
+  }
+
   void removeAllTable(){
     selectedTable.clear();
     notifyListeners();

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:optimy_second_device/fragment/cart/cart_dialog_function.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +30,7 @@ class CartDialog extends StatefulWidget {
 }
 
 class _CartDialogState extends State<CartDialog> {
+  CartDialogFunction cartDialogFunction = CartDialogFunction();
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<PosTable> tableList = [], cartSelectedTableList = [];
   List<OrderCache> orderCacheList = [];
@@ -102,7 +104,6 @@ class _CartDialogState extends State<CartDialog> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        this.cart = cart;
         return AlertDialog(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -553,6 +554,7 @@ class _CartDialogState extends State<CartDialog> {
 
   readAllTable({isReset}) async {
     isLoad = false;
+    cart = context.read<CartModel>();
     await clientAction.connectRequestPort(action: '7', callback: decodeData);
   }
 
@@ -563,11 +565,14 @@ class _CartDialogState extends State<CartDialog> {
         switch(json['status']){
           case '1': {
             Iterable value1 = json['data']['table_list'];
-            tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+            List<PosTable> responseTableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
             //var cart = Provider.of<CartModel>(context, listen: false);
             cartSelectedTableList = cart.selectedTable;
             if(cartSelectedTableList.isNotEmpty){
-              checkTable(tableList);
+              tableList = cartDialogFunction.checkTable(responseTableList, cartSelectedTableList);
+              cart.overrideSelectedTable(tableList.where((table) => table.isSelected == true).toList());
+              // checkTable2(tableList);
+              // checkTable(tableList);
             }
             setState(() {
               isLoad = true;
@@ -583,6 +588,49 @@ class _CartDialogState extends State<CartDialog> {
       print('inti table error: $e');
       tableList = [];
     }
+  }
+
+  checkTable2(List<PosTable> tableList){
+    // Filter out tables with status == 1 from tableList
+    List<PosTable> inUsedTable = tableList.where((table) => table.status == 1).toList();
+    bool anyTableIncluded = false;
+    // Check if any table in cartSelectedTableList is in inUsedTable
+    for (var cartTable in cartSelectedTableList) {
+      for (var table in inUsedTable) {
+        if (table.table_sqlite_id == cartTable.table_sqlite_id) {
+          anyTableIncluded = true;
+          // Mark the table as selected
+          table.isSelected = true;
+
+          // Check and mark all tables in the same group as selected
+          for (var groupTable in tableList) {
+            if (groupTable.group == table.group) { // Assuming `groupId` indicates the table group
+              groupTable.isSelected = true;
+            }
+          }
+        }
+      }
+    }
+
+    // If no table in cartSelectedTableList is included in inUsedTable
+    if (!anyTableIncluded) {
+      for (var table in tableList) {
+        for (var cartTable in cartSelectedTableList) {
+          if (table.table_sqlite_id == cartTable.table_sqlite_id) {
+            table.isSelected = true;
+          }
+        }
+      }
+      return;
+    }
+
+    // Add all selected tables to cartSelectedTableList
+    cart.overrideSelectedTable(tableList.where((table) => table.isSelected == true).toList());
+    // cartSelectedTableList.addAll(
+    //     tableList.where((table) => table.isSelected == true && !cartSelectedTableList.contains(table))
+    // );
+    print("cart selected table length: ${cart.selectedTable.length}");
+    // cart.addAllTable(cartSelectedTableList);
   }
 
   checkTable(List<PosTable> tableList){
