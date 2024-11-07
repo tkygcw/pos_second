@@ -50,13 +50,15 @@ class CartModel extends ChangeNotifier {
     }
   }
 
-  void initialLoad() {
-    removeAllTable();
-    removeAllCartItem();
-    removePromotion();
-    removePaymentDetail();
+  void initialLoad({bool? notify = true}) {
+    selectedTable.clear();
+    cartNotifierItem.clear();
+    selectedPromotion = null;
+    cartNotifierPayment.clear();
     initBranchLinkDiningOption();
-    notifyListeners();
+    if(notify == true){
+      notifyListeners();
+    }
   }
 
   void notDineInInitLoad(){
@@ -100,6 +102,15 @@ class CartModel extends ChangeNotifier {
   void addItem(cartProductItem object, {bool? notifyListener}) {
     cartNotifierItem.add(object);
     if(notifyListener == null){
+      notifyListeners();
+    }
+  }
+
+  void overrideItem({required List<cartProductItem> cartItem, bool? notify = true}) {
+    List<cartProductItem> notPlacedItem = cartNotifierItem.where((e) => e.status == 0).toList();
+    cartNotifierItem = cartItem;
+    cartNotifierItem.addAll(notPlacedItem);
+    if(notify = true){
       notifyListeners();
     }
   }

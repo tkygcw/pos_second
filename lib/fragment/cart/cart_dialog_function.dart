@@ -1,6 +1,33 @@
 import '../../object/table.dart';
 
 class CartDialogFunction {
+
+  bool isSameTable(List<PosTable> selectedTableList, List<PosTable> tableInCart){
+    print("selected table length: ${selectedTableList.length}");
+    print("table in cart length: ${tableInCart.length}");
+
+    // Check if lengths are the same
+    if (selectedTableList.length != tableInCart.length) {
+      print("is same: false");
+      return false;
+    }
+
+    // Sort both lists by table number
+    selectedTableList.sort((a, b) => a.number!.compareTo(b.number!));
+    tableInCart.sort((a, b) => a.number!.compareTo(b.number!));
+
+    // Compare each element
+    for (int i = 0; i < selectedTableList.length; i++) {
+      if (selectedTableList[i].number != tableInCart[i].number) {
+        print("is same: false");
+        return false;
+      }
+    }
+
+    print("is same: true");
+    return true;
+  }
+
   List<PosTable> checkTable(List<PosTable> tableList, List<PosTable> cartSelectedTableList){
     // Step 1: Filter tables with status == 1
     List<PosTable> inUseTables = _getInUseTables(tableList);

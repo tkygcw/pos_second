@@ -114,12 +114,13 @@ class _CartDialogState extends State<CartDialog> {
                 child: SizedBox(
                   width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 10 : MediaQuery.of(context).size.width / 5,
                   height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 20 : MediaQuery.of(context).size.height / 25,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
                       backgroundColor: Colors.red,
                     ),
-                    child: Text(
+                    icon: Icon(Icons.no_food),
+                    label: Text(
                       AppLocalizations.of(context)!.translate('clear_all'),
                       style: TextStyle(color: Colors.white),
                     ),
@@ -148,7 +149,7 @@ class _CartDialogState extends State<CartDialog> {
                       mainAxisSpacing: isLandscapeOrien() ? 10 : 0,
                       crossAxisCount: isLandscapeOrien() ? MediaQuery.of(context).size.height > 500 ? 4 : 3
                                       : MediaQuery.of(context).size.width < 530 ? 3 : 4,
-                      children: tableList.asMap().map((index, posTable) => MapEntry(index, tableItem(cart, color, index))).values.toList(),
+                      children: tableList.asMap().map((index, posTable) => MapEntry(index, tableView(cart, color, index))).values.toList(),
                       onReorder: (int oldIndex, int newIndex) {
                         if (oldIndex != newIndex) {
                           showSecondDialog(context, color, oldIndex, newIndex, cart);
@@ -186,35 +187,22 @@ class _CartDialogState extends State<CartDialog> {
                 ),
                 onPressed: !checkIsSelected() || isButtonDisabled ? null : () async {
                   isButtonDisabled = true;
-                  cart.selectedTable.clear();
-                  cart.cartNotifierItem.clear();
                   List<PosTable> selectedTable = tableList.where((e) => e.isSelected == true).toList();
-                  if(selectedTable[0].status == 1){
-                    setState(() {
-                      this.isLoad = false;
-                    });
-                    await readSpecificTableDetail(selectedTable[0]);
-                  } else {
-                    cart.addAllTable(selectedTable);
+                  if(cartDialogFunction.isSameTable(selectedTable, cart.selectedTable) == true) {
                     Navigator.of(context).pop();
+                  } else {
+                    if(selectedTable[0].status == 1){
+                      setState(() {
+                        this.isLoad = false;
+                      });
+                      await readSpecificTableDetail(selectedTable[0]);
+                      Navigator.of(context).pop();
+                    } else {
+                      cart.overrideItem(cartItem: [], notify: false);
+                      cart.overrideSelectedTable(selectedTable, notify: false);
+                      Navigator.of(context).pop();
+                    }
                   }
-                  // for (int index = 0; index < tableList.length; index++) {
-                  //   //if using table is selected
-                  //   if (tableList[index].status == 1 && tableList[index].isSelected == true) {
-                  //     this.isLoad = false;
-                  //     await readSpecificTableDetail(tableList[index]);
-                  //   }
-                  //   //if non-using table is selected
-                  //   else if (tableList[index].status == 0 && tableList[index].isSelected == true) {
-                  //     //merge all table
-                  //     cart.addTable(tableList[index]);
-                  //   } else {
-                  //     cart.removeSpecificTable(tableList[index]);
-                  //   }
-                  // }
-                  // print("orderDetailList: ${orderDetailList.length}");
-                  // if(!mounted) return;
-                  // Navigator.of(context).pop();
                 },
                 child: Text(
                   AppLocalizations.of(context)!.translate('select_table'),
@@ -262,7 +250,7 @@ class _CartDialogState extends State<CartDialog> {
     }
   }
 
-  Widget tableItem(CartModel cart, ThemeColor color, index) {
+  Widget tableView(CartModel cart, ThemeColor color, index) {
     return Container(
       key: Key(index.toString()),
       child: Column(children: [
@@ -558,21 +546,26 @@ class _CartDialogState extends State<CartDialog> {
     await clientAction.connectRequestPort(action: '7', callback: decodeData);
   }
 
-  decodeData(response){
+  decodeData(response) async{
     try{
       if(response != null && mounted){
         var json = jsonDecode(response);
         switch(json['status']){
           case '1': {
             Iterable value1 = json['data']['table_list'];
-            List<PosTable> responseTableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+            tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
             //var cart = Provider.of<CartModel>(context, listen: false);
             cartSelectedTableList = cart.selectedTable;
             if(cartSelectedTableList.isNotEmpty){
-              tableList = cartDialogFunction.checkTable(responseTableList, cartSelectedTableList);
-              cart.overrideSelectedTable(tableList.where((table) => table.isSelected == true).toList());
-              // checkTable2(tableList);
-              // checkTable(tableList);
+              tableList = cartDialogFunction.checkTable(tableList, cartSelectedTableList);
+              List<PosTable> selectedTableList = tableList.where((table) => table.isSelected == true).toList();
+              if(selectedTableList.any((e) => e.status == 0)){
+                cart.overrideItem(cartItem: [], notify: false);
+              } else {
+                await readSpecificTableDetail(selectedTableList.first);
+              }
+              cart.overrideSelectedTable(selectedTableList, notify: false);
+              print("cart table list : ${cart.selectedTable.length}");
             }
             setState(() {
               isLoad = true;
@@ -587,81 +580,6 @@ class _CartDialogState extends State<CartDialog> {
     }catch(e){
       print('inti table error: $e');
       tableList = [];
-    }
-  }
-
-  checkTable2(List<PosTable> tableList){
-    // Filter out tables with status == 1 from tableList
-    List<PosTable> inUsedTable = tableList.where((table) => table.status == 1).toList();
-    bool anyTableIncluded = false;
-    // Check if any table in cartSelectedTableList is in inUsedTable
-    for (var cartTable in cartSelectedTableList) {
-      for (var table in inUsedTable) {
-        if (table.table_sqlite_id == cartTable.table_sqlite_id) {
-          anyTableIncluded = true;
-          // Mark the table as selected
-          table.isSelected = true;
-
-          // Check and mark all tables in the same group as selected
-          for (var groupTable in tableList) {
-            if (groupTable.group == table.group) { // Assuming `groupId` indicates the table group
-              groupTable.isSelected = true;
-            }
-          }
-        }
-      }
-    }
-
-    // If no table in cartSelectedTableList is included in inUsedTable
-    if (!anyTableIncluded) {
-      for (var table in tableList) {
-        for (var cartTable in cartSelectedTableList) {
-          if (table.table_sqlite_id == cartTable.table_sqlite_id) {
-            table.isSelected = true;
-          }
-        }
-      }
-      return;
-    }
-
-    // Add all selected tables to cartSelectedTableList
-    cart.overrideSelectedTable(tableList.where((table) => table.isSelected == true).toList());
-    // cartSelectedTableList.addAll(
-    //     tableList.where((table) => table.isSelected == true && !cartSelectedTableList.contains(table))
-    // );
-    print("cart selected table length: ${cart.selectedTable.length}");
-    // cart.addAllTable(cartSelectedTableList);
-  }
-
-  checkTable(List<PosTable> tableList){
-    if(cartSelectedTableList[0].status == 0){
-      for (int j = 0; j < tableList.length; j++) {
-        for (int i = 0; i < cartSelectedTableList.length; i++) {
-          if(tableList[j].table_sqlite_id == cartSelectedTableList[i].table_sqlite_id){
-            if(cartSelectedTableList[i].status == 0){
-              tableList[j].isSelected = true;
-            }
-          }
-        }
-      }
-    } else {
-      String selectedTableGroup = cartSelectedTableList[0].group!;
-      List<PosTable> sameGroupTable = tableList.where((e) => e.group == selectedTableGroup).toList();
-      for (int j = 0; j < tableList.length; j++) {
-        for (int i = 0; i < sameGroupTable.length; i++) {
-          if(tableList[j].table_sqlite_id == sameGroupTable[i].table_sqlite_id){
-            tableList[j].isSelected = true;
-          }
-        }
-      }
-      if(sameGroupTable.length != cartSelectedTableList.length){
-        cartSelectedTableList.clear();
-        if(sameGroupTable.isNotEmpty){
-          cart.addAllTable(sameGroupTable);
-        } else{
-          cart.removeAllCartItem();
-        }
-      }
     }
   }
 
@@ -686,7 +604,6 @@ class _CartDialogState extends State<CartDialog> {
         if(orderDetailList.isNotEmpty){
           addToCart();
         }
-        Navigator.of(context).pop();
       }break;
       default: {
         clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData2);
@@ -695,6 +612,7 @@ class _CartDialogState extends State<CartDialog> {
   }
 
   addToCart() {
+    List<cartProductItem> itemList = [];
     getSelectedTable();
     for (int i = 0; i < orderDetailList.length; i++) {
       cartProductItem value = cartProductItem(
@@ -719,14 +637,15 @@ class _CartDialogState extends State<CartDialog> {
         ticket_exp: orderDetailList[i].ticket_exp,
         product_sku: orderDetailList[i].product_sku
       );
-      cart.addItem(value);
+      itemList.add(value);
     }
+    cart.overrideItem(cartItem: itemList, notify: false);
   }
 
   void getSelectedTable(){
     if(tableList.isNotEmpty){
       List<PosTable> selectedTableList = tableList.where((e) => e.isSelected == true).toList();
-      cart.addAllTable(selectedTableList);
+      cart.overrideSelectedTable(selectedTableList, notify: false);
     }
   }
 

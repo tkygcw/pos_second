@@ -119,9 +119,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   @override
-  void deactivate() {
-    //controller.sink.close();
-    super.deactivate();
+  dispose() {
+    cart.initialLoad(notify: false);
+    super.dispose();
   }
 
   getPreferences() async{
