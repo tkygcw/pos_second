@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:optimy_second_device/fragment/custom_toastification.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
@@ -34,6 +33,7 @@ import '../../object/variant_group.dart';
 import '../../page/loading_dialog.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
+import '../toast/custom_toastification.dart';
 import 'cart_dialog.dart';
 import 'cart_remove_dialog.dart';
 
@@ -120,7 +120,7 @@ class _CartPageState extends State<CartPage> {
 
   @override
   dispose() {
-    cart.initialLoad(notify: false);
+    // cart.initialLoad(notify: false);
     super.dispose();
   }
 
@@ -1577,11 +1577,11 @@ class _CartPageState extends State<CartPage> {
     getRounding();
     getAllTotal();
     checkCartItem(cart);
-    if (cart.myCount == 0) {
+    if (cart.cartScrollDown == 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollDown();
       });
-      cart.myCount++;
+      cart.setCartScrollDown = 1;
     }
     cartController.sink.add('refresh');
     // if (!controller.isClosed) {
@@ -1898,7 +1898,7 @@ class _CartPageState extends State<CartPage> {
       switch(json['status']){
         case '1': {
           //place order success
-          CustomSuccessToast.showToast(title: AppLocalizations.of(context)!.translate('place_order_success'));
+          CustomSuccessToast(title: AppLocalizations.of(context)!.translate('place_order_success')).showToast();
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
           cart.initialLoad();
@@ -1912,14 +1912,15 @@ class _CartPageState extends State<CartPage> {
         case '3': {
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
-          CustomFailedToast.showToast(title: json['error']);
-          // CustomSnackBar.instance.showSnackBar(title: json['error'], contentType: ContentType.failure, playSound: true, playtime: 2);
-          // cart.initialLoad();
+          CustomFailedToast(title: AppLocalizations.of(context)!.translate(json['error']), duration: 6).showToast();
         }break;
         case '4': {
           Navigator.of(context).pop();
-          CustomFailedToast.showToast(title: json['exception']);
-          // CustomSnackBar.instance.showSnackBar(title: json['exception'], contentType: ContentType.failure, playSound: true, playtime: 2);
+          CustomFailedToast(
+              title: AppLocalizations.of(context)!.translate(json['place_order_failed']),
+              description: json['exception'],
+              duration: 6,
+          ).showToast();
           cart.initialLoad();
         }break;
         default: {

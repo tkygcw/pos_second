@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:optimy_second_device/fragment/custom_toastification.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -14,8 +13,10 @@ import 'package:optimy_second_device/object/subscription.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/object/user.dart';
 
+import '../fragment/toast/custom_toastification.dart';
 import '../main.dart';
 import '../notifier/notification_notifier.dart';
+import '../translation/AppLocalizations.dart';
 import 'app_setting.dart';
 import 'branch_link_modifier.dart';
 import 'branch_link_product.dart';
@@ -179,7 +180,9 @@ class DecodeAction {
   }
 
   showFlushBarAndPlaySound(){
-    ShowFailedPrintKitchenToast.showToast();
+    return CustomFailedToast(
+        title: "${AppLocalizations.of(MyApp.navigatorKey.currentContext!)?.translate('error')}"
+            "${AppLocalizations.of(MyApp.navigatorKey.currentContext!)?.translate('kitchen_printer_timeout')}").showToast();
   }
 
 }

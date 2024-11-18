@@ -18,8 +18,14 @@ class CartModel extends ChangeNotifier {
   String selectedOptionId = '';
   String? subtotal;
   bool isInit = false;
-  int myCount = 0;
   bool isChange = false;
+  int _cartScrollDown = 0;
+
+  int get cartScrollDown => _cartScrollDown;
+
+  set setCartScrollDown(int value) {
+    _cartScrollDown = value;
+  }
 
   Map<String, Object?> toJson() => {
     'selectedTable': this.selectedTable,
@@ -71,7 +77,7 @@ class CartModel extends ChangeNotifier {
   }
 
   void resetCount(){
-    myCount = 0;
+    _cartScrollDown = 0;
     notifyListeners();
   }
 
@@ -110,6 +116,7 @@ class CartModel extends ChangeNotifier {
     List<cartProductItem> notPlacedItem = cartNotifierItem.where((e) => e.status == 0).toList();
     cartNotifierItem = cartItem;
     cartNotifierItem.addAll(notPlacedItem);
+    _cartScrollDown = 0;
     if(notify = true){
       notifyListeners();
     }
