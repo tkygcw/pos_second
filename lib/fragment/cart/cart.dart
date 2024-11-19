@@ -812,25 +812,9 @@ class _CartPageState extends State<CartPage> {
   getModifier(cartProductItem object) {
     List<String?> modifier = [];
     String result = '';
-    if (object.modifier != null) {
-      var length = object.modifier!.length;
-      for (int i = 0; i < length; i++) {
-        ModifierGroup group = object.modifier![i];
-        var length = group.modifierChild!.length;
-        for (int j = 0; j < length; j++) {
-          if (group.modifierChild![j].isChecked!) {
-            modifier.add('${group.modifierChild![j].name!}\n');
-            result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
-          }
-        }
-      }
-    } else {
-      if (object.orderModifierDetail != null && object.orderModifierDetail!.isNotEmpty) {
-        for (int i = 0; i < object.orderModifierDetail!.length; i++) {
-          modifier.add('${object.orderModifierDetail![i].mod_name!}\n');
-          result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
-        }
-      }
+    if (object.checkedModifierItem != null && object.checkedModifierItem!.isNotEmpty) {
+      modifier = object.checkedModifierItem!.map((e) => '${e.name}\n').toList();
+      result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
     }
     return result;
   }
@@ -839,23 +823,9 @@ class _CartPageState extends State<CartPage> {
   Get Cart product variant
 */
   getVariant(cartProductItem object) {
-    List<String?> variant = [];
     String result = '';
-    if (object.variant != null) {
-      var length = object.variant!.length;
-      for (int i = 0; i < length; i++) {
-        VariantGroup group = object.variant![i];
-        for (int j = 0; j < group.child!.length; j++) {
-          if (group.child![j].isSelected!) {
-            variant.add('${group.child![j].name!}\n');
-            result = variant.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceAll('|', '\n+').replaceFirst('', '+ ');
-          }
-        }
-      }
-    } else {
-      if (object.productVariantName != null && object.productVariantName != '') {
-        result = "${object.productVariantName!.replaceAll('|', '\n+').replaceFirst('', '+ ')}\n";
-      }
+    if (object.productVariantName != null && object.productVariantName != '') {
+      result = "${object.productVariantName!.replaceAll('|', '\n+').replaceFirst('', '+ ')}\n";
     }
     return result;
   }
@@ -1917,7 +1887,7 @@ class _CartPageState extends State<CartPage> {
         case '4': {
           Navigator.of(context).pop();
           CustomFailedToast(
-              title: AppLocalizations.of(context)!.translate(json['place_order_failed']),
+              title: AppLocalizations.of(context)!.translate('place_order_failed'),
               description: json['exception'],
               duration: 6,
           ).showToast();

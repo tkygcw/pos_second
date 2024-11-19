@@ -1329,8 +1329,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         quantity: simpleIntInput,
         checkedModifierLength: checkedModifierLength,
         checkedModifierItem: checkedModItem,
-        modifier: modifierGroup,
-        variant: variantGroup,
         productVariantName: getProductVariantName(),
         remark: remarkController.text,
         status: 0,
