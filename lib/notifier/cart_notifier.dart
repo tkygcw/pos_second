@@ -9,7 +9,6 @@ import '../object/promotion.dart';
 import '../object/table.dart';
 
 class CartModel extends ChangeNotifier {
-  List<cartProductItem> cartNotifierItem = [];
   List<cartPaymentDetail> cartNotifierPayment  = [];
   List<Promotion> autoPromotion = [];
   Promotion? selectedPromotion ;
@@ -19,17 +18,28 @@ class CartModel extends ChangeNotifier {
   String? subtotal;
   bool isInit = false;
   bool isChange = false;
+  List<cartProductItem> _cartNotifierItem = [];
   int _cartScrollDown = 0;
 
+  List<cartProductItem> get cartNotifierItem => _cartNotifierItem;
+
   int get cartScrollDown => _cartScrollDown;
+
+  set setCartNotifierItem(List<cartProductItem> value) {
+    _cartNotifierItem = value;
+  }
 
   set setCartScrollDown(int value) {
     _cartScrollDown = value;
   }
 
+  // set cartNotifierItem(List<cartProductItem> value) {
+  //   _cartNotifierItem = value;
+  // }
+
   Map<String, Object?> toJson() => {
     'selectedTable': this.selectedTable,
-    'cartNotifierItem': this.cartNotifierItem,
+    'cartNotifierItem': this._cartNotifierItem,
     'selectedOption': this.selectedOption,
     'selectedOptionId': this.selectedOptionId,
     'subtotal': this.subtotal
@@ -58,7 +68,7 @@ class CartModel extends ChangeNotifier {
 
   void initialLoad({bool? notify = true}) {
     selectedTable.clear();
-    cartNotifierItem.clear();
+    _cartNotifierItem.clear();
     selectedPromotion = null;
     cartNotifierPayment.clear();
     initBranchLinkDiningOption();
@@ -106,16 +116,16 @@ class CartModel extends ChangeNotifier {
   }
 
   void addItem(cartProductItem object, {bool? notifyListener}) {
-    cartNotifierItem.add(object);
+    _cartNotifierItem.add(object);
     if(notifyListener == null){
       notifyListeners();
     }
   }
 
   void overrideItem({required List<cartProductItem> cartItem, bool? notify = true}) {
-    List<cartProductItem> notPlacedItem = cartNotifierItem.where((e) => e.status == 0).toList();
-    cartNotifierItem = cartItem;
-    cartNotifierItem.addAll(notPlacedItem);
+    List<cartProductItem> notPlacedItem = _cartNotifierItem.where((e) => e.status == 0).toList();
+    _cartNotifierItem = cartItem;
+    _cartNotifierItem.addAll(notPlacedItem);
     _cartScrollDown = 0;
     if(notify = true){
       notifyListeners();
@@ -123,12 +133,12 @@ class CartModel extends ChangeNotifier {
   }
 
   void removeItem(cartProductItem object) {
-    cartNotifierItem.remove(object);
+    _cartNotifierItem.remove(object);
     notifyListeners();
   }
 
   void removeSpecificItem({String? orderCacheLocalId}){
-    cartNotifierItem.removeWhere((item) => item.order_cache_sqlite_id == orderCacheLocalId);
+    _cartNotifierItem.removeWhere((item) => item.order_cache_sqlite_id == orderCacheLocalId);
     /*for(int i = 0; i < cartNotifierItem.length; i++){
       print("pass order cache id: ${object.order_cache_sqlite_id}");
       print("list order cache id: ${cartNotifierItem[i].order_cache_sqlite_id}");
@@ -141,18 +151,18 @@ class CartModel extends ChangeNotifier {
   }
 
   void removeAllCartItem(){
-    cartNotifierItem.clear();
+    _cartNotifierItem.clear();
     notifyListeners();
   }
 
   void removePartialCartItem(){
     List<cartProductItem> removeItem = [];
-    for(int j = 0; j < cartNotifierItem.length; j++){
-      if(cartNotifierItem[j].status == 0){
-        removeItem.add(cartNotifierItem[j]);
+    for(int j = 0; j < _cartNotifierItem.length; j++){
+      if(_cartNotifierItem[j].status == 0){
+        removeItem.add(_cartNotifierItem[j]);
       }
     }
-    cartNotifierItem.removeWhere((element) => removeItem.contains(element));
+    _cartNotifierItem.removeWhere((element) => removeItem.contains(element));
     notifyListeners();
   }
 

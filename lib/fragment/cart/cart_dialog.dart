@@ -77,9 +77,14 @@ class _CartDialogState extends State<CartDialog> {
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: Text('Confirm merge table'),
+        title: Text(AppLocalizations.of(context)!.translate('confirm_merge_table')),
         content: SizedBox(
-            height: 100.0, width: 350.0, child: Text('merge table ${tableList[dragIndex].number} with table ${tableList[targetIndex].number} ?')),
+            height: 100.0,
+            width: 350.0,
+            child: Text('${AppLocalizations.of(context)!.translate('merge_table')} '
+                '${tableList[dragIndex].number} ${AppLocalizations.of(context)!.translate('with_table')} '
+                '${tableList[targetIndex].number} ?'),
+        ),
         actions: <Widget>[
           TextButton(
             child: Text('${AppLocalizations.of(context)?.translate('close')}'),
