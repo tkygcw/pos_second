@@ -2,9 +2,6 @@ import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 
-import '../../main.dart';
-import '../../translation/AppLocalizations.dart';
-
 abstract class CustomToastification {
   final String title;
   final Widget? description;

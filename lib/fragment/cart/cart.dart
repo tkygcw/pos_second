@@ -1851,13 +1851,17 @@ class _CartPageState extends State<CartPage> {
 
   ///place order
   callPlaceOrder(CartModel cart, String action) async {
+    CartModel newCart = cart;
+    if(action == '9'){
+      newCart = CartModel.addOrderCopy(cart);
+    }
     final String? pos_user = prefs.getString('pos_pin_user');
     Map<String, dynamic> userMap = json.decode(pos_user!);
     User userData = User.fromJson(userMap);
     Map<String, dynamic> map = {
       'order_by_user_id': userData.user_id.toString(),
       'order_by': userData.name,
-      'cart':cart
+      'cart':newCart
     };
     await clientAction.connectRequestPort(action: action, param: jsonEncode(map), callback: responseStatusCheck);
   }

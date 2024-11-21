@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/server_ip_dialog.dart';
-import 'package:optimy_second_device/object/client_action.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

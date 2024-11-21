@@ -33,9 +33,26 @@ class CartModel extends ChangeNotifier {
     _cartScrollDown = value;
   }
 
-  // set cartNotifierItem(List<cartProductItem> value) {
-  //   _cartNotifierItem = value;
-  // }
+  CartModel({
+    List<PosTable>? selectedTable,
+    List<cartProductItem>? cartNotifierItem,
+    String? selectedOption,
+    String? selectedOptionId,
+    String? subtotal
+  }){
+    this.selectedTable = selectedTable ?? [];
+    this._cartNotifierItem = cartNotifierItem ?? [];
+    this.selectedOption = selectedOption ?? 'Dine in';
+    this.selectedOptionId = selectedOptionId ?? '';
+    this.subtotal = subtotal ?? '';
+  }
+
+  CartModel.addOrderCopy(CartModel cart)
+      : this.selectedTable = cart.selectedTable,
+        this._cartNotifierItem = cart.cartNotifierItem.where((e) => e.status == 0).toList(),
+        this.selectedOption = cart.selectedOption,
+        this.selectedOptionId = cart.selectedOptionId,
+        this.subtotal = cart.subtotal;
 
   Map<String, Object?> toJson() => {
     'selectedTable': this.selectedTable,

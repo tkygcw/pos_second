@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/object/product.dart';
 
-import '../notifier/cart_notifier.dart';
 import '../product/product_order_dialog.dart';
 import 'colorCode.dart';
 
@@ -100,7 +99,6 @@ class ProductSearchDelegate extends SearchDelegate{
         );
       },
     );
-    throw UnimplementedError();
   }
 
   @override

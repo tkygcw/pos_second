@@ -2,7 +2,6 @@ import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/setting/about.dart';
 import 'package:optimy_second_device/main.dart';
-import 'package:optimy_second_device/page/home.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
 

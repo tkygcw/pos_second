@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
-import 'package:optimy_second_device/object/client_action.dart';
 import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/page/pos_pin.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
