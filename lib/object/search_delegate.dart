@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:optimy_second_device/object/product.dart';
 
 import '../product/product_order_dialog.dart';
+import '../translation/AppLocalizations.dart';
 import 'colorCode.dart';
 
 class ProductSearchDelegate extends SearchDelegate{
@@ -74,45 +75,11 @@ class ProductSearchDelegate extends SearchDelegate{
     for (int i = 0; i < productList!.length; i++) {
       if (productList![i].name!.toLowerCase().contains(query.toLowerCase())) {
         matchQuery.add(productList![i]);
-      } else if (productList![i].SKU!.contains(query.toLowerCase())){
+      } else if (productList![i].SKU!.toLowerCase().contains(query.toLowerCase())){
         matchQuery.add(productList![i]);
       }
     }
-    return ListView.builder(
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index) {
-        var result = matchQuery[index].SKU! + '-' + matchQuery[index].name!;
-        return ListTile(
-          title: Text(result),
-          leading: matchQuery[index].graphic_type == '2' ?
-          CircleAvatar(
-              backgroundColor: Colors.grey.shade200,
-              child: Image.file(File(imagePath! + '/' + matchQuery[index].image!))
-          ):
-          CircleAvatar(
-            backgroundColor: HexColor(matchQuery[index].color!),
-          ),
-          onTap: (){
-            close(context, null);
-            openProductOrderDialog(matchQuery[index], context);
-          },
-        );
-      },
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    // TODO: implement buildSuggestions
-    List<Product> matchQuery = [];
-    for (int i = 0; i < productList!.length; i++) {
-      if (productList![i].name!.toLowerCase().contains(query.toLowerCase())) {
-        matchQuery.add(productList![i]);
-      } else if (productList![i].SKU!.contains(query.toLowerCase())){
-        matchQuery.add(productList![i]);
-      }
-    }
-    if(query.isNotEmpty){
+    if(matchQuery.isNotEmpty){
       return ListView.builder(
         itemCount: matchQuery.length,
         itemBuilder: (context, index) {
@@ -122,7 +89,50 @@ class ProductSearchDelegate extends SearchDelegate{
             leading: matchQuery[index].graphic_type == '2' ?
             CircleAvatar(
                 backgroundColor: Colors.grey.shade200,
-                child: Image.file(File(imagePath! + '/' + matchQuery[index].image!))):
+                foregroundImage: FileImage(File(imagePath! + '/' + matchQuery[index].image!),
+                ),
+            ) :
+            CircleAvatar(
+              backgroundColor: HexColor(matchQuery[index].color!),
+            ),
+            onTap: () {
+              close(context, null);
+              openProductOrderDialog(matchQuery[index], context);
+            },
+          );
+        },
+      );
+    } else {
+      return Center(
+        child: Text(AppLocalizations.of(context)!.translate('no_record_found')),
+      );
+    }
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // TODO: implement buildSuggestions
+    List<Product> matchQuery = [];
+    for (int i = 0; i < productList!.length; i++) {
+      if (productList![i].name!.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(productList![i]);
+      } else if (productList![i].SKU!.toLowerCase().contains(query.toLowerCase())){
+        matchQuery.add(productList![i]);
+      }
+    }
+    if(matchQuery.isNotEmpty){
+      return ListView.builder(
+        itemCount: matchQuery.length,
+        itemBuilder: (context, index) {
+          var result = matchQuery[index].SKU! + ' ' + matchQuery[index].name!;
+          return ListTile(
+            title: Text(result),
+            leading: matchQuery[index].graphic_type == '2' ?
+            CircleAvatar(
+              backgroundColor: Colors.grey.shade200,
+              foregroundImage: FileImage(File(imagePath! + '/' + matchQuery[index].image!),
+              ),
+            ):
             CircleAvatar(
                 backgroundColor: HexColor(matchQuery[index].color!),
             ),
@@ -134,7 +144,9 @@ class ProductSearchDelegate extends SearchDelegate{
         },
       );
     } else {
-      return Container();
+      return Center(
+        child: Text(AppLocalizations.of(context)!.translate('no_record_found')),
+      );
     }
   }
 

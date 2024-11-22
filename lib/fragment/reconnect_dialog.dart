@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:optimy_second_device/fragment/server_ip_dialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -94,15 +95,19 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
     var json = jsonDecode(response);
     print('status: ${json['status']}');
     switch(json['status']){
-      case '1': {
-        print("im revive");
+      case '0': {
+        clientAction.openReconnectDialog(keepAlive: true, callback: checkStatus);
       }break;
       case '2': {
+        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
         await logout();
       }break;
-      default: {
-        clientAction.openReconnectDialog(keepAlive: true, callback: checkStatus);
-      }
+      case '3': {
+        Fluttertoast.showToast(
+            backgroundColor: Colors.redAccent,
+            msg: "Sub POS version not supported, please update to latest version");
+        await logout();
+      }break;
     }
   }
 
