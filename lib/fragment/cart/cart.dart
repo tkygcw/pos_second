@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:optimy_second_device/fragment/custom_toastification.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
@@ -34,6 +33,7 @@ import '../../object/variant_group.dart';
 import '../../page/loading_dialog.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
+import '../toast/custom_toastification.dart';
 import 'cart_dialog.dart';
 import 'cart_remove_dialog.dart';
 
@@ -119,9 +119,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   @override
-  void deactivate() {
-    //controller.sink.close();
-    super.deactivate();
+  dispose() {
+    // cart.initialLoad(notify: false);
+    super.dispose();
   }
 
   getPreferences() async{
@@ -812,25 +812,9 @@ class _CartPageState extends State<CartPage> {
   getModifier(cartProductItem object) {
     List<String?> modifier = [];
     String result = '';
-    if (object.modifier != null) {
-      var length = object.modifier!.length;
-      for (int i = 0; i < length; i++) {
-        ModifierGroup group = object.modifier![i];
-        var length = group.modifierChild!.length;
-        for (int j = 0; j < length; j++) {
-          if (group.modifierChild![j].isChecked!) {
-            modifier.add('${group.modifierChild![j].name!}\n');
-            result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
-          }
-        }
-      }
-    } else {
-      if (object.orderModifierDetail != null && object.orderModifierDetail!.isNotEmpty) {
-        for (int i = 0; i < object.orderModifierDetail!.length; i++) {
-          modifier.add('${object.orderModifierDetail![i].mod_name!}\n');
-          result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
-        }
-      }
+    if (object.checkedModifierItem != null && object.checkedModifierItem!.isNotEmpty) {
+      modifier = object.checkedModifierItem!.map((e) => '${e.name}\n').toList();
+      result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
     }
     return result;
   }
@@ -839,23 +823,9 @@ class _CartPageState extends State<CartPage> {
   Get Cart product variant
 */
   getVariant(cartProductItem object) {
-    List<String?> variant = [];
     String result = '';
-    if (object.variant != null) {
-      var length = object.variant!.length;
-      for (int i = 0; i < length; i++) {
-        VariantGroup group = object.variant![i];
-        for (int j = 0; j < group.child!.length; j++) {
-          if (group.child![j].isSelected!) {
-            variant.add('${group.child![j].name!}\n');
-            result = variant.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceAll('|', '\n+').replaceFirst('', '+ ');
-          }
-        }
-      }
-    } else {
-      if (object.productVariantName != null && object.productVariantName != '') {
-        result = "${object.productVariantName!.replaceAll('|', '\n+').replaceFirst('', '+ ')}\n";
-      }
+    if (object.productVariantName != null && object.productVariantName != '') {
+      result = "${object.productVariantName!.replaceAll('|', '\n+').replaceFirst('', '+ ')}\n";
     }
     return result;
   }
@@ -1577,11 +1547,11 @@ class _CartPageState extends State<CartPage> {
     getRounding();
     getAllTotal();
     checkCartItem(cart);
-    if (cart.myCount == 0) {
+    if (cart.cartScrollDown == 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollDown();
       });
-      cart.myCount++;
+      cart.setCartScrollDown = 1;
     }
     cartController.sink.add('refresh');
     // if (!controller.isClosed) {
@@ -1881,13 +1851,17 @@ class _CartPageState extends State<CartPage> {
 
   ///place order
   callPlaceOrder(CartModel cart, String action) async {
+    CartModel newCart = cart;
+    if(action == '9'){
+      newCart = CartModel.addOrderCopy(cart);
+    }
     final String? pos_user = prefs.getString('pos_pin_user');
     Map<String, dynamic> userMap = json.decode(pos_user!);
     User userData = User.fromJson(userMap);
     Map<String, dynamic> map = {
       'order_by_user_id': userData.user_id.toString(),
       'order_by': userData.name,
-      'cart':cart
+      'cart':newCart
     };
     await clientAction.connectRequestPort(action: action, param: jsonEncode(map), callback: responseStatusCheck);
   }
@@ -1898,7 +1872,7 @@ class _CartPageState extends State<CartPage> {
       switch(json['status']){
         case '1': {
           //place order success
-          CustomSuccessToast.showToast(title: AppLocalizations.of(context)!.translate('place_order_success'));
+          CustomSuccessToast(title: AppLocalizations.of(context)!.translate('place_order_success')).showToast();
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
           cart.initialLoad();
@@ -1912,14 +1886,15 @@ class _CartPageState extends State<CartPage> {
         case '3': {
           updateBranchLinkProductData(json['data']['tb_branch_link_product']);
           Navigator.of(context).pop();
-          CustomFailedToast.showToast(title: json['error']);
-          // CustomSnackBar.instance.showSnackBar(title: json['error'], contentType: ContentType.failure, playSound: true, playtime: 2);
-          cart.initialLoad();
+          CustomFailedToast(title: AppLocalizations.of(context)!.translate(json['error']), duration: 6).showToast();
         }break;
         case '4': {
           Navigator.of(context).pop();
-          CustomFailedToast.showToast(title: json['exception']);
-          // CustomSnackBar.instance.showSnackBar(title: json['exception'], contentType: ContentType.failure, playSound: true, playtime: 2);
+          CustomFailedToast(
+              title: AppLocalizations.of(context)!.translate('place_order_failed'),
+              description: json['exception'],
+              duration: 6,
+          ).showToast();
           cart.initialLoad();
         }break;
         default: {
