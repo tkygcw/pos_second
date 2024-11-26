@@ -4,7 +4,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:optimy_second_device/fragment/food/food_menu_content.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:provider/provider.dart';
@@ -112,6 +111,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   productChecking() async {
+    categories = decodeAction.decodedCategoryList?.firstWhereOrNull((e) => widget.productDetail!.category_id! == e.category_id!.toString());
     Map<String, dynamic> param = {
       'product_detail': widget.productDetail!,
       'dining_option_id': context.read<CartModel>().selectedOptionId
@@ -1378,8 +1378,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       checkedModifierLength = 0;
       checkedModItem = [];
     }
-
     var value = cartProductItem(
+        branch_link_product_id: branchLinkProduct!.branch_link_product_id,
         branch_link_product_sqlite_id: branchLinkProduct!.branch_link_product_sqlite_id.toString(),
         product_name: productName,
         category_id: widget.productDetail!.category_id!,
@@ -1388,8 +1388,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         quantity: simpleIntInput,
         checkedModifierLength: checkedModifierLength,
         checkedModifierItem: checkedModItem,
-        modifier: modifierGroup,
-        variant: variantGroup,
         productVariantName: getProductVariantName(),
         remark: remarkController.text,
         status: 0,

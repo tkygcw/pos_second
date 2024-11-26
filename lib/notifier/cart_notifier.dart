@@ -9,7 +9,6 @@ import '../object/promotion.dart';
 import '../object/table.dart';
 
 class CartModel extends ChangeNotifier {
-  List<cartProductItem> cartNotifierItem = [];
   List<cartPaymentDetail> cartNotifierPayment  = [];
   List<Promotion> autoPromotion = [];
   Promotion? selectedPromotion ;
@@ -18,12 +17,46 @@ class CartModel extends ChangeNotifier {
   String selectedOptionId = '';
   String? subtotal;
   bool isInit = false;
-  int myCount = 0;
   bool isChange = false;
+  List<cartProductItem> _cartNotifierItem = [];
+  int _cartScrollDown = 0;
+
+  List<cartProductItem> get cartNotifierItem => _cartNotifierItem;
+
+  int get cartScrollDown => _cartScrollDown;
+
+  set setCartNotifierItem(List<cartProductItem> value) {
+    _cartNotifierItem = value;
+  }
+
+  set setCartScrollDown(int value) {
+    _cartScrollDown = value;
+  }
+
+  CartModel({
+    List<PosTable>? selectedTable,
+    List<cartProductItem>? cartNotifierItem,
+    String? selectedOption,
+    String? selectedOptionId,
+    String? subtotal
+  }){
+    this.selectedTable = selectedTable ?? [];
+    this._cartNotifierItem = cartNotifierItem ?? [];
+    this.selectedOption = selectedOption ?? 'Dine in';
+    this.selectedOptionId = selectedOptionId ?? '';
+    this.subtotal = subtotal ?? '';
+  }
+
+  CartModel.addOrderCopy(CartModel cart)
+      : this.selectedTable = cart.selectedTable,
+        this._cartNotifierItem = cart.cartNotifierItem.where((e) => e.status == 0).toList(),
+        this.selectedOption = cart.selectedOption,
+        this.selectedOptionId = cart.selectedOptionId,
+        this.subtotal = cart.subtotal;
 
   Map<String, Object?> toJson() => {
     'selectedTable': this.selectedTable,
-    'cartNotifierItem': this.cartNotifierItem,
+    'cartNotifierItem': this._cartNotifierItem,
     'selectedOption': this.selectedOption,
     'selectedOptionId': this.selectedOptionId,
     'subtotal': this.subtotal
@@ -50,13 +83,15 @@ class CartModel extends ChangeNotifier {
     }
   }
 
-  void initialLoad() {
-    removeAllTable();
-    removeAllCartItem();
-    removePromotion();
-    removePaymentDetail();
+  void initialLoad({bool? notify = true}) {
+    selectedTable.clear();
+    _cartNotifierItem.clear();
+    selectedPromotion = null;
+    cartNotifierPayment.clear();
     initBranchLinkDiningOption();
-    notifyListeners();
+    if(notify == true){
+      notifyListeners();
+    }
   }
 
   void notDineInInitLoad(){
@@ -69,7 +104,7 @@ class CartModel extends ChangeNotifier {
   }
 
   void resetCount(){
-    myCount = 0;
+    _cartScrollDown = 0;
     notifyListeners();
   }
 
@@ -98,19 +133,29 @@ class CartModel extends ChangeNotifier {
   }
 
   void addItem(cartProductItem object, {bool? notifyListener}) {
-    cartNotifierItem.add(object);
+    _cartNotifierItem.add(object);
     if(notifyListener == null){
       notifyListeners();
     }
   }
 
+  void overrideItem({required List<cartProductItem> cartItem, bool? notify = true}) {
+    List<cartProductItem> notPlacedItem = _cartNotifierItem.where((e) => e.status == 0).toList();
+    _cartNotifierItem = cartItem;
+    _cartNotifierItem.addAll(notPlacedItem);
+    _cartScrollDown = 0;
+    if(notify = true){
+      notifyListeners();
+    }
+  }
+
   void removeItem(cartProductItem object) {
-    cartNotifierItem.remove(object);
+    _cartNotifierItem.remove(object);
     notifyListeners();
   }
 
   void removeSpecificItem({String? orderCacheLocalId}){
-    cartNotifierItem.removeWhere((item) => item.order_cache_sqlite_id == orderCacheLocalId);
+    _cartNotifierItem.removeWhere((item) => item.order_cache_sqlite_id == orderCacheLocalId);
     /*for(int i = 0; i < cartNotifierItem.length; i++){
       print("pass order cache id: ${object.order_cache_sqlite_id}");
       print("list order cache id: ${cartNotifierItem[i].order_cache_sqlite_id}");
@@ -123,18 +168,18 @@ class CartModel extends ChangeNotifier {
   }
 
   void removeAllCartItem(){
-    cartNotifierItem.clear();
+    _cartNotifierItem.clear();
     notifyListeners();
   }
 
   void removePartialCartItem(){
     List<cartProductItem> removeItem = [];
-    for(int j = 0; j < cartNotifierItem.length; j++){
-      if(cartNotifierItem[j].status == 0){
-        removeItem.add(cartNotifierItem[j]);
+    for(int j = 0; j < _cartNotifierItem.length; j++){
+      if(_cartNotifierItem[j].status == 0){
+        removeItem.add(_cartNotifierItem[j]);
       }
     }
-    cartNotifierItem.removeWhere((element) => removeItem.contains(element));
+    _cartNotifierItem.removeWhere((element) => removeItem.contains(element));
     notifyListeners();
   }
 
@@ -146,6 +191,13 @@ class CartModel extends ChangeNotifier {
   void addAllTable(List<PosTable> tableList){
     selectedTable.addAll(tableList);
     notifyListeners();
+  }
+
+  void overrideSelectedTable(List<PosTable> tableList, {bool? notify = true}){
+    selectedTable = tableList.toList();
+    if(notify == true){
+      notifyListeners();
+    }
   }
 
   void removeAllTable(){

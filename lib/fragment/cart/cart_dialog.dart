@@ -3,7 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:optimy_second_device/fragment/cart/cart_dialog_function.dart';
+import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 
@@ -29,6 +30,7 @@ class CartDialog extends StatefulWidget {
 }
 
 class _CartDialogState extends State<CartDialog> {
+  CartDialogFunction cartDialogFunction = CartDialogFunction();
   FlutterUsbPrinter flutterUsbPrinter = FlutterUsbPrinter();
   List<PosTable> tableList = [], cartSelectedTableList = [];
   List<OrderCache> orderCacheList = [];
@@ -62,14 +64,27 @@ class _CartDialogState extends State<CartDialog> {
     });
   }
 
+  List<PosTable> getSelectedTable(){
+    return tableList.where((e) => e.isSelected == true).toList();
+  }
+
+  showCustomFailToast(String title, {String? description, int? duration}){
+    return CustomFailedToast(title: title, description: description, duration: duration).showToast();
+  }
+
   showSecondDialog(BuildContext context, ThemeColor color, int dragIndex, int targetIndex, CartModel cart) {
     return showDialog(
       barrierDismissible: false,
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: Text('Confirm merge table'),
+        title: Text(AppLocalizations.of(context)!.translate('confirm_merge_table')),
         content: SizedBox(
-            height: 100.0, width: 350.0, child: Text('merge table ${tableList[dragIndex].number} with table ${tableList[targetIndex].number} ?')),
+            height: 100.0,
+            width: 350.0,
+            child: Text('${AppLocalizations.of(context)!.translate('merge_table')} '
+                '${tableList[dragIndex].number} ${AppLocalizations.of(context)!.translate('with_table')} '
+                '${tableList[targetIndex].number} ?'),
+        ),
         actions: <Widget>[
           TextButton(
             child: Text('${AppLocalizations.of(context)?.translate('close')}'),
@@ -83,13 +98,24 @@ class _CartDialogState extends State<CartDialog> {
               Navigator.of(context).pop();
               if (tableList[dragIndex].table_sqlite_id != tableList[targetIndex].table_sqlite_id) {
                 if (tableList[targetIndex].status == 1 && tableList[dragIndex].status == 0) {
-                  await mergeTable(dragTableId: tableList[dragIndex].table_sqlite_id!, targetTableId: tableList[targetIndex].table_sqlite_id!);
+                  await mergeTable(
+                      dragTableId: tableList[dragIndex].table_sqlite_id!,
+                      targetTable: tableList[targetIndex]
+                  );
                   //await _printTableAddList(dragTable: tableList[dragIndex].number, targetTable: tableList[targetIndex].number);
                 } else {
-                  Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "${AppLocalizations.of(context)?.translate('merge_error_2')}");
+                  showCustomFailToast(
+                      AppLocalizations.of(context)!.translate('merge_table_error'),
+                      description: AppLocalizations.of(context)!.translate('merge_error_2'),
+                      duration: 6
+                  );
                 }
               } else {
-                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "${AppLocalizations.of(context)?.translate('merge_error')}");
+                showCustomFailToast(
+                    AppLocalizations.of(context)!.translate('merge_table_error'),
+                    description: AppLocalizations.of(context)!.translate('merge_error'),
+                    duration: 6
+                );
               }
             },
           ),
@@ -102,7 +128,6 @@ class _CartDialogState extends State<CartDialog> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        this.cart = cart;
         return AlertDialog(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -113,12 +138,13 @@ class _CartDialogState extends State<CartDialog> {
                 child: SizedBox(
                   width: isLandscapeOrien() ? MediaQuery.of(context).size.width / 10 : MediaQuery.of(context).size.width / 5,
                   height: isLandscapeOrien() ? MediaQuery.of(context).size.height / 20 : MediaQuery.of(context).size.height / 25,
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.zero,
                       backgroundColor: Colors.red,
                     ),
-                    child: Text(
+                    icon: Icon(Icons.no_food),
+                    label: Text(
                       AppLocalizations.of(context)!.translate('clear_all'),
                       style: TextStyle(color: Colors.white),
                     ),
@@ -147,7 +173,7 @@ class _CartDialogState extends State<CartDialog> {
                       mainAxisSpacing: isLandscapeOrien() ? 10 : 0,
                       crossAxisCount: isLandscapeOrien() ? MediaQuery.of(context).size.height > 500 ? 4 : 3
                                       : MediaQuery.of(context).size.width < 530 ? 3 : 4,
-                      children: tableList.asMap().map((index, posTable) => MapEntry(index, tableItem(cart, color, index))).values.toList(),
+                      children: tableList.asMap().map((index, posTable) => MapEntry(index, tableView(cart, color, index))).values.toList(),
                       onReorder: (int oldIndex, int newIndex) {
                         if (oldIndex != newIndex) {
                           showSecondDialog(context, color, oldIndex, newIndex, cart);
@@ -185,35 +211,22 @@ class _CartDialogState extends State<CartDialog> {
                 ),
                 onPressed: !checkIsSelected() || isButtonDisabled ? null : () async {
                   isButtonDisabled = true;
-                  cart.selectedTable.clear();
-                  cart.cartNotifierItem.clear();
-                  List<PosTable> selectedTable = tableList.where((e) => e.isSelected == true).toList();
-                  if(selectedTable[0].status == 1){
-                    setState(() {
-                      this.isLoad = false;
-                    });
-                    await readSpecificTableDetail(selectedTable[0]);
-                  } else {
-                    cart.addAllTable(selectedTable);
+                  List<PosTable> selectedTable = getSelectedTable();
+                  if(cartDialogFunction.isSameTable(selectedTable, cart.selectedTable) == true) {
                     Navigator.of(context).pop();
+                  } else {
+                    if(selectedTable[0].status == 1){
+                      setState(() {
+                        this.isLoad = false;
+                      });
+                      await readSpecificTableDetail(selectedTable[0]);
+                      Navigator.of(context).pop();
+                    } else {
+                      cart.overrideItem(cartItem: [], notify: false);
+                      addSelectedTableToCart();
+                      Navigator.of(context).pop();
+                    }
                   }
-                  // for (int index = 0; index < tableList.length; index++) {
-                  //   //if using table is selected
-                  //   if (tableList[index].status == 1 && tableList[index].isSelected == true) {
-                  //     this.isLoad = false;
-                  //     await readSpecificTableDetail(tableList[index]);
-                  //   }
-                  //   //if non-using table is selected
-                  //   else if (tableList[index].status == 0 && tableList[index].isSelected == true) {
-                  //     //merge all table
-                  //     cart.addTable(tableList[index]);
-                  //   } else {
-                  //     cart.removeSpecificTable(tableList[index]);
-                  //   }
-                  // }
-                  // print("orderDetailList: ${orderDetailList.length}");
-                  // if(!mounted) return;
-                  // Navigator.of(context).pop();
                 },
                 child: Text(
                   AppLocalizations.of(context)!.translate('select_table'),
@@ -261,7 +274,7 @@ class _CartDialogState extends State<CartDialog> {
     }
   }
 
-  Widget tableItem(CartModel cart, ThemeColor color, index) {
+  Widget tableView(CartModel cart, ThemeColor color, index) {
     return Container(
       key: Key(index.toString()),
       child: Column(children: [
@@ -274,15 +287,16 @@ class _CartDialogState extends State<CartDialog> {
             color: Colors.white,
             child: InkWell(
               splashColor: Colors.blue.withAlpha(30),
-              onDoubleTap: () {
-                if (tableList[index].status == 1) {
-                  //openChangeTableDialog(tableList[index], printerList: printerList);
-                  cart.removeAllTable();
-                  cart.removeAllCartItem();
-                } else {
-                  Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "table not in use");
-                }
-              },
+              ///temp close change table function
+              // onDoubleTap: () {
+              //   if (tableList[index].status == 1) {
+              //     //openChangeTableDialog(tableList[index], printerList: printerList);
+              //     cart.removeAllTable();
+              //     cart.removeAllCartItem();
+              //   } else {
+              //     Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: "table not in use");
+              //   }
+              // },
               onTap: () async {
                 //check selected table is in use or not
                 if (tableList[index].status == 1) {
@@ -409,7 +423,7 @@ class _CartDialogState extends State<CartDialog> {
                                       // cart.removeSpecificTable(tableList[index]);
                                       //cart.removeAllCartItem();
                                     } else {
-                                      Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('cannot_remove_this_table'));
+                                      showCustomFailToast(AppLocalizations.of(context)!.translate('cannot_remove_this_table'));
                                     }
                                   },
                                 ))
@@ -553,10 +567,11 @@ class _CartDialogState extends State<CartDialog> {
 
   readAllTable({isReset}) async {
     isLoad = false;
+    cart = context.read<CartModel>();
     await clientAction.connectRequestPort(action: '7', callback: decodeData);
   }
 
-  decodeData(response){
+  decodeData(response) async{
     try{
       if(response != null && mounted){
         var json = jsonDecode(response);
@@ -567,7 +582,15 @@ class _CartDialogState extends State<CartDialog> {
             //var cart = Provider.of<CartModel>(context, listen: false);
             cartSelectedTableList = cart.selectedTable;
             if(cartSelectedTableList.isNotEmpty){
-              checkTable(tableList);
+              tableList = cartDialogFunction.checkTable(tableList, cartSelectedTableList);
+              List<PosTable> selectedTableList = getSelectedTable();
+              if(selectedTableList.any((e) => e.status == 0)){
+                cart.overrideItem(cartItem: [], notify: false);
+                addSelectedTableToCart();
+              } else {
+                await readSpecificTableDetail(selectedTableList.first);
+              }
+              print("cart table list : ${cart.selectedTable.length}");
             }
             setState(() {
               isLoad = true;
@@ -580,40 +603,8 @@ class _CartDialogState extends State<CartDialog> {
         }
       }
     }catch(e){
-      print('inti table error: $e');
+      print('init table error: $e');
       tableList = [];
-    }
-  }
-
-  checkTable(List<PosTable> tableList){
-    if(cartSelectedTableList[0].status == 0){
-      for (int j = 0; j < tableList.length; j++) {
-        for (int i = 0; i < cartSelectedTableList.length; i++) {
-          if(tableList[j].table_sqlite_id == cartSelectedTableList[i].table_sqlite_id){
-            if(cartSelectedTableList[i].status == 0){
-              tableList[j].isSelected = true;
-            }
-          }
-        }
-      }
-    } else {
-      String selectedTableGroup = cartSelectedTableList[0].group!;
-      List<PosTable> sameGroupTable = tableList.where((e) => e.group == selectedTableGroup).toList();
-      for (int j = 0; j < tableList.length; j++) {
-        for (int i = 0; i < sameGroupTable.length; i++) {
-          if(tableList[j].table_sqlite_id == sameGroupTable[i].table_sqlite_id){
-            tableList[j].isSelected = true;
-          }
-        }
-      }
-      if(sameGroupTable.length != cartSelectedTableList.length){
-        cartSelectedTableList.clear();
-        if(sameGroupTable.isNotEmpty){
-          cart.addAllTable(sameGroupTable);
-        } else{
-          cart.removeAllCartItem();
-        }
-      }
     }
   }
 
@@ -626,7 +617,7 @@ class _CartDialogState extends State<CartDialog> {
     }
   }
 
-  decodeData2(response) {
+  decodeData2(response) async {
     var json = jsonDecode(response);
     switch(json['status']){
       case '1': {
@@ -638,7 +629,11 @@ class _CartDialogState extends State<CartDialog> {
         if(orderDetailList.isNotEmpty){
           addToCart();
         }
-        Navigator.of(context).pop();
+      }break;
+      case '2': {
+        showCustomFailToast(AppLocalizations.of(context)!.translate('table_not_in_used'));
+        addSelectedTableToCart();
+        await readAllTable();
       }break;
       default: {
         clientAction.openReconnectDialog(action: json['action'], param: json['param'], callback: decodeData2);
@@ -647,7 +642,8 @@ class _CartDialogState extends State<CartDialog> {
   }
 
   addToCart() {
-    getSelectedTable();
+    List<cartProductItem> itemList = [];
+    addSelectedTableToCart();
     for (int i = 0; i < orderDetailList.length; i++) {
       cartProductItem value = cartProductItem(
         branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
@@ -671,14 +667,14 @@ class _CartDialogState extends State<CartDialog> {
         ticket_exp: orderDetailList[i].ticket_exp,
         product_sku: orderDetailList[i].product_sku
       );
-      cart.addItem(value);
+      itemList.add(value);
     }
+    cart.overrideItem(cartItem: itemList, notify: false);
   }
 
-  void getSelectedTable(){
+  void addSelectedTableToCart({bool? notify = false}){
     if(tableList.isNotEmpty){
-      List<PosTable> selectedTableList = tableList.where((e) => e.isSelected == true).toList();
-      cart.addAllTable(selectedTableList);
+      cart.overrideSelectedTable(getSelectedTable(), notify: notify);
     }
   }
 
@@ -688,10 +684,21 @@ class _CartDialogState extends State<CartDialog> {
 
   decodeData3(response) async {
     var json = jsonDecode(response);
-    switch(json['status']){
+    String statusCode = json['status'];
+    print("status code: $statusCode");
+    switch(statusCode){
       case '1': {
-        PosTable posTable = tableList.firstWhere((e) => e.table_sqlite_id == int.parse(json['data']));
-        cart.removeSpecificTable(posTable);
+        await readAllTable();
+      }break;
+      case '2': {
+        showCustomFailToast(AppLocalizations.of(context)!.translate(json['error']));
+        await readAllTable();
+      }break;
+      case'3': {
+        showCustomFailToast(AppLocalizations.of(context)!.translate(json['error']));
+      }break;
+      case '4': {
+        showCustomFailToast(json['exception']);
         await readAllTable();
       }break;
       default: {
@@ -700,27 +707,29 @@ class _CartDialogState extends State<CartDialog> {
     }
   }
 
-  Future<void> mergeTable({required int dragTableId, required int targetTableId}) async {
-    Map<String, int> param = {
+  Future<void> mergeTable({required int dragTableId, required PosTable targetTable}) async {
+    Map<String, dynamic> param = {
       "dragTableId": dragTableId,
-      "targetTableId": targetTableId
+      'targetPosTable': targetTable
     };
     await clientAction.connectRequestPort(action: '12', param: jsonEncode(param), callback: decodeData4);
   }
 
   decodeData4(response) async {
-    cart.removeAllTable();
-    cart.removeAllCartItem();
     var json = jsonDecode(response);
     switch(json['status']){
       case '1': {
         await readAllTable();
       }break;
       case '2': {
-        Fluttertoast.showToast(msg: json['error'], backgroundColor: Colors.red);
+        showCustomFailToast(AppLocalizations.of(context)!.translate(json['error']));
         await readAllTable();
       }break;
+      case '3': {
+        showCustomFailToast(AppLocalizations.of(context)!.translate(json['error']));
+      }break;
       case '4': {
+        showCustomFailToast(json['exception']);
         await readAllTable();
       }break;
       default: {

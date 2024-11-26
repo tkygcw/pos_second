@@ -4,7 +4,6 @@ import 'package:optimy_second_device/fragment/food/food_menu_content.dart';
 import 'package:optimy_second_device/fragment/food/food_menu_content_mobile.dart';
 import 'package:provider/provider.dart';
 import '../../notifier/theme_color.dart';
-import '../../page/home.dart';
 import '../../translation/AppLocalizations.dart';
 
 class FoodMenu extends StatefulWidget {

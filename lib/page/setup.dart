@@ -203,7 +203,7 @@ class _SetupPageState extends State<SetupPage> {
 
   savePref() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('branch_id', selectedBranch!.branchID!);
+    await prefs.setInt('branch_id', selectedBranch!.branch_id!);
     await prefs.setInt('device_id', selectedDevice!.deviceID!);
     await prefs.setString("branch", json.encode(selectedBranch!));
   }
