@@ -342,6 +342,7 @@
   "pay": "Pay",
   "payment_detail": "Payment Detail",
   "payment_method": "Payment method",
+  "payment_not_complete": "Payment for this table has not been completed",
   "payment_overview": "Payment Overview",
   "payment_received": "Payment received",
   "payment_report": "Payment Report",

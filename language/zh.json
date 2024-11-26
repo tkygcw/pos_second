@@ -348,6 +348,7 @@
   "pay": "付款",
   "payment_detail": "付款详情",
   "payment_method": "付款方式",
+  "payment_not_complete": "此桌付款尚未完成",
   "payment_overview": "付款概览",
   "payment_received": "已收款",
   "payment_report": "付款报告",
