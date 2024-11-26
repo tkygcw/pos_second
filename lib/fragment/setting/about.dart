@@ -64,7 +64,7 @@ class _AboutState extends State<About> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Optimy Sub Pos License $appVersion',
+                        'Optimy Pos License v$appVersionCode',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
