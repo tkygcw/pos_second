@@ -815,6 +815,9 @@ class _CartPageState extends State<CartPage> {
     if (object.checkedModifierItem != null && object.checkedModifierItem!.isNotEmpty) {
       modifier = object.checkedModifierItem!.map((e) => '${e.name}\n').toList();
       result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
+    } else if (object.orderModifierDetail != null && object.orderModifierDetail!.isNotEmpty){
+      modifier = object.orderModifierDetail!.map((e) => '${e.mod_name}\n').toList();
+      result = modifier.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', '+').replaceFirst('', '+ ');
     }
     return result;
   }
