@@ -1281,20 +1281,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     }
   }
 
-  compareCartProductModifier({required List<ModifierGroup> cartModifierGroup}){
-    List<ModifierItem> checkedCartModItem = [];
-    //add all checked modifier item from cart product
-    if(cartModifierGroup.isNotEmpty){
-      for(int i = 0 ; i < cartModifierGroup.length; i++){
-        ModifierGroup group = cartModifierGroup[i];
-        for(int j = 0; j < group.modifierChild!.length; j++){
-          if(group.modifierChild![j].isChecked == true){
-            checkedCartModItem.add(cartModifierGroup[i].modifierChild![j]);
-          }
-        }
-      }
-    }
-    return checkSame(checkedCartModItem, checkedModItem);
+  compareCartProductModifier({required List<ModifierItem> cartProductModifier}){
+    return checkSame(cartProductModifier, checkedModItem);
   }
 
   bool checkSame(List<ModifierItem> checkedCartModItem, List<ModifierItem> checkedModItem) {
@@ -1417,21 +1405,21 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       }
       while(item.length > 1){
         for(int i = 0 ; i < item.length; i++){
-          bool status = compareCartProductModifier(cartModifierGroup: item[i].modifier!);
+          bool status = compareCartProductModifier(cartProductModifier: item[i].checkedModifierItem!);
           if(status == false){
             item.remove(item[i]);
           }
         }
       }
       if(item.length == 1){
-        if(item[0].checkedModifierLength == 0){
-          item[0].quantity = quantityStack(cartItem: item[0], newAddItem: value);
+        if(item.first.checkedModifierLength == 0){
+          item.first.quantity = quantityStack(cartItem: item.first, newAddItem: value);
         } else {
-          bool status = compareCartProductModifier(cartModifierGroup: item[0].modifier!);
+          bool status = compareCartProductModifier(cartProductModifier: item.first.checkedModifierItem!);
           if(status == false){
             cart.addItem(value);
           } else{
-            item[0].quantity = quantityStack(cartItem: item[0], newAddItem: value);
+            item.first.quantity = quantityStack(cartItem: item.first, newAddItem: value);
           }
         }
       } else {

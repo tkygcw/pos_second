@@ -9,6 +9,7 @@ import 'package:optimy_second_device/page/login.dart';
 import 'package:optimy_second_device/page/second_display.dart';
 import 'package:optimy_second_device/translation/AppLocalizations.dart';
 import 'package:optimy_second_device/translation/appLanguage.dart';
+import 'package:package_info/package_info.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,7 @@ final LCDDisplay lcdDisplay = LCDDisplay();
 final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();
 AppLanguage appLanguage = AppLanguage();
+String appVersionCode = '', patch = '2';
 
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +52,8 @@ void main() async  {
 
   //other method
   statusBarColor();
+
+  await getAppVersion();
 
   await appLanguage.fetchLocale();
   runApp(MyApp(appLanguage: appLanguage));
@@ -198,6 +202,11 @@ statusBarColor() {
 
 getDeviceIp() async {
   await clientAction.getDeviceIp();
+}
+
+getAppVersion() async {
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  appVersionCode = '${packageInfo.version}${patch != '' ? '+$patch' : ''}';
 }
 
 // class MyHomePage extends StatefulWidget {
