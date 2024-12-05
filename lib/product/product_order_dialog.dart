@@ -63,7 +63,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   bool checkboxValueA = false;
   bool isLoaded = false;
   bool hasPromo = false;
-  bool isButtonDisabled = false;
+  bool isButtonDisabled = false, isAddButtonDisabled = false;
 
   @override
   void initState() {
@@ -179,15 +179,56 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   }
 
   Widget modifierGroupLayout(ModifierGroup modifierGroup, CartModel cart) {
+    bool minSelectText = false;
+    int checkedModifiersCount = 0;
+    int maxSelect = modifierGroup.max_select ?? 0;
+    int minSelect = modifierGroup.min_select ?? 0;
+    for(int i = 0; i < modifierGroup.modifierChild!.length; i++){
+      if(modifierGroup.modifierChild![i].isChecked!){
+        checkedModifiersCount++;
+      }
+    }
+
+    if(minSelect != 0 && checkedModifiersCount < minSelect) {
+      minSelectText = true;
+      isAddButtonDisabled = true;
+    } else {
+      minSelectText = false;
+    }
+
+    String getModifierMinMaxHint() {
+      if (minSelectText) {
+        return ' (${AppLocalizations.of(context)!.translate('choose_at_least')} $minSelect ${AppLocalizations.of(context)!.translate('ge')})';
+      } else if (maxSelect != 0) {
+        return ' (${AppLocalizations.of(context)!.translate('choose_maximum')} $maxSelect ${AppLocalizations.of(context)!.translate('ge')})';
+      } else {
+        return '';
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(modifierGroup.name!, style: TextStyle(fontWeight: FontWeight.bold)),
+        Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: modifierGroup.name!,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (maxSelect != 0 || minSelectText)
+                TextSpan(
+                  text: getModifierMinMaxHint(),
+                  style: TextStyle(color: minSelectText ? Colors.red : Colors.black, fontSize: 14),
+                ),
+            ],
+          ),
+        ),
         for (int i = 0; i < modifierGroup.modifierChild!.length; i++)
           CheckboxListTile(
             title: Row(
               children: [
-                Text(modifierGroup.modifierChild![i].name!),
+                Text('${modifierGroup.modifierChild![i].name!}'),
                 Text(
                   ' (+RM ${Utils.convertTo2Dec(modifierGroup.modifierChild![i].price)})',
                   style: TextStyle(fontSize: 12),
@@ -195,10 +236,29 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
               ],
             ),
             value: modifierGroup.modifierChild![i].isChecked,
-            onChanged: modifierGroup.modifierChild![i].mod_status! == '2' ? null : (isChecked) {
-              modifierGroup.modifierChild![i].isChecked = isChecked!;
-              addCheckedModItem(modifierGroup.modifierChild![i]);
-              actionController.sink.add("add-on");
+            onChanged: modifierGroup.modifierChild![i].mod_status! == '2'
+                ? null
+                : (isChecked) {
+              if (isChecked! && maxSelect != 0 && checkedModifiersCount >= maxSelect) {
+                Fluttertoast.showToast(
+                    backgroundColor: Colors.red,
+                    msg: '${modifierGroup.name} ${AppLocalizations.of(context)!.translate('choose_maximum')} $maxSelect ${AppLocalizations.of(context)!.translate('ge')}'
+                );
+                return;
+              }
+              setState(() {
+                checkedModifiersCount++;
+                modifierGroup.modifierChild![i].isChecked = isChecked;
+                addCheckedModItem(modifierGroup.modifierChild![i]);
+                actionController.sink.add("add-on");
+                print("checkedModifiersCount: $checkedModifiersCount");
+                print("minSelect: $minSelect");
+                if(minSelect != 0 && checkedModifiersCount < minSelect) {
+                  isAddButtonDisabled = true;
+                } else {
+                  isAddButtonDisabled = false;
+                }
+              });
             },
             controlAffinity: ListTileControlAffinity.trailing,
           )
@@ -558,7 +618,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: color.buttonColor,
                           ),
-                          onPressed: isButtonDisabled ? null : ()  {
+                          onPressed: isButtonDisabled || isAddButtonDisabled ? null : ()  {
                             if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
                               Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
                             } else {
@@ -934,7 +994,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: color.buttonColor,
                                     ),
-                                    onPressed: isButtonDisabled ? null : () {
+                                    onPressed: isButtonDisabled || isAddButtonDisabled ? null : () {
                                       if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
                                         Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
                                       } else {
