@@ -74,7 +74,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
-      print("resume");
       // Reconnect to the server when the app comes to the foreground
       await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
     }
