@@ -33,7 +33,7 @@ final LCDDisplay lcdDisplay = LCDDisplay();
 final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();
 AppLanguage appLanguage = AppLanguage();
-String appVersionCode = '', patch = '2';
+String appVersionCode = '', patch = '';
 
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
