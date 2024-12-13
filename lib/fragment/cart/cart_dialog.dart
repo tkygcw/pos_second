@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
-import 'package:optimy_second_device/fragment/cart/cart_dialog_function.dart';
+import 'package:optimy_second_device/fragment/cart/function/cart_dialog_function.dart';
 import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';

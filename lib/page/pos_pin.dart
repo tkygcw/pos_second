@@ -330,16 +330,15 @@ class _PosPinPageState extends State<PosPinPage> {
         }
       }
 
-
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         PageTransition(
           type: PageTransitionType.fade,
           child: HomePage(
             user: user,
-            isNewDay: false,
           ),
         ),
+        (route) => false,
       );
     } else {
       Fluttertoast.showToast(backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('wrong_pin_please_insert_valid_pin'));

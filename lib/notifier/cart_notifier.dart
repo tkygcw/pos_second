@@ -9,10 +9,18 @@ import '../object/promotion.dart';
 import '../object/table.dart';
 
 class CartModel extends ChangeNotifier {
-  List<cartPaymentDetail> cartNotifierPayment  = [];
+  CartPaymentDetail? cartNotifierPayment;
   List<Promotion> autoPromotion = [];
   Promotion? selectedPromotion ;
-  List<PosTable> selectedTable = [];
+  List<PosTable> _selectedTable = [];
+
+  List<PosTable> get selectedTable => _selectedTable;
+
+  set setSelectedTable(List<PosTable> value) {
+    _selectedTable = value;
+  }
+
+
   String selectedOption = 'Dine in';
   String selectedOptionId = '';
   String? subtotal;
@@ -40,7 +48,7 @@ class CartModel extends ChangeNotifier {
     String? selectedOptionId,
     String? subtotal
   }){
-    this.selectedTable = selectedTable ?? [];
+    this._selectedTable = selectedTable ?? [];
     this._cartNotifierItem = cartNotifierItem ?? [];
     this.selectedOption = selectedOption ?? 'Dine in';
     this.selectedOptionId = selectedOptionId ?? '';
@@ -48,14 +56,14 @@ class CartModel extends ChangeNotifier {
   }
 
   CartModel.addOrderCopy(CartModel cart)
-      : this.selectedTable = cart.selectedTable,
+      : this._selectedTable = cart.selectedTable,
         this._cartNotifierItem = cart.cartNotifierItem.where((e) => e.status == 0).toList(),
         this.selectedOption = cart.selectedOption,
         this.selectedOptionId = cart.selectedOptionId,
         this.subtotal = cart.subtotal;
 
   Map<String, Object?> toJson() => {
-    'selectedTable': this.selectedTable,
+    'selectedTable': this._selectedTable,
     'cartNotifierItem': this._cartNotifierItem,
     'selectedOption': this.selectedOption,
     'selectedOptionId': this.selectedOptionId,
@@ -63,7 +71,7 @@ class CartModel extends ChangeNotifier {
   };
 
   List<int> getSelectedTableIdList(){
-    List<int> idList = selectedTable.map((e) => e.table_sqlite_id!).toList();
+    List<int> idList = _selectedTable.map((e) => e.table_sqlite_id!).toList();
     return idList;
     // for(int i = 0; i < selectedTable.length; i++){
     //   idList.add(selectedTable[i].table_sqlite_id!);
@@ -84,10 +92,10 @@ class CartModel extends ChangeNotifier {
   }
 
   void initialLoad({bool? notify = true}) {
-    selectedTable.clear();
+    _selectedTable.clear();
     _cartNotifierItem.clear();
     selectedPromotion = null;
-    cartNotifierPayment.clear();
+    cartNotifierPayment = null;
     initBranchLinkDiningOption();
     if(notify == true){
       notifyListeners();
@@ -123,17 +131,24 @@ class CartModel extends ChangeNotifier {
   }
 
   void removePaymentDetail(){
-    cartNotifierPayment.clear();
+    cartNotifierPayment = null;
     notifyListeners();
   }
 
-  void addPaymentDetail(cartPaymentDetail object){
-    cartNotifierPayment.add(object);
+  void addPaymentDetail(CartPaymentDetail object){
+    cartNotifierPayment = object;
     notifyListeners();
   }
 
   void addItem(cartProductItem object, {bool? notifyListener}) {
     _cartNotifierItem.add(object);
+    if(notifyListener == null){
+      notifyListeners();
+    }
+  }
+
+  void addAllItem(List<cartProductItem> object, {bool? notifyListener}) {
+    _cartNotifierItem.addAll(object);
     if(notifyListener == null){
       notifyListeners();
     }
@@ -154,16 +169,8 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeSpecificItem({String? orderCacheLocalId}){
-    _cartNotifierItem.removeWhere((item) => item.order_cache_sqlite_id == orderCacheLocalId);
-    /*for(int i = 0; i < cartNotifierItem.length; i++){
-      print("pass order cache id: ${object.order_cache_sqlite_id}");
-      print("list order cache id: ${cartNotifierItem[i].order_cache_sqlite_id}");
-      if(object.order_cache_sqlite_id == cartNotifierItem[i].order_cache_sqlite_id){
-        cartNotifierItem.removeAt(i);
-        break;
-      }
-    }*/
+  void removeSpecificItem(String? table_use_key) {
+    _cartNotifierItem.removeWhere((e) => e.table_use_key == table_use_key);
     notifyListeners();
   }
 
@@ -184,34 +191,40 @@ class CartModel extends ChangeNotifier {
   }
 
   void addTable(PosTable posTable){
-    selectedTable.add(posTable);
+    _selectedTable.add(posTable);
     notifyListeners();
   }
 
   void addAllTable(List<PosTable> tableList){
-    selectedTable.addAll(tableList);
+    _selectedTable.addAll(tableList);
     notifyListeners();
   }
 
   void overrideSelectedTable(List<PosTable> tableList, {bool? notify = true}){
-    selectedTable = tableList.toList();
+    _selectedTable = tableList.toList();
     if(notify == true){
       notifyListeners();
     }
   }
 
   void removeAllTable(){
-    selectedTable.clear();
+    _selectedTable.clear();
     notifyListeners();
   }
 
   void removeSpecificTable(PosTable posTable){
-    for(int i= 0; i < selectedTable.length; i++){
-      if(posTable.table_id == selectedTable[i].table_id){
-        selectedTable.removeAt(i);
+    for(int i= 0; i < _selectedTable.length; i++){
+      print("table id: ${posTable.table_id}");
+      if(posTable.table_id == _selectedTable[i].table_id){
+        _selectedTable.removeAt(i);
         break;
       }
     }
+    notifyListeners();
+  }
+
+  void removeGroupedTable(PosTable posTable){
+    _selectedTable.removeWhere((e) => e.group == posTable.group);
     notifyListeners();
   }
 

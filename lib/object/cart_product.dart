@@ -41,6 +41,7 @@ class cartProductItem{
   int? ticket_count;
   String? ticket_exp;
   String? product_sku;
+  String? table_use_key;
 
   cartProductItem(
       {
@@ -77,7 +78,8 @@ class cartProductItem{
         this.allow_ticket,
         this.ticket_count,
         this.ticket_exp,
-        this.product_sku
+        this.product_sku,
+        this.table_use_key
       });
 
   static cartProductItem fromJson(Map<String, Object?> json) {
@@ -123,7 +125,8 @@ class cartProductItem{
         allow_ticket: json['allow_ticket'] as int?,
         ticket_count: json['ticketCount'] as int?,
         ticket_exp: json['ticket_exp'] as String?,
-        product_sku: json['product_sku'] as String?
+        product_sku: json['product_sku'] as String?,
+        table_use_key: json['table_use_key'] as String?
     );
   }
 
@@ -161,7 +164,8 @@ class cartProductItem{
     'allow_ticket': allow_ticket,
     'ticket_count': ticket_count,
     'ticket_exp': ticket_exp,
-    'product_sku': product_sku
+    'product_sku': product_sku,
+    'table_use_key': table_use_key
   };
 
 }

@@ -6,11 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
+import 'package:optimy_second_device/fragment/table/table_menu.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/cart/cart.dart';
 import '../fragment/order/order.dart';
+import '../fragment/table/table_page.dart';
 import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
 import '../object/app_setting.dart';
@@ -19,23 +21,21 @@ import '../translation/AppLocalizations.dart';
 
 class HomePage extends StatefulWidget {
   final User? user;
-  final bool isNewDay;
 
-  const HomePage({Key? key, this.user, required this.isNewDay}) : super(key: key);
+  const HomePage({Key? key, this.user}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late List<CollapsibleItem> _items;
-  late String currentPage;
-  late String role;
+  List<CollapsibleItem> _items = [];
+  String role = '';
+  String currentPage = "menu";
   String? branchName;
   Timer? timer, notificationTimer;
-  bool hasNotification = false, willPop = false;
+  bool hasNotification = false, willPop = false, loading = true;
   int count = 0;
-  late ThemeColor themeColor;
   List<AppSetting> appSettingList = [];
   bool isCartExpanded = false;
 
@@ -43,41 +43,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    // if(notificationModel.notificationStarted == false){
-    //   setupFirebaseMessaging();
-    // }
-    // setScreenLayout();
-    // initSecondDisplay();
-    // _items = _generateItems;
-    // currentPage = 'menu';
-    // getRoleName();
-    // getBranchName();
-    // if (widget.isNewDay) {
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //     showDialog(
-    //         barrierDismissible: false,
-    //         context: context,
-    //         builder: (BuildContext context) {
-    //           return WillPopScope(child: CashDialog(isCashIn: true, callBack: () {}, isCashOut: false, isNewDay: true), onWillPop: () async => false);
-    //           //CashDialog(isCashIn: true, callBack: (){}, isCashOut: false, isNewDay: true,);
-    //         });
-    //   });
-    // }
-  }
-
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    _items = _generateItems;
-    currentPage = 'menu';
-    getRoleName();
-    getBranchName();
-    super.didChangeDependencies();
-  }
-
-  @override
-  dispose() {
-    super.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _items = _generateItems;
+      getRoleName();
+      getBranchName();
+    });
   }
 
   setScreenLayout() {
@@ -91,81 +61,81 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      this.themeColor = color;
-      return PopScope(
-        canPop: willPop,
-        onPopInvokedWithResult: (didPop, result) => showSecondDialog(context, color),
-        child: Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: SafeArea(
-              child: isLandscapeOrien() ? CollapsibleSidebar(
-                  sidebarBoxShadow: [
-                    BoxShadow(
-                      color: Colors.transparent,
+    var color = context.read<ThemeColor>();
+    return loading ? Container() : PopScope(
+      canPop: willPop,
+      onPopInvokedWithResult: (didPop, result) => showSecondDialog(context, color),
+      child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: SafeArea(
+            child: isLandscapeOrien() ?
+            CollapsibleSidebar(
+                sidebarBoxShadow: [
+                  BoxShadow(
+                    color: Colors.transparent,
+                  ),
+                ],
+                // maxWidth: 80,
+                isCollapsed: true,
+                items: _items,
+                avatarImg: AssetImage("drawable/logo.png"),
+                title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                backgroundColor: color.backgroundColor,
+                selectedTextColor: color.iconColor,
+                textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                customItemOffsetX: 20,
+                selectedIconColor: color.iconColor,
+                selectedIconBox: color.buttonColor,
+                unselectedIconColor: Colors.white,
+                body: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _body(),
+                    ),
+                    //cart page
+                    Visibility(
+                      visible: currentPage != 'product' &&
+                          currentPage != 'setting' &&
+                          currentPage != 'settlement' &&
+                          currentPage != 'qr_order' &&
+                          currentPage != 'setting' &&
+                          currentPage != 'report'
+                          ? true
+                          : false,
+                      child: Expanded(
+                          flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                          child: CartPage(
+                            currentPage: currentPage,
+                          )),
+                    )
+                  ],
+                )) :
+            Stack(
+              children: [
+                Stack(
+                  children: [
+                    _buildBody(context),
+                    ValueListenableBuilder<bool>(
+                        valueListenable: isCollapsedNotifier,
+                        builder: (context, isCollapsed, child) {
+                          return !isCollapsed ? GestureDetector(
+                            child: Container(
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                              });
+                            },
+                          ) : Container();
+                        }
                     ),
                   ],
-                  // maxWidth: 80,
-                  isCollapsed: true,
-                  items: _items,
-                  avatarImg: AssetImage("drawable/logo.png"),
-                  title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
-                  backgroundColor: color.backgroundColor,
-                  selectedTextColor: color.iconColor,
-                  textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                  titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                  toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  customItemOffsetX: 20,
-                  selectedIconColor: color.iconColor,
-                  selectedIconBox: color.buttonColor,
-                  unselectedIconColor: Colors.white,
-                  body: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _body(context),
-                      ),
-                      //cart page
-                      Visibility(
-                        visible: currentPage != 'product' &&
-                            currentPage != 'setting' &&
-                            currentPage != 'settlement' &&
-                            currentPage != 'qr_order' &&
-                            currentPage != 'setting' &&
-                            currentPage != 'report'
-                            ? true
-                            : false,
-                        child: Expanded(
-                            flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                            child: CartPage(
-                              currentPage: currentPage,
-                            )),
-                      )
-                    ],
-                  ))
-                  : Stack(
-                children: [
-                  Stack(
-                    children: [
-                      _buildBody(context),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: isCollapsedNotifier,
-                          builder: (context, isCollapsed, child) {
-                            return !isCollapsed ? GestureDetector(
-                              child: Container(
-                                color: Colors.black.withOpacity(0.5),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  isCollapsedNotifier.value = !isCollapsedNotifier.value;
-                                });
-                              },
-                            ) : Container();
-                          }
-                        ),
-                    ],
-                  ),
-                  Positioned(
+                ),
+                Positioned(
                     left: 0,
                     top: 0,
                     bottom: 0,
@@ -200,11 +170,10 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ))
-                ],
-              ),
-            )),
-      );
-    });
+              ],
+            ),
+          )),
+    );
   }
 
   Widget _buildBody(BuildContext context) {
@@ -215,7 +184,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               Expanded(
                 flex: 3,
-                child: _body(context),
+                child: _body(),
               ),
               Visibility(
                 visible: currentPage != 'product' &&
@@ -243,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                     flex: 1,
                     child: Stack(
                       children: [
-                        _body(context),
+                        _body(),
                         if (isCartExpanded)
                           GestureDetector(
                             child: Container(
@@ -344,7 +313,7 @@ class _HomePageState extends State<HomePage> {
 
 
   List<CollapsibleItem> get _generateItems {
-    CartModel cart = Provider.of<CartModel>(context, listen: false);
+    CartModel cart = context.read<CartModel>();
     return [
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('menu'),
@@ -357,6 +326,15 @@ class _HomePageState extends State<HomePage> {
         isSelected: true,
       ),
       CollapsibleItem(
+        text: AppLocalizations.of(context)!.translate('table'),
+        icon: Icons.table_restaurant,
+        onPressed: () => setState(() {
+          currentPage = 'table';
+          cart.initialLoad();
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
+        }),
+      ),
+      CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('setting'),
         icon: Icons.settings,
         onPressed: () => setState(() {
@@ -367,10 +345,12 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  Widget _body(BuildContext context) {
+  Widget _body() {
     switch (currentPage) {
       case 'menu':
         return OrderPage();
+      case 'table':
+        return TableMenu();
       case 'setting':
         return SettingMenu();
       default:
@@ -396,6 +376,7 @@ class _HomePageState extends State<HomePage> {
     Map branchObject = json.decode(branch!);
     setState(() {
       branchName = branchObject['name'];
+      loading = false;
     });
   }
 

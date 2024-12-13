@@ -1,10 +1,11 @@
 import 'package:optimy_second_device/object/promotion.dart';
 import 'package:optimy_second_device/object/tax.dart';
+import 'package:optimy_second_device/object/tax_link_dining.dart';
 
 import 'order_promotion_detail.dart';
 import 'order_tax_detail.dart';
 
-class cartPaymentDetail {
+class CartPaymentDetail {
   String localOrderId = '';
   double subtotal = 0.0;
   double amount = 0.00;
@@ -17,9 +18,10 @@ class cartPaymentDetail {
   List<Promotion>? promotionList = [];
   Promotion? manualPromo;
   List<Tax>? taxList = [];
+  List<TaxLinkDining>? diningTax = [];
   String? dining_name;
 
-  cartPaymentDetail(
+  CartPaymentDetail(
       String localOrderId,
       double subtotal,
       double amount,
@@ -32,7 +34,9 @@ class cartPaymentDetail {
       {this.promotionList,
         this.manualPromo,
         this.taxList,
-        this.dining_name})
+        this.dining_name,
+        this.diningTax
+      })
   {
     this.localOrderId = localOrderId;
     this.subtotal = subtotal;

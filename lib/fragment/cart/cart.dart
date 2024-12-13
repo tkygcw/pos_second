@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/fragment/cart/promotion_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
+import 'package:optimy_second_device/fragment/payment/make_payment_dialog.dart';
+import 'package:optimy_second_device/fragment/payment/payment_page.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -197,7 +201,7 @@ class _CartPageState extends State<CartPage> {
                   children: [
                     Visibility(
                       visible: widget.currentPage == 'table' ? true : false,
-                      child: Text('${getSelectedTable(cart)}'),
+                      child: Text('${AppLocalizations.of(context)!.translate('table')}: ${getSelectedTable(cart)}'),
                     ),
                   ],
                 ),
@@ -260,6 +264,17 @@ class _CartPageState extends State<CartPage> {
                           //cart.removeAllTable();
                         },
                       ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: widget.currentPage == 'table' ? true : false,
+                    child: IconButton(
+                      tooltip: 'promotion',
+                      icon: Icon(Icons.discount),
+                      color: color.backgroundColor,
+                      onPressed: () {
+                        openPromotionDialog();
+                      },
                     ),
                   ),
                 ],
@@ -687,10 +702,18 @@ class _CartPageState extends State<CartPage> {
                                             }
                                           }
                                         }
+                                        else if (widget.currentPage == 'table'){
+                                          if(cart.cartNotifierItem.isNotEmpty){
+                                            paymentAddToCart(cart);
+                                            openPaymentSelect(cart);
+                                          }
+                                        }
                                       },
                                       child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
+                                      widget.currentPage == 'menu'?
                                       Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM $finalAmount)') :
-                                      Text(AppLocalizations.of(context)!.translate('place_order')),
+                                      Text('${AppLocalizations.of(context)!.translate('pay')} (RM ${this.finalAmount})')
+                                      : Text(AppLocalizations.of(context)!.translate('place_order')),
                                     ),
                                   ),
                                   //some spacing for second button
@@ -708,6 +731,44 @@ class _CartPageState extends State<CartPage> {
         );
       });
     });
+  }
+
+  paymentAddToCart(CartModel cart) {
+    var value = CartPaymentDetail('', total, totalAmount, rounding, finalAmount, 0.0, 0.0, [], [],
+        promotionList: autoApplyPromotionList, manualPromo: cart.selectedPromotion, dining_name: cart.selectedOption, diningTax: currentDiningTax);
+    cart.addPaymentDetail(value);
+  }
+
+  openPaymentSelect(CartModel cart) async {
+    Navigator.push(
+      context,
+      PageTransition(
+        type: PageTransitionType.rightToLeft,
+        child: const MakePaymentPage()
+      ),
+    );
+  }
+
+  openPromotionDialog(){
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: const PromotionDialog(),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
   }
 
   String getCartUnit(cartProductItem productItem){
@@ -773,17 +834,6 @@ class _CartPageState extends State<CartPage> {
       return totalQuantity;
     } else {
       return 0;
-    }
-  }
-
-  paymentAddToCart(CartModel cart) {
-    var value = cartPaymentDetail('', total, totalAmount, rounding, finalAmount, 0.0, 0.0, [], [],
-        promotionList: autoApplyPromotionList, manualPromo: cart.selectedPromotion, taxList: taxRateList, dining_name: cart.selectedOption);
-    if(cart.cartNotifierPayment.isNotEmpty){
-      cart.cartNotifierPayment.clear();
-      cart.addPaymentDetail(value);
-    } else {
-      cart.addPaymentDetail(value);
     }
   }
 
@@ -895,29 +945,32 @@ class _CartPageState extends State<CartPage> {
   }
 
   getManualApplyPromotion(CartModel cart) {
-    List<cartProductItem> sameCategoryList = [];
+    List<cartProductItem> _sameCategoryList = [];
     allPromo = '';
     selectedPromoRate = '';
+    double rate = 0.0;
     try {
       if (cart.selectedPromotion != null) {
         allPromo = cart.selectedPromotion!.name!;
         if (cart.selectedPromotion!.type == 0) {
-          selectedPromoRate = '${cart.selectedPromotion!.amount}%';
+          selectedPromoRate = cart.selectedPromotion!.amount.toString() + '%';
+          rate = double.parse(cart.selectedPromotion!.amount!) / 100;
           cart.selectedPromotion!.promoRate = selectedPromoRate;
         } else {
-          selectedPromoRate = '${cart.selectedPromotion!.amount!}.00';
+          selectedPromoRate = double.parse(cart.selectedPromotion!.amount!).toStringAsFixed(2);
+          rate = double.parse(cart.selectedPromotion!.amount!);
           cart.selectedPromotion!.promoRate = selectedPromoRate;
         }
 
         if (cart.selectedPromotion!.specific_category == '1') {
           for (int i = 0; i < cart.cartNotifierItem.length; i++) {
             if (cart.cartNotifierItem[i].category_id == cart.selectedPromotion!.category_id) {
-              sameCategoryList.add(cart.cartNotifierItem[i]);
+              _sameCategoryList.add(cart.cartNotifierItem[i]);
             }
           }
-          specificCategoryAmount(cart.selectedPromotion!, sameCategoryList, cart);
+          specificCategoryAmount(cart.selectedPromotion!, _sameCategoryList, cart);
         } else {
-          nonSpecificCategoryAmount(cart);
+          nonSpecificCategoryAmount(cart, rate);
         }
       }
     } catch (error) {
@@ -952,30 +1005,31 @@ class _CartPageState extends State<CartPage> {
     //controller.add('refresh');
   }
 
-  nonSpecificCategoryAmount(CartModel cart) {
+  nonSpecificCategoryAmount(CartModel cart, double rate) {
     try {
       selectedPromo = 0.0;
       hasSelectedPromo = false;
 
       if (cart.selectedPromotion!.type == 0) {
         hasSelectedPromo = true;
-        selectedPromo = total * 0.10;
+        selectedPromo = double.parse((total * rate).toStringAsFixed(2));
       } else {
         if (cart.cartNotifierItem.isNotEmpty) {
           for (int i = 0; i < cart.cartNotifierItem.length; i++) {
             hasSelectedPromo = true;
-            selectedPromo += double.parse(cart.selectedPromotion!.amount!) * cart.cartNotifierItem[i].quantity!;
+            selectedPromo = double.parse(cart.selectedPromotion!.amount!);
             cart.selectedPromotion!.promoAmount = selectedPromo;
           }
         }
       }
       promoAmount += selectedPromo;
+      print('promotion amount: ${promoAmount}');
       cart.selectedPromotion!.promoAmount = selectedPromo;
     } catch (error) {
       print('check promotion type error: $error');
       selectedPromo = 0.0;
     }
-    //controller.add('refresh');
+    // controller.add('refresh');
   }
 
   promotionDateTimeChecking({
