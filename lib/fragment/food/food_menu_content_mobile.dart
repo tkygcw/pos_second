@@ -119,7 +119,7 @@ class _FoodMenuContentMobileState extends State<FoodMenuContentMobile> with Tick
         List<Product> data = sortProduct(initProduct.toList());
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
-            crossAxisCount: 3,
+            crossAxisCount: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context!).size.width > 500 ? 4 : 3,
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(
@@ -163,7 +163,7 @@ class _FoodMenuContentMobileState extends State<FoodMenuContentMobile> with Tick
         data = sortProduct(data);
         categoryTabContent.add(GridView.count(
             shrinkWrap: true,
-            crossAxisCount: 3,
+            crossAxisCount: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context!).size.width > 500 ? 4 : 3,
             children: List.generate(data.length, (index) {
               return Card(
                 child: Container(

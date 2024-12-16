@@ -36,7 +36,7 @@ class _FoodMenuState extends State<FoodMenu> with TickerProviderStateMixin {
           ),
         ),
         resizeToAvoidBottomInset: false,
-        body: size.width > 500 && size.height > 500 ?
+        body: size.width > 900 && size.height > 500 ?
         FoodMenuContent(color: color):
         FoodMenuContentMobile(color: color),
       );
