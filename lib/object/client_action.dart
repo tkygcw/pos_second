@@ -111,17 +111,17 @@ class ClientAction {
         }
         //split request call every 1 sec
         //splitRequest(buffer: buffer, serverSocket: socket);
-      }, cancelOnError: true
-          ,onError: (err){
+      }, cancelOnError: true,
+          onError: (err){
             print('listen error: $err');
             // timer?.cancel();
             socket.destroy();
-            openReconnectDialog(keepAlive: true);
+            // openReconnectDialog(keepAlive: true);
           },onDone: (){
             print('server down');
             // timer?.cancel();
             socket.destroy();
-            openReconnectDialog(keepAlive: true);
+            // openReconnectDialog(keepAlive: true);
           });
     } else {
       result = {'status': '1'};

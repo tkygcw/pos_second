@@ -1,21 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/cart/cart.dart';
 import '../fragment/order/order.dart';
+import '../main.dart';
 import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
 import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
+import 'login.dart';
 
 class HomePage extends StatefulWidget {
   final User? user;
@@ -27,7 +32,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   late List<CollapsibleItem> _items;
   late String currentPage;
   late String role;
@@ -42,6 +47,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     // TODO: implement initState
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
     // if(notificationModel.notificationStarted == false){
     //   setupFirebaseMessaging();
@@ -66,6 +72,60 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      // Reconnect to the server when the app comes to the foreground
+      await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
+    }
+  }
+
+  checkStatus(response) async {
+    var json = jsonDecode(response);
+    print('status: ${json['status']}');
+    switch(json['status']){
+      case '0': {
+        clientAction.openReconnectDialog(keepAlive: true, callback: checkStatus);
+      }break;
+      case '2': {
+        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
+        await logout();
+      }break;
+      case '3': {
+        Fluttertoast.showToast(
+            backgroundColor: Colors.redAccent,
+            msg: "Sub POS version not supported, please update to latest version");
+        await logout();
+      }break;
+    }
+  }
+
+  logout() async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    deleteDirectory();
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+        builder: (context) => LoginPage()));
+  }
+
+  Future<Directory> get _localDirectory async {
+    final directory = await getApplicationSupportDirectory();
+    final path = directory.path;
+    return Directory('$path/assets');
+  }
+
+  Future<int> deleteDirectory() async {
+    try {
+      final folder = await _localDirectory;
+      folder.delete(recursive: true);
+      print("delete successful");
+      return 1;
+    } catch (e) {
+      print(e);
+      return 0;
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     // TODO: implement didChangeDependencies
     _items = _generateItems;
@@ -77,6 +137,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
