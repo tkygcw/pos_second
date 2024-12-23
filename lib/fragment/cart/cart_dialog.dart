@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:optimy_second_device/fragment/cart/function/cart_dialog_function.dart';
 import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
@@ -281,10 +282,13 @@ class _CartDialogState extends State<CartDialog> {
         Expanded(
           child: Card(
             elevation: 5,
-            shape: tableList[index].isSelected
-                ? RoundedRectangleBorder(side: BorderSide(color: color.backgroundColor, width: 3.0), borderRadius: BorderRadius.circular(4.0))
-                : RoundedRectangleBorder(side: BorderSide(color: Colors.white, width: 3.0), borderRadius: BorderRadius.circular(4.0)),
-            color: Colors.white,
+            shape: tableList[index].status == 1 && tableList[index].order_key != '' && tableList[index].order_key != null
+                ? new RoundedRectangleBorder(side: new BorderSide(color: Color(0xFFFFB3B3), width: 3.0), borderRadius: BorderRadius.circular(4.0))
+                : tableList[index].isSelected
+                ? new RoundedRectangleBorder(side: new BorderSide(color: color.backgroundColor, width: 3.0), borderRadius: BorderRadius.circular(4.0))
+                : new RoundedRectangleBorder(side: new BorderSide(color: Colors.white, width: 3.0), borderRadius: BorderRadius.circular(4.0)),
+            color: tableList[index].status == 1 && tableList[index].order_key != '' && tableList[index].order_key != null
+                ? Color(0xFFFFB3B3) : Colors.white,
             child: InkWell(
               splashColor: Colors.blue.withAlpha(30),
               ///temp close change table function
@@ -300,25 +304,30 @@ class _CartDialogState extends State<CartDialog> {
               onTap: () async {
                 //check selected table is in use or not
                 if (tableList[index].status == 1) {
-                  // table in use (colored)
-                  for (int i = 0; i < tableList.length; i++) {
-                    //check all group
-                    if (tableList[index].group == tableList[i].group) {
-                      if (tableList[i].isSelected == false) {
-                        setState(() {
-                          tableList[i].isSelected = true;
-                        });
+                  if(tableList[index].order_key == ''){
+                    // table in use (colored)
+                    for (int i = 0; i < tableList.length; i++) {
+                      //check all group
+                      if (tableList[index].group == tableList[i].group) {
+                        if (tableList[i].isSelected == false) {
+                          setState(() {
+                            tableList[i].isSelected = true;
+                          });
+                        } else {
+                          setState(() {
+                            tableList[i].isSelected = false;
+                          });
+                        }
                       } else {
                         setState(() {
                           tableList[i].isSelected = false;
                         });
                       }
-                    } else {
-                      setState(() {
-                        tableList[i].isSelected = false;
-                      });
                     }
+                  } else {
+                    Fluttertoast.showToast(backgroundColor: Colors.orangeAccent, msg: AppLocalizations.of(context)!.translate('payment_not_complete'));
                   }
+
                 } else {
                   //table not in use (white)
                   for (int j = 0; j < tableList.length; j++) {
@@ -578,7 +587,15 @@ class _CartDialogState extends State<CartDialog> {
         switch(json['status']){
           case '1': {
             Iterable value1 = json['data']['table_list'];
+            List table_order_key_list = List.from(json['data']['table_order_key_list']);
             tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+            for(var item in table_order_key_list) {
+              for(int i = 0; i < tableList.length; i++){
+                if (tableList[i].table_id.toString() == item['table_id']) {
+                  tableList[i].order_key = item['order_key'];
+                }
+              }
+            }
             //var cart = Provider.of<CartModel>(context, listen: false);
             cartSelectedTableList = cart.selectedTable;
             if(cartSelectedTableList.isNotEmpty){

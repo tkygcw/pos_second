@@ -1,23 +1,28 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
 import 'package:optimy_second_device/fragment/table/table_menu.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/cart/cart.dart';
 import '../fragment/order/order.dart';
 import '../fragment/table/table_page.dart';
+import '../main.dart';
 import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
 import '../object/app_setting.dart';
 import '../object/user.dart';
 import '../translation/AppLocalizations.dart';
+import 'login.dart';
 
 class HomePage extends StatefulWidget {
   final User? user;
@@ -28,7 +33,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   List<CollapsibleItem> _items = [];
   String role = '';
   String currentPage = "menu";
@@ -43,6 +48,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _items = _generateItems;
       getRoleName();

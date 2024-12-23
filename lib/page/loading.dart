@@ -38,10 +38,8 @@ class _LoadingPageState extends State<LoadingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return Scaffold(
-        backgroundColor: color.backgroundColor,
-        body: StreamBuilder(
+    return Scaffold(
+      body: StreamBuilder(
           stream: controller.stream,
           builder: (context, snapshot) {
             if(snapshot.hasData){
@@ -53,9 +51,8 @@ class _LoadingPageState extends State<LoadingPage> {
               return CustomProgressBar();
             }
           }
-        ),
-      );
-    });
+      ),
+    );
   }
 
   startLoad() async  {

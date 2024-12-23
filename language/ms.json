@@ -85,6 +85,8 @@
   "check_list_setting": "Tetapan senarai semak",
   "check_list_show_price": "Tunjukkan harga dalam senarai semak",
   "check_list_show_price_desc": "Dayakan untuk menunjukkan harga unit item dalam senarai semak",
+  "choose_at_least": "Pilih sekurang-kurangnya",
+  "choose_maximum": "Pilih maksimum",
   "choose_your_branch": "Pilih cawangan anda",
   "choose_your_store": "Pilih kedai anda",
   "clear": "Kosongkan",
@@ -346,6 +348,7 @@
   "pay": "Bayar",
   "payment_detail": "Butiran Pembayaran",
   "payment_method": "Cara Pembayaran",
+  "payment_not_complete": "Bayaran untuk meja ini belum selesai",
   "payment_overview": "Gambaran Keseluruhan Pembayaran",
   "payment_received": "Pembayaran Diterima",
   "payment_report": "Laporan Pembayaran",
@@ -566,5 +569,6 @@
   "would_you_like_to_remove": "Adakah anda ingin memadam?",
   "would_you_like_to_reprint_check_list": "Adakah anda ingin mencetak semula senarai semak?",
   "wrong_pin_please_insert_valid_pin": "PIN salah. Sila masukkan PIN yang sah",
-  "yes": "Ya"
+  "yes": "Ya",
+  "ge": ""
 }

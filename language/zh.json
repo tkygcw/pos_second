@@ -85,6 +85,8 @@
   "check_list_setting": "清单设置",
   "check_list_show_price": "清单显示价格",
   "check_list_show_price_desc": "在打印清单时显示产品单价",
+  "choose_at_least": "至少选择",
+  "choose_maximum": "最多选择",
   "choose_your_branch": "选择您的分店",
   "choose_your_store": "选择您的商店",
   "clear": "清除",
@@ -346,6 +348,7 @@
   "pay": "付款",
   "payment_detail": "付款详情",
   "payment_method": "付款方式",
+  "payment_not_complete": "此桌付款尚未完成",
   "payment_overview": "付款概览",
   "payment_received": "已收款",
   "payment_report": "付款报告",
@@ -566,5 +569,6 @@
   "would_you_like_to_remove": "确定是否删除？",
   "would_you_like_to_reprint_check_list": "您想重新打印检查清单吗？",
   "wrong_pin_please_insert_valid_pin": "PIN 错误，请输入有效的 PIN",
-  "yes": "是"
+  "yes": "是",
+  "ge": "个"
 }
