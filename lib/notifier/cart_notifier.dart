@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/object/tax_link_dining.dart';
+import 'package:optimy_second_device/utils/Utils.dart';
 
 import '../object/branch_link_dining_option.dart';
 import '../object/cart_payment.dart';
@@ -19,7 +21,6 @@ class CartModel extends ChangeNotifier {
   set setSelectedTable(List<PosTable> value) {
     _selectedTable = value;
   }
-
 
   String selectedOption = 'Dine in';
   String selectedOptionId = '';
@@ -40,6 +41,98 @@ class CartModel extends ChangeNotifier {
   set setCartScrollDown(int value) {
     _cartScrollDown = value;
   }
+
+  // Calculate subtotal (before discount)
+  double get subtotal2 {
+    return cartNotifierItem.fold(0, (total, item) => total + double.parse(item.price!) * item.quantity!);
+  }
+
+  List<Promotion> get applicablePromotions {
+    List<Promotion> promotionList = decodeAction.decodedBranchPromotionList!.where((e) => e.auto_apply == '1').toList();
+    return promotionList.where((promotion) {
+      if (cartNotifierItem.isEmpty) return false;
+      promotion.promoRate =  promotion.type == 0 ?  '${promotion.amount!}%' : 'RM${promotion.amount!}';
+      if (promotion.specific_category == '1') {
+        //compare with cart item category
+        return false;
+      } else {
+        if (promotion.all_day == '1' && promotion.all_time == '1') {
+          return true;
+        } else if (promotion.all_day == '0' && promotion.all_time == '1'){
+          //check both promo date
+          return false;
+        } else if (promotion.all_day == '1' && promotion.all_time == '0') {
+          //check both promo time
+          return false;
+        } else {
+          return false;
+          //check both promo dateTime
+        }
+      }
+    }).toList();
+  }
+
+  // Calculate the discount for each promotion
+  double discountForPromotion(Promotion promo) {
+    double totalDiscount = 0.0;
+    print("cart item length: ${cartNotifierItem.length}");
+    for (var item in cartNotifierItem) {
+      if (promo.type == 1) {
+        // Fixed amount discount
+        totalDiscount += (double.parse(promo.amount!) * item.quantity!);
+      } else {
+        // Percentage discount
+        totalDiscount += (double.parse(item.price!) * item.quantity!) * (double.parse(promo.amount!) / 100);
+      }
+    }
+    return totalDiscount;
+  }
+
+  double get selectedPromoAmount {
+    double totalDiscount = 0.0;
+    if(selectedPromotion != null){
+      totalDiscount = selectedPromotion!.type == 0 ?  double.parse(selectedPromotion!.amount!) / 100 : selectedPromotion!.amount as double;
+    }
+    return totalDiscount;
+  }
+
+  // Total discount from all promotions
+  double get totalAutoPromotionDiscount {
+    return applicablePromotions.fold(0, (sum, promo) => sum + discountForPromotion(promo));
+  }
+
+  // Calculate the subtotal after promotion
+  double get discountedSubtotal {
+    return subtotal2 - totalAutoPromotionDiscount - selectedPromoAmount;
+  }
+
+  List<TaxLinkDining> get applicableTax {
+    return decodeAction.decodedTaxLinkDiningList.where((tax) => tax.dining_id == selectedOptionId).toList();
+  }
+
+  double taxAmount(TaxLinkDining tax) {
+    return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+  }
+
+  // Total discount from all promotions
+  double get totalTaxAmount {
+    return applicableTax.fold(0, (sum, tax) => sum + taxAmount(tax));
+  }
+
+  double get grossTotal {
+    var grossTotal = discountedSubtotal + totalTaxAmount;
+    return double.parse((grossTotal).toStringAsFixed(2));
+  }
+
+  double get rounding {
+    return Utils.roundToNearestFiveSen(grossTotal) - grossTotal;
+  }
+
+  double get netTotal {
+    var netTotal = Utils.roundToNearestFiveSen(grossTotal);
+    return double.parse(netTotal.toStringAsFixed(2));
+  }
+
 
   CartModel({
     List<PosTable>? selectedTable,

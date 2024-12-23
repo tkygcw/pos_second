@@ -109,7 +109,9 @@ class _CartPageState extends State<CartPage> {
   AppSetting appSetting = decodeAction.decodedAppSetting!;
 
   void _scrollDown() {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    }
   }
 
   @override
@@ -119,6 +121,7 @@ class _CartPageState extends State<CartPage> {
     cart = context.read<CartModel>();
     cart.initBranchLinkDiningOption();
     getPreferences();
+    cartController.sink.add('refresh');
     super.initState();
   }
 
@@ -188,9 +191,10 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          getSubTotal();
-        });
+        _scrollDown();
+        // WidgetsBinding.instance.addPostFrameCallback((_) {
+        //   getSubTotal();
+        // });
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: Scaffold(
@@ -475,7 +479,7 @@ class _CartPageState extends State<CartPage> {
                                 children: [
                                   ListTile(
                                     title: Text("Subtotal", style: TextStyle(fontSize: 14)),
-                                    trailing: Text(total.toStringAsFixed(2),
+                                    trailing: Text(cart.subtotal2.toStringAsFixed(2),
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
@@ -487,7 +491,7 @@ class _CartPageState extends State<CartPage> {
                                         scrollDirection: Axis.horizontal,
                                         child: Row(
                                           children: [
-                                            Text('$allPromo ($selectedPromoRate)',
+                                            Text('${cart.selectedPromotion?.name} (${cart.selectedPromotion?.promoRate})',
                                                 style: TextStyle(fontSize: 14)),
                                             IconButton(
                                               padding: EdgeInsets.only(left: 10),
@@ -504,31 +508,46 @@ class _CartPageState extends State<CartPage> {
                                           ],
                                         ),
                                       ),
-                                      trailing: Text('-${selectedPromo.toStringAsFixed(2)}',
+                                      trailing: Text('-${cart.discountForPromotion(cart.selectedPromotion!).toStringAsFixed(2)}',
                                           style: TextStyle(fontSize: 14)),
                                       visualDensity: VisualDensity(vertical: -4),
                                       dense: true,
                                     ),
                                   ),
-                                  Visibility(
-                                      visible: hasPromo == true ? true : false,
-                                      child: ListView.builder(
-                                          shrinkWrap: true,
-                                          physics: NeverScrollableScrollPhysics(),
-                                          itemCount: autoApplyPromotionList.length,
-                                          itemBuilder: (context, index) {
-                                            return ListTile(
-                                                title: Text('${autoApplyPromotionList[index]
-                                                    .name} (${autoApplyPromotionList[index]
-                                                    .promoRate})',
-                                                    style: TextStyle(fontSize: 14)),
-                                                visualDensity: VisualDensity(vertical: -4),
-                                                dense: true,
-                                                trailing: Text(
-                                                    '-${autoApplyPromotionList[index].promoAmount!
-                                                        .toStringAsFixed(2)}',
-                                                    style: TextStyle(fontSize: 14)));
-                                          })),
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: cart.applicablePromotions.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                          title: Text('${cart.applicablePromotions[index].name} (${cart.applicablePromotions[index].promoRate})',
+                                              style: TextStyle(fontSize: 14)),
+                                          visualDensity: VisualDensity(vertical: -4),
+                                          dense: true,
+                                          trailing: Text(
+                                              '-${cart.discountForPromotion(cart.applicablePromotions[index]).toStringAsFixed(2)}',
+                                              style: TextStyle(fontSize: 14)));
+                                    },
+                                  ),
+                                  // Visibility(
+                                  //     visible: hasPromo == true ? true : false,
+                                  //     child: ListView.builder(
+                                  //         shrinkWrap: true,
+                                  //         physics: NeverScrollableScrollPhysics(),
+                                  //         itemCount: autoApplyPromotionList.length,
+                                  //         itemBuilder: (context, index) {
+                                  //           return ListTile(
+                                  //               title: Text('${autoApplyPromotionList[index]
+                                  //                   .name} (${autoApplyPromotionList[index]
+                                  //                   .promoRate})',
+                                  //                   style: TextStyle(fontSize: 14)),
+                                  //               visualDensity: VisualDensity(vertical: -4),
+                                  //               dense: true,
+                                  //               trailing: Text(
+                                  //                   '-${autoApplyPromotionList[index].promoAmount!
+                                  //                       .toStringAsFixed(2)}',
+                                  //                   style: TextStyle(fontSize: 14)));
+                                  //         })),
                                   Visibility(
                                     visible: widget.currentPage == 'bill' ? true : false,
                                     child: ListView.builder(
@@ -558,12 +577,12 @@ class _CartPageState extends State<CartPage> {
                                     child: ListView.builder(
                                         shrinkWrap: true,
                                         physics: NeverScrollableScrollPhysics(),
-                                        itemCount: currentDiningTax.length,
+                                        itemCount: cart.applicableTax.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text('${currentDiningTax[index].tax_name}(${currentDiningTax[index].tax_rate}%)',
+                                            title: Text('${cart.applicableTax[index].tax_name}(${cart.applicableTax[index].tax_rate}%)',
                                                 style: TextStyle(fontSize: 14)),
-                                            trailing: Text('${currentDiningTax[index].tax_amount?.toStringAsFixed(2)}',
+                                            trailing: Text(cart.taxAmount(cart.applicableTax[index]).toStringAsFixed(2),
                                                 style: TextStyle(fontSize: 14)),
                                             visualDensity: VisualDensity(vertical: -4),
                                             dense: true,
@@ -590,14 +609,14 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                   ListTile(
                                     title: Text("Amount", style: TextStyle(fontSize: 14)),
-                                    trailing: Text(totalAmount.toStringAsFixed(2),
+                                    trailing: Text(cart.grossTotal.toStringAsFixed(2),
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
                                   ),
                                   ListTile(
                                     title: Text("Rounding", style: TextStyle(fontSize: 14)),
-                                    trailing: Text(rounding.toStringAsFixed(2),
+                                    trailing: Text(cart.rounding.toStringAsFixed(2),
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
@@ -606,7 +625,7 @@ class _CartPageState extends State<CartPage> {
                                     visualDensity: VisualDensity(vertical: -4),
                                     title: Text("Final Amount", style: TextStyle(
                                         fontSize: 18, fontWeight: FontWeight.bold)),
-                                    trailing: Text(finalAmount, style: TextStyle(
+                                    trailing: Text(cart.netTotal.toStringAsFixed(2), style: TextStyle(
                                         fontSize: 18, fontWeight: FontWeight.bold)),
                                     dense: true,
                                   ),
@@ -711,7 +730,7 @@ class _CartPageState extends State<CartPage> {
                                       },
                                       child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
                                       widget.currentPage == 'menu'?
-                                      Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM $finalAmount)') :
+                                      Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM ${cart.netTotal.toStringAsFixed(2)})') :
                                       Text('${AppLocalizations.of(context)!.translate('pay')} (RM ${this.finalAmount})')
                                       : Text(AppLocalizations.of(context)!.translate('place_order')),
                                     ),
