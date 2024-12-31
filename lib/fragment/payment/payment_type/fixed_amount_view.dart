@@ -6,25 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../notifier/cart_notifier.dart';
 import 'shared_widget/final_amount_widget.dart';
 
-class FixedAmountView extends StatefulWidget {
+class FixedAmountView extends StatelessWidget {
   const FixedAmountView({super.key});
-
-  @override
-  State<FixedAmountView> createState() => _FixedAmountViewState();
-}
-
-class _FixedAmountViewState extends State<FixedAmountView> {
-  String finalAmount = '0.00';
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    var cart = context.read<CartModel>();
-    setState(() {
-      finalAmount = cart.cartNotifierPayment!.finalAmount;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +15,6 @@ class _FixedAmountViewState extends State<FixedAmountView> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        FinalAmountWidget(finalAmount: finalAmount),
         ClipRRect(
           borderRadius: BorderRadius.circular(16.0),
           child:

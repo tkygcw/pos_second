@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/payment/function/payment_function.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../translation/AppLocalizations.dart';
+import '../../../toast/custom_toastification.dart';
 import '../../payment_method_widget.dart';
 
 class ButtonWidget extends StatefulWidget {
@@ -18,11 +20,13 @@ class ButtonWidget extends StatefulWidget {
 class _ButtonWidgetState extends State<ButtonWidget> {
   bool isButtonDisable = false, split_payment = false, scanning = false;
   late ThemeColor color;
+  late PaymentFunction _paymentFunction;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _paymentFunction = context.read<PaymentFunction>();
     color = context.read<ThemeColor>();
   }
 
@@ -78,7 +82,9 @@ class _ButtonWidgetState extends State<ButtonWidget> {
           height: 70,
           width: 150,
           child: ElevatedButton.icon(
-            onPressed: isButtonDisable ? null : () {},
+            onPressed: isButtonDisable ? null : () {
+              _paymentFunction.makePayment();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: color.backgroundColor,
               elevation: 5,

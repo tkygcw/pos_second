@@ -8,57 +8,31 @@ import 'package:provider/provider.dart';
 import '../../../notifier/cart_notifier.dart';
 
 class CashView extends StatefulWidget {
-  final PaymentFunction paymentFunction;
-  const CashView({super.key, required this.paymentFunction});
+  const CashView({super.key});
 
   @override
   State<CashView> createState() => _CashViewState();
 }
 
 class _CashViewState extends State<CashView> {
-  String finalAmount = '0.00';
-
-  @override
-  void initState() {
-    var cart = context.read<CartModel>();
-    finalAmount = cart.cartNotifierPayment!.finalAmount;
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FinalAmountWidget(finalAmount: finalAmount),
-        SizedBox(height: 10),
-        _AmountField(paymentFunction: widget.paymentFunction, finalAmount: finalAmount,)
-      ],
-    );
-  }
-}
-
-class _AmountField extends StatefulWidget {
-  final String finalAmount;
-  final PaymentFunction paymentFunction;
-  const _AmountField({super.key, required this.paymentFunction, required this.finalAmount});
-
-  @override
-  State<_AmountField> createState() => _AmountFieldState();
-}
-
-class _AmountFieldState extends State<_AmountField> {
   final TextEditingController _controller = TextEditingController();
   String change = '0.00', finalAmount = '0.00';
   bool chipSelected = false;
+  late PaymentFunction paymentFunction;
+
+  setPaymentReceived(double value){
+    paymentFunction.setPaymentReceived = value;
+  }
 
   calcChange(){
-    change = widget.paymentFunction.calcChange(_controller.text, finalAmount);
+    paymentFunction.calcChange(_controller.text, finalAmount);
   }
 
   @override
   void initState() {
-    finalAmount = widget.finalAmount;
+    finalAmount = context.read<CartModel>().netTotal.toStringAsFixed(2);
+    paymentFunction = context.read<PaymentFunction>();
+    setPaymentReceived(0.0);
     super.initState();
   }
 
@@ -66,12 +40,14 @@ class _AmountFieldState extends State<_AmountField> {
   void dispose() {
     // TODO: implement dispose
     _controller.dispose();
+    paymentFunction.resetChange();
+    setPaymentReceived(double.parse(finalAmount));
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext currentContext) {
+    change = context.select((PaymentFunction value) => value.change.toStringAsFixed(2));
     return SizedBox(
       width: 500,
       child: Column(
@@ -102,6 +78,9 @@ class _AmountFieldState extends State<_AmountField> {
                         // makePayment();
                       },
                       onChanged: (value) {
+                        if(value != ''){
+                          setPaymentReceived(double.parse(value));
+                        }
                         calcChange();
                       },
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
@@ -124,7 +103,8 @@ class _AmountFieldState extends State<_AmountField> {
             paymentTypeEnum: PaymentTypeEnum.cash,
             clearField: () {
               _controller.clear();
-              change = '0.00';
+              setPaymentReceived(0.0);
+              calcChange();
             },
           ),
         ],
@@ -143,6 +123,7 @@ class _AmountFieldState extends State<_AmountField> {
             elevation: 5,
             onSelected: (chipSelected) {
               _controller.text = finalAmount;
+              setPaymentReceived(double.parse(finalAmount));
               calcChange();
             },
           ),
@@ -152,6 +133,7 @@ class _AmountFieldState extends State<_AmountField> {
             elevation: 5,
             onSelected: (chipSelected) {
               _controller.text = '10.00';
+              setPaymentReceived(double.parse(_controller.text));
               calcChange();
             },
           ),
@@ -161,6 +143,7 @@ class _AmountFieldState extends State<_AmountField> {
             elevation: 5,
             onSelected: (chipSelected) {
               _controller.text = '20.00';
+              setPaymentReceived(double.parse(_controller.text));
               calcChange();
             },
           ),
@@ -170,6 +153,7 @@ class _AmountFieldState extends State<_AmountField> {
             elevation: 5,
             onSelected: (chipSelected) {
               _controller.text = '50.00';
+              setPaymentReceived(double.parse(_controller.text));
               calcChange();
             },
           ),
@@ -179,6 +163,7 @@ class _AmountFieldState extends State<_AmountField> {
             elevation: 5,
             onSelected: (chipSelected) {
               _controller.text = '100.00';
+              setPaymentReceived(double.parse(_controller.text));
               calcChange();
             },
           ),

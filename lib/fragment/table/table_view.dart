@@ -129,7 +129,8 @@ class _TableCard extends StatelessWidget {
                     first_cache_batch: orderCache.last.batch_id,
                     table_use_key: orderCache.last.table_use_key,
                     per_quantity_unit: order.per_quantity_unit,
-                    status: 0
+                    status: 0,
+                    category_id: order.product_category_id,
                   );
                   itemList.add(item);
                 }

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/cart/function/promotion_function.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/utils/Utils.dart';
@@ -13,7 +14,10 @@ import '../object/table.dart';
 class CartModel extends ChangeNotifier {
   CartPaymentDetail? cartNotifierPayment;
   List<Promotion> autoPromotion = [];
-  Promotion? selectedPromotion ;
+  Promotion? _selectedPromotion ;
+
+  Promotion? get selectedPromotion => _selectedPromotion;
+
   List<PosTable> _selectedTable = [];
 
   List<PosTable> get selectedTable => _selectedTable;
@@ -24,7 +28,6 @@ class CartModel extends ChangeNotifier {
 
   String selectedOption = 'Dine in';
   String selectedOptionId = '';
-  String? subtotal;
   bool isInit = false;
   bool isChange = false;
   List<cartProductItem> _cartNotifierItem = [];
@@ -43,27 +46,28 @@ class CartModel extends ChangeNotifier {
   }
 
   // Calculate subtotal (before discount)
-  double get subtotal2 {
+  double get subtotal {
     return cartNotifierItem.fold(0, (total, item) => total + double.parse(item.price!) * item.quantity!);
   }
 
   List<Promotion> get applicablePromotions {
+    final promoFunc = PromotionFunction();
     List<Promotion> promotionList = decodeAction.decodedBranchPromotionList!.where((e) => e.auto_apply == '1').toList();
     return promotionList.where((promotion) {
       if (cartNotifierItem.isEmpty) return false;
       promotion.promoRate =  promotion.type == 0 ?  '${promotion.amount!}%' : 'RM${promotion.amount!}';
       if (promotion.specific_category == '1') {
         //compare with cart item category
-        return false;
+        return promoFunc.isPromotionAvailable(promotion, CartModel(cartNotifierItem: cartNotifierItem));
       } else {
         if (promotion.all_day == '1' && promotion.all_time == '1') {
           return true;
         } else if (promotion.all_day == '0' && promotion.all_time == '1'){
           //check both promo date
-          return false;
+          return promoFunc.isPromotionAvailable(promotion, CartModel(cartNotifierItem: cartNotifierItem));
         } else if (promotion.all_day == '1' && promotion.all_time == '0') {
+          return promoFunc.isPromotionAvailable(promotion, CartModel(cartNotifierItem: cartNotifierItem));
           //check both promo time
-          return false;
         } else {
           return false;
           //check both promo dateTime
@@ -74,42 +78,61 @@ class CartModel extends ChangeNotifier {
 
   // Calculate the discount for each promotion
   double discountForPromotion(Promotion promo) {
-    double totalDiscount = 0.0;
-    print("cart item length: ${cartNotifierItem.length}");
-    for (var item in cartNotifierItem) {
-      if (promo.type == 1) {
-        // Fixed amount discount
-        totalDiscount += (double.parse(promo.amount!) * item.quantity!);
+    var totalDiscount = 0.0;
+    try{
+      if (promo.specific_category == '1') {
+        List<cartProductItem> categorizeItem = cartNotifierItem.where((item) => item.category_id == promo.category_id!).toList();
+        for (var item in categorizeItem) {
+          if (promo.type == 1) {
+            // Fixed amount discount
+            totalDiscount += (double.parse(promo.amount!) * item.quantity!);
+          } else {
+            // Percentage discount
+            totalDiscount += (double.parse(item.price!) * item.quantity!) * (double.parse(promo.amount!) / 100);
+          }
+        }
       } else {
-        // Percentage discount
-        totalDiscount += (double.parse(item.price!) * item.quantity!) * (double.parse(promo.amount!) / 100);
+        for (var item in cartNotifierItem) {
+          if (promo.type == 1) {
+            // Fixed amount discount
+            totalDiscount += (double.parse(promo.amount!) * item.quantity!);
+          } else {
+            // Percentage discount
+            totalDiscount += (double.parse(item.price!) * item.quantity!) * (double.parse(promo.amount!) / 100);
+          }
+        }
       }
+    }catch(e){
+      totalDiscount = 0.0;
     }
     return totalDiscount;
   }
 
-  double get selectedPromoAmount {
-    double totalDiscount = 0.0;
-    if(selectedPromotion != null){
-      totalDiscount = selectedPromotion!.type == 0 ?  double.parse(selectedPromotion!.amount!) / 100 : selectedPromotion!.amount as double;
-    }
-    return totalDiscount;
-  }
-
-  // Total discount from all promotions
+  // Total discount from all auto apply promotions
   double get totalAutoPromotionDiscount {
     return applicablePromotions.fold(0, (sum, promo) => sum + discountForPromotion(promo));
   }
 
-  // Calculate the subtotal after promotion
-  double get discountedSubtotal {
-    return subtotal2 - totalAutoPromotionDiscount - selectedPromoAmount;
+  // Total discount from selected promotions
+  double get totalSelectedPromotionDiscount {
+    var totalDiscount = 0.0;
+    if(selectedPromotion != null){
+      totalDiscount = discountForPromotion(selectedPromotion!);
+    }
+    return totalDiscount;
   }
 
+  // Calculate the subtotal after promotion
+  double get discountedSubtotal {
+    return subtotal - totalAutoPromotionDiscount - totalSelectedPromotionDiscount;
+  }
+
+  //get all tax and charges
   List<TaxLinkDining> get applicableTax {
     return decodeAction.decodedTaxLinkDiningList.where((tax) => tax.dining_id == selectedOptionId).toList();
   }
 
+  //calculate the tax/charges amount after promotion
   double taxAmount(TaxLinkDining tax) {
     return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
   }
@@ -119,48 +142,47 @@ class CartModel extends ChangeNotifier {
     return applicableTax.fold(0, (sum, tax) => sum + taxAmount(tax));
   }
 
+  // Total before rounding
   double get grossTotal {
     var grossTotal = discountedSubtotal + totalTaxAmount;
     return double.parse((grossTotal).toStringAsFixed(2));
   }
 
+  // Total rounding
   double get rounding {
     return Utils.roundToNearestFiveSen(grossTotal) - grossTotal;
   }
 
+  // Final amount
   double get netTotal {
     var netTotal = Utils.roundToNearestFiveSen(grossTotal);
     return double.parse(netTotal.toStringAsFixed(2));
   }
 
-
   CartModel({
     List<PosTable>? selectedTable,
     List<cartProductItem>? cartNotifierItem,
     String? selectedOption,
-    String? selectedOptionId,
-    String? subtotal
+    String? selectedOptionId
   }){
     this._selectedTable = selectedTable ?? [];
     this._cartNotifierItem = cartNotifierItem ?? [];
     this.selectedOption = selectedOption ?? 'Dine in';
     this.selectedOptionId = selectedOptionId ?? '';
-    this.subtotal = subtotal ?? '';
   }
 
   CartModel.addOrderCopy(CartModel cart)
       : this._selectedTable = cart.selectedTable,
         this._cartNotifierItem = cart.cartNotifierItem.where((e) => e.status == 0).toList(),
         this.selectedOption = cart.selectedOption,
-        this.selectedOptionId = cart.selectedOptionId,
-        this.subtotal = cart.subtotal;
+        this.selectedOptionId = cart.selectedOptionId;
 
   Map<String, Object?> toJson() => {
     'selectedTable': this._selectedTable,
     'cartNotifierItem': this._cartNotifierItem,
     'selectedOption': this.selectedOption,
     'selectedOptionId': this.selectedOptionId,
-    'subtotal': this.subtotal
+    'subtotal': this.subtotal.toStringAsFixed(2)
   };
 
   List<int> getSelectedTableIdList(){
@@ -187,7 +209,7 @@ class CartModel extends ChangeNotifier {
   void initialLoad({bool? notify = true}) {
     _selectedTable.clear();
     _cartNotifierItem.clear();
-    selectedPromotion = null;
+    _selectedPromotion = null;
     cartNotifierPayment = null;
     initBranchLinkDiningOption();
     if(notify == true){
@@ -322,12 +344,13 @@ class CartModel extends ChangeNotifier {
   }
 
   void addPromotion(Promotion promo){
-    selectedPromotion = promo;
+    promo.promoRate =  promo.type == 0 ?  '${promo.amount!}%' : 'RM${promo.amount!}';
+    _selectedPromotion = promo;
     notifyListeners();
   }
 
   void removePromotion(){
-    selectedPromotion = null;
+    _selectedPromotion = null;
     notifyListeners();
   }
 

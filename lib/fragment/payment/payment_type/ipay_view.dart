@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
-import '../../../../notifier/cart_notifier.dart';
-import '../../../../translation/AppLocalizations.dart';
-import '../../payment_method_widget.dart';
-import 'button_widget.dart';
-import 'final_amount_widget.dart';
+import '../../../notifier/cart_notifier.dart';
+import '../../../translation/AppLocalizations.dart';
+import '../payment_method_widget.dart';
+import 'shared_widget/button_widget.dart';
+import 'shared_widget/final_amount_widget.dart';
 
 class IpayView extends StatefulWidget {
   const IpayView({super.key});
@@ -20,18 +20,7 @@ class IpayView extends StatefulWidget {
 }
 
 class _IpayViewState extends State<IpayView> {
-  String finalAmount = '0.00';
   bool startScan = false;
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    var cart = context.read<CartModel>();
-    setState(() {
-      finalAmount = cart.cartNotifierPayment!.finalAmount;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +28,6 @@ class _IpayViewState extends State<IpayView> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        FinalAmountWidget(finalAmount: finalAmount),
         _ScanWidget(scanning: startScan),
         ButtonWidget(paymentTypeEnum: PaymentTypeEnum.ipay, scanQR: scanQR,)
       ],

@@ -118,7 +118,7 @@ class _PromotionCard extends StatelessWidget {
 
             } else {
               //check is outstanding or not
-              if(_promoFunc.checkOfferAmount(promotion, cart.subtotal!) == false){
+              if(_promoFunc.checkOfferAmount(promotion, cart.subtotal.toStringAsFixed(2)) == false){
                 cart.addPromotion(promotion);
               } else {
                 CustomFailedToast(title: AppLocalizations.of(context)!.translate('outstanding_promotion')).showToast();
@@ -177,7 +177,7 @@ class _AdjustPromotionDialogState extends State<_AdjustPromotionDialog> {
                         willPop = false;
                       });
                       promotion.amount = _textFieldController.text;
-                      bool outstanding = _promoFunc.checkOfferAmount(promotion, cart.subtotal!);
+                      bool outstanding = _promoFunc.checkOfferAmount(promotion, cart.subtotal.toStringAsFixed(2));
                       if(outstanding){
                         Fluttertoast.showToast(
                             backgroundColor: Color(0xFFFF0000),
@@ -227,13 +227,13 @@ class _AdjustPromotionDialogState extends State<_AdjustPromotionDialog> {
           onPressed: isButtonDisabled
               ? null
               : () async {
-            if(_textFieldController.text != '' && double.parse(_textFieldController.text).toStringAsFixed(2) != 0.00) {
+            if(_textFieldController.text != '' && double.parse(_textFieldController.text).toStringAsFixed(2) != '0.00') {
               setState(() {
                 isButtonDisabled = true;
                 willPop = false;
               });
               promotion.amount = _textFieldController.text;
-              bool outstanding = _promoFunc.checkOfferAmount(promotion, cart.subtotal!);
+              bool outstanding = _promoFunc.checkOfferAmount(promotion, cart.subtotal.toStringAsFixed(2));
               if(outstanding){
                 Fluttertoast.showToast(
                     backgroundColor: Color(0xFFFF0000),

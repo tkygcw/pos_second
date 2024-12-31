@@ -16,8 +16,8 @@ class CartDetail extends StatelessWidget {
     var cart = context.read<CartModel>();
     var color = context.read<ThemeColor>();
     return Container(
-      padding: EdgeInsets.all(15.0),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(15.0),
+      decoration: const BoxDecoration(
           border: Border(
             right: BorderSide(
               color: Colors.blueGrey,
@@ -189,11 +189,13 @@ class _CartPayment extends StatefulWidget {
 
 class _CartPaymentState extends State<_CartPayment> {
   final ScrollController _controller = ScrollController();
+  late final CartModel cart;
   void _scrollDown() {
     _controller.jumpTo(_controller.position.maxScrollExtent);
   }
   @override
   void initState() {
+    cart = context.read<CartModel>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _scrollDown();
@@ -211,9 +213,24 @@ class _CartPaymentState extends State<_CartPayment> {
       children: [
         ListTile(
           title: Text('Subtotal', style: TextStyle(fontSize: 14)),
-          trailing: Text(widget.cartPayment.subtotal.toStringAsFixed(2), style: TextStyle(fontSize: 14)),
+          trailing: Text(cart.subtotal.toStringAsFixed(2), style: TextStyle(fontSize: 14)),
           visualDensity: VisualDensity(vertical: -4),
           dense: true,
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: cart.applicablePromotions.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+                title: Text('${cart.applicablePromotions[index].name} (${cart.applicablePromotions[index].promoRate})',
+                    style: TextStyle(fontSize: 14)),
+                visualDensity: VisualDensity(vertical: -4),
+                dense: true,
+                trailing: Text(
+                    '-${cart.discountForPromotion(cart.applicablePromotions[index]).toStringAsFixed(2)}',
+                    style: TextStyle(fontSize: 14)));
+          },
         ),
         widget.selectedPromotion != null ?
         ListTile(
@@ -221,7 +238,7 @@ class _CartPaymentState extends State<_CartPayment> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                Text('${widget.selectedPromotion!.name} (${widget.selectedPromotion!.promoRate})',
+                Text('${cart.selectedPromotion?.name} (${cart.selectedPromotion?.promoRate})',
                     style: TextStyle(fontSize: 14)),
               ],
             ),
@@ -230,51 +247,33 @@ class _CartPaymentState extends State<_CartPayment> {
               style: TextStyle(fontSize: 14)),
           visualDensity: VisualDensity(vertical: -4),
           dense: true,
-        ): SizedBox.shrink(),
-        Visibility(
-            visible: widget.cartPayment.promotionList!.isNotEmpty,
-            child: ListView.builder(
-                physics: NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: widget.cartPayment.promotionList!.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                      title: Text('${widget.cartPayment.promotionList![index].name} (${widget.cartPayment.promotionList![index].promoRate})',
-                          style: TextStyle(fontSize: 14)),
-                      visualDensity: VisualDensity(vertical: -4),
-                      dense: true,
-                      trailing: Text('-${widget.cartPayment.promotionList![index].promoAmount!.toStringAsFixed(2)}',
-                          style: TextStyle(fontSize: 14)));
-                })),
+        ) : SizedBox.shrink(),
         ListView.builder(
-            shrinkWrap: true,
-            padding: EdgeInsets.zero,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: widget.cartPayment.diningTax!.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text('${widget.cartPayment.diningTax![index].tax_name}(${widget.cartPayment.diningTax![index].tax_rate}%)'),
-                trailing: Text('${widget.cartPayment.diningTax![index].tax_amount?.toStringAsFixed(2)}'),
-                //Text(''),
-                visualDensity: VisualDensity(vertical: -4),
-                dense: true,
-              );
-            }),
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: cart.applicableTax.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text('${cart.applicableTax[index].tax_name}(${cart.applicableTax[index].tax_rate}%)',
+                  style: TextStyle(fontSize: 14)),
+              trailing: Text(cart.taxAmount(cart.applicableTax[index]).toStringAsFixed(2),
+                  style: TextStyle(fontSize: 14)),
+              visualDensity: VisualDensity(vertical: -4),
+              dense: true,
+            );
+          },
+        ),
         ListTile(
-          title: Text('Total',
+          title: Text('Amount',
               style: TextStyle(fontSize: 14)),
-          trailing: Text(widget.cartPayment.amount.toStringAsFixed(2),
+          trailing: Text(cart.grossTotal.toStringAsFixed(2),
               style: TextStyle(fontSize: 14)),
           visualDensity: VisualDensity(vertical: -4),
           dense: true,
         ),
         ListTile(
-          title: Text('Rounding',
-              style: TextStyle(fontSize: 14)),
-          trailing: Text(
-              '${widget.cartPayment.rounding.toStringAsFixed(2)}',
-              style: TextStyle(fontSize: 14)),
+          title: Text('Rounding', style: TextStyle(fontSize: 14)),
+          trailing: Text(cart.rounding.toStringAsFixed(2), style: TextStyle(fontSize: 14)),
           visualDensity: VisualDensity(vertical: -4),
           dense: true,
         ),
@@ -291,7 +290,7 @@ class _CartPaymentState extends State<_CartPayment> {
           title: Text('Final Amount',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           trailing: Text(
-              "${widget.cartPayment.finalAmount}",
+              cart.netTotal.toStringAsFixed(2),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           dense: true,
         ),

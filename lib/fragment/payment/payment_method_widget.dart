@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/payment/function/payment_function.dart';
 import 'package:optimy_second_device/fragment/payment/payment_type/cash_view.dart';
 import 'package:optimy_second_device/fragment/payment/payment_type/fixed_amount_view.dart';
-import 'package:optimy_second_device/fragment/payment/payment_type/shared_widget/ipay_view.dart';
+import 'package:optimy_second_device/fragment/payment/payment_type/ipay_view.dart';
+import 'package:optimy_second_device/fragment/payment/payment_type/shared_widget/final_amount_widget.dart';
 import 'package:optimy_second_device/object/payment_link_company.dart';
+import 'package:provider/provider.dart';
 
 import '../../page/progress_bar.dart';
-
-var paymentFunc = PaymentFunction();
 
 enum PaymentTypeEnum {
   cash,
@@ -23,7 +23,7 @@ class PaymentMethod extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: FutureBuilder<List<PaymentLinkCompany>>(
-          future: paymentFunc.getPaymentMethod(),
+          future: context.read<PaymentFunction>().getPaymentMethod(),
           builder: (context, snapshot) {
             print("connection state in payment method: ${snapshot.connectionState}");
             switch(snapshot.connectionState){
@@ -57,7 +57,7 @@ class _PaymentTypeView extends StatelessWidget {
       case PaymentTypeEnum.ipay:
         return IpayView();
       default:
-        return CashView(paymentFunction: paymentFunc);
+        return CashView();
     }
   }
 }
@@ -76,6 +76,7 @@ class _PaymentSelectState extends State<_PaymentSelect> {
 
   _paymentSelectCallBack(PaymentLinkCompany companyPayment){
     setState(() {
+      context.read<PaymentFunction>().setPaymentLinkCompany = companyPayment;
       paymentType = PaymentTypeEnum.values.elementAt(companyPayment.type!);
       paymentName = companyPayment.name!;
     });
@@ -94,6 +95,7 @@ class _PaymentSelectState extends State<_PaymentSelect> {
          ),
        ),
        const SizedBox(height: 20),
+       const FinalAmountWidget(),
        _PaymentTypeView(paymentType: paymentType),
        const SizedBox(height: 20),
        SizedBox(
@@ -105,7 +107,7 @@ class _PaymentSelectState extends State<_PaymentSelect> {
            children: List.generate(widget.paymentLinkCompanyList.length, (i) {
              return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
            })
-                ),
+         ),
        )
      ],
     );
