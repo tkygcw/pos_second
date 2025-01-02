@@ -8,34 +8,37 @@ import 'package:optimy_second_device/utils/Utils.dart';
 import '../object/branch_link_dining_option.dart';
 import '../object/cart_payment.dart';
 import '../object/cart_product.dart';
+import '../object/order_cache.dart';
 import '../object/promotion.dart';
 import '../object/table.dart';
 
 class CartModel extends ChangeNotifier {
   CartPaymentDetail? cartNotifierPayment;
   List<Promotion> autoPromotion = [];
-  Promotion? _selectedPromotion ;
-
-  Promotion? get selectedPromotion => _selectedPromotion;
-
   List<PosTable> _selectedTable = [];
-
-  List<PosTable> get selectedTable => _selectedTable;
-
-  set setSelectedTable(List<PosTable> value) {
-    _selectedTable = value;
-  }
-
+  Promotion? _selectedPromotion ;
   String selectedOption = 'Dine in';
   String selectedOptionId = '';
   bool isInit = false;
   bool isChange = false;
   List<cartProductItem> _cartNotifierItem = [];
+  List<OrderCache> _currentOrderCache = [];
+
   int _cartScrollDown = 0;
 
+  Promotion? get selectedPromotion => _selectedPromotion;
+  List<PosTable> get selectedTable => _selectedTable;
   List<cartProductItem> get cartNotifierItem => _cartNotifierItem;
-
   int get cartScrollDown => _cartScrollDown;
+  List<OrderCache> get currentOrderCache => _currentOrderCache;
+
+  set setCurrentOrderCache(List<OrderCache> value) {
+    _currentOrderCache = value;
+  }
+
+  set setSelectedTable(List<PosTable> value) {
+    _selectedTable = value;
+  }
 
   set setCartNotifierItem(List<cartProductItem> value) {
     _cartNotifierItem = value;

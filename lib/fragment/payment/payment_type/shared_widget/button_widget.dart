@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/payment/function/payment_function.dart';
+import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,7 @@ class _ButtonWidgetState extends State<ButtonWidget> {
   bool isButtonDisable = false, split_payment = false, scanning = false;
   late ThemeColor color;
   late PaymentFunction _paymentFunction;
+  late CartModel _cartModel;
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _ButtonWidgetState extends State<ButtonWidget> {
     super.initState();
     _paymentFunction = context.read<PaymentFunction>();
     color = context.read<ThemeColor>();
+    _cartModel = context.read<CartModel>();
   }
 
   @override
@@ -83,7 +86,11 @@ class _ButtonWidgetState extends State<ButtonWidget> {
           width: 150,
           child: ElevatedButton.icon(
             onPressed: isButtonDisable ? null : () {
-              _paymentFunction.makePayment();
+              if(_paymentFunction.paymentReceived < _cartModel.netTotal){
+                CustomFailedToast(title: 'Not enough balance').showToast();
+                return;
+              }
+              _paymentFunction.makePayment(_cartModel);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: color.backgroundColor,

@@ -1,32 +1,43 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/notifier/cart_notifier.dart';
+import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/payment_link_company.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
+import '../../../object/user.dart';
 
 class PaymentFunction extends ChangeNotifier {
   double _paymentReceived = 0.0;
+  double _change = 0.0;
+  bool _splitPayment = false;
+  String _ipayTransId  = '';
+  PaymentLinkCompany? _paymentLinkCompany;
+  List<PaymentLinkCompany> _paymentMethodList = [];
 
+  double get change => _change;
   double get paymentReceived => _paymentReceived;
+  bool get splitPayment => _splitPayment;
+  String get ipayTransId => _ipayTransId;
+  PaymentLinkCompany? get paymentLinkCompany => _paymentLinkCompany;
 
   set setPaymentReceived(double value) {
     _paymentReceived = value;
   }
 
-  double _change = 0.0;
-
-  double get change => _change;
-
-  PaymentLinkCompany? _paymentLinkCompany;
-
-  PaymentLinkCompany? get paymentLinkCompany => _paymentLinkCompany;
-
   set setPaymentLinkCompany(PaymentLinkCompany? value) {
     _paymentLinkCompany = value;
   }
 
-  List<PaymentLinkCompany> _paymentMethodList = [];
+  set setSplitPayment(bool value) {
+    _splitPayment = value;
+  }
+
+  set setIpayTransId(String value) {
+    _ipayTransId = value;
+  }
 
   PaymentFunction();
 
@@ -50,12 +61,53 @@ class PaymentFunction extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future makePayment() async {
+  Future makePayment(CartModel cart) async {
     print("_paymentLinkCompany: ${_paymentLinkCompany!.payment_link_company_id}");
     print("change: ${change}");
     print("Payment received: ${_paymentReceived}");
-    // await clientAction.connectRequestPort(action: '17', param: '', callback: _decodeData);
+    final prefs = await SharedPreferences.getInstance();
+    final String? pos_user = prefs.getString('pos_pin_user');
+    Map<String, dynamic> userMap = json.decode(pos_user!);
+    User userData = User.fromJson(userMap);
+    var orderData = Order(
+      payment_received: _splitPayment ? '' : _paymentReceived.toStringAsFixed(2),
+      payment_change: _splitPayment ? '' : _change.toStringAsFixed(2),
+      payment_link_company_id: _splitPayment ? '' : _paymentLinkCompany!.payment_link_company_id!.toString(),
+      payment_split: _splitPayment ? 1 : 0,
+      ipay_trans_id: _splitPayment ? '' : _ipayTransId,
+      close_by: userData.name,
+      dining_id: cart.selectedOptionId,
+      dining_name: cart.selectedOption,
+      subtotal: cart.subtotal.toStringAsFixed(2),
+      amount: cart.grossTotal.toStringAsFixed(2),
+      rounding: cart.rounding.toStringAsFixed(2),
+      final_amount: cart.netTotal.toStringAsFixed(2)
+    );
+    Map<String, dynamic> param = {
+      'orderCacheList': cart.currentOrderCache,
+      'orderData': orderData,
+      'promotion': cart.applicablePromotions,
+      'tax': cart.applicableTax
+    };
+    await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
     // return _paymentMethodList;
+  }
+
+  void _decodePaymentRes(response){
+    try{
+      var json = jsonDecode(clientAction.response!);
+      String status = json['status'];
+      switch(status){
+        case '1': {
+          print("payment success");
+        }break;
+        default: {
+          clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
+        }
+      }
+    }catch(e, s){
+      print('_decodePaymentRes error: $e, trace: ${s}');
+    }
   }
 
   Future<List<PaymentLinkCompany>> getPaymentMethod() async {

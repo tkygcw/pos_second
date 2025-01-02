@@ -136,6 +136,7 @@ class _TableCard extends StatelessWidget {
                 }
                 cart.addAllItem(itemList, notifyListener: false);
                 cart.addTable(posTable);
+                cart.setCurrentOrderCache = orderCache;
               } else {
                 CustomFailedToast(title: 'Table not in used').showToast();
               }
