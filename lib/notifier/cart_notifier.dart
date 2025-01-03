@@ -95,13 +95,23 @@ class CartModel extends ChangeNotifier {
           }
         }
       } else {
-        for (var item in cartNotifierItem) {
-          if (promo.type == 1) {
-            // Fixed amount discount
-            totalDiscount += (double.parse(promo.amount!) * item.quantity!);
-          } else {
+        if(promo.auto_apply == '1'){
+          for (var item in cartNotifierItem) {
+            if (promo.type == 0) {
+              // Percentage discount
+              totalDiscount += (double.parse(item.price!) * item.quantity!) * (double.parse(promo.amount!) / 100);
+            } else {
+              // Fixed amount discount
+              totalDiscount += (double.parse(promo.amount!) * item.quantity!);
+            }
+          }
+        } else {
+          if (promo.type == 0) {
             // Percentage discount
-            totalDiscount += (double.parse(item.price!) * item.quantity!) * (double.parse(promo.amount!) / 100);
+            totalDiscount += subtotal * (double.parse(promo.amount!) / 100);
+          } else {
+            // Fixed amount discount
+            totalDiscount += double.parse(promo.amount!);
           }
         }
       }
@@ -127,7 +137,9 @@ class CartModel extends ChangeNotifier {
 
   // Calculate the subtotal after promotion
   double get discountedSubtotal {
-    return subtotal - totalAutoPromotionDiscount - totalSelectedPromotionDiscount;
+    return Utils.convertTo2DecInDouble(subtotal) -
+        Utils.convertTo2DecInDouble(totalAutoPromotionDiscount) -
+        Utils.convertTo2DecInDouble(totalSelectedPromotionDiscount);
   }
 
   //get all tax and charges
@@ -137,7 +149,7 @@ class CartModel extends ChangeNotifier {
 
   //calculate the tax/charges amount after promotion
   double taxAmount(TaxLinkDining tax) {
-    return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+    return Utils.convertTo2DecInDouble(discountedSubtotal * (double.parse(tax.tax_rate!) / 100));
   }
 
   // Total discount from all promotions
@@ -148,7 +160,7 @@ class CartModel extends ChangeNotifier {
   // Total before rounding
   double get grossTotal {
     var grossTotal = discountedSubtotal + totalTaxAmount;
-    return double.parse((grossTotal).toStringAsFixed(2));
+    return Utils.convertTo2DecInDouble(grossTotal);
   }
 
   // Total rounding

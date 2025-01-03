@@ -38,6 +38,8 @@ class PromotionFields {
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
+  static String promoAmount = 'promoAmount';
+  static String promoRate = 'promoRate';
 }
 
 class Promotion{
@@ -100,6 +102,8 @@ class Promotion{
     String? created_at,
     String? updated_at,
     String? soft_delete,
+    double? promoAmount,
+    String? promoRate
   }) =>
       Promotion(
           promotion_id: promotion_id ?? this.promotion_id,
@@ -160,6 +164,8 @@ class Promotion{
     PromotionFields.created_at: created_at,
     PromotionFields.updated_at: updated_at,
     PromotionFields.soft_delete: soft_delete,
+    PromotionFields.promoAmount: promoAmount,
+    PromotionFields.promoRate: promoRate
   };
 
   static double callPromotion(promotionType, totalPrice, rate) {

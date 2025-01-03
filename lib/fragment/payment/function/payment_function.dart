@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/payment_link_company.dart';
+import 'package:optimy_second_device/object/promotion.dart';
+import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
@@ -86,11 +88,27 @@ class PaymentFunction extends ChangeNotifier {
     Map<String, dynamic> param = {
       'orderCacheList': cart.currentOrderCache,
       'orderData': orderData,
-      'promotion': cart.applicablePromotions,
-      'tax': cart.applicableTax
+      'promotion': getTotalDiscountPerPromotion(cart),
+      'tax': getTotalAmountPerTax(cart)
     };
     await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
     // return _paymentMethodList;
+  }
+
+  List<TaxLinkDining> getTotalAmountPerTax(CartModel cart) {
+    return cart.applicableTax.map((tax) {
+      return tax.copy(
+          tax_amount: cart.taxAmount(tax)
+      );
+    }).toList();
+  }
+
+  List<Promotion> getTotalDiscountPerPromotion(CartModel cart) {
+    return cart.applicablePromotions.map((promotion) {
+      return promotion.copy(
+        promoAmount: cart.discountForPromotion(promotion)
+      );
+    }).toList();
   }
 
   void _decodePaymentRes(response){

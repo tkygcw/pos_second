@@ -243,7 +243,7 @@ class _CartPaymentState extends State<_CartPayment> {
               ],
             ),
           ),
-          trailing: Text('-${widget.selectedPromotion!.promoAmount!.toStringAsFixed(2)}',
+          trailing: Text('-${cart.discountForPromotion(cart.selectedPromotion!).toStringAsFixed(2)}',
               style: TextStyle(fontSize: 14)),
           visualDensity: VisualDensity(vertical: -4),
           dense: true,

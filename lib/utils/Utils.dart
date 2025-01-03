@@ -44,6 +44,14 @@ class Utils {
     }
   }
 
+  static double convertTo2DecInDouble(double value) {
+    try {
+      return double.parse(value.toStringAsFixed(2));
+    } catch ($e) {
+      return double.parse(0.0.toStringAsFixed(2));
+    }
+  }
+
   static MaterialColor white = const MaterialColor(
     0xFFFFFFFF,
     const <int, Color>{
