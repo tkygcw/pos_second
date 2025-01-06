@@ -68,6 +68,7 @@ class OrderFields {
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
+  static String payment_type_id = 'payment_type_id';
 }
 
 class Order {
@@ -104,7 +105,7 @@ class Order {
   String? soft_delete;
   bool isSelected = false;
   String? payment_name;
-  String? payment_type;
+  String? payment_type_id;
   String? refund_by;
   String? refund_at;
   int? item_sum;
@@ -158,7 +159,7 @@ class Order {
         this.updated_at,
         this.soft_delete,
         this.payment_name,
-        this.payment_type,
+        this.payment_type_id,
         this.refund_by,
         this.refund_at,
         this.item_sum,
@@ -205,6 +206,7 @@ class Order {
     String? created_at,
     String? updated_at,
     String? soft_delete,
+    String? payment_type_id
   }) =>
       Order(
           order_sqlite_id: order_sqlite_id ?? this.order_sqlite_id,
@@ -238,8 +240,7 @@ class Order {
           created_at: created_at ?? this.created_at,
           updated_at: updated_at ?? this.updated_at,
           soft_delete: soft_delete ?? this.soft_delete,
-          payment_name: payment_name ?? this.payment_name,
-          payment_type: payment_type ?? this.payment_type);
+          payment_type_id: payment_type_id ?? this.payment_type_id);
 
   static Order fromJson(Map<String, Object?> json) => Order(
     order_sqlite_id: json[OrderFields.order_sqlite_id] as int?,
@@ -274,7 +275,7 @@ class Order {
     updated_at: json[OrderFields.updated_at] as String?,
     soft_delete: json[OrderFields.soft_delete] as String?,
     payment_name: json['name'] as String?,
-    payment_type: json['payment_type_id'] as String?,
+    payment_type_id: json[OrderFields.payment_type_id] as String?,
     refund_by: json['refund_name'] as String?,
     refund_at: json['refund_at'] as String?,
     item_sum: json['item_sum'] as int?,
@@ -321,5 +322,6 @@ class Order {
     OrderFields.created_at: created_at,
     OrderFields.updated_at: updated_at,
     OrderFields.soft_delete: soft_delete,
+    OrderFields.payment_type_id: payment_type_id
   };
 }

@@ -1590,8 +1590,8 @@ class _CartPageState extends State<CartPage> {
     }
     //await getDiningTax(cart);
     calPromotion(cart);
-    getTaxAmount();
-    getRounding();
+    // getTaxAmount();
+    // getRounding();
     getAllTotal();
     checkCartItem(cart);
     if (cart.cartScrollDown == 0) {
@@ -1606,42 +1606,42 @@ class _CartPageState extends State<CartPage> {
     // }
   }
 
-  void getTaxAmount() {
-    try {
-      discountPrice = total - promoAmount;
-      currentDiningTax = taxLinkDiningList.where((tax) => tax.dining_id == cart.selectedOptionId).toList();
-      if (currentDiningTax.isNotEmpty) {
-        for (int i = 0; i < currentDiningTax.length; i++) {
-          priceIncTaxes = discountPrice * (double.parse(currentDiningTax[i].tax_rate!) / 100);
-          currentDiningTax[i].tax_amount = priceIncTaxes;
-        }
-      }
-    } catch (e) {
-      print('get tax amount error: $e');
-    }
-    // if (!controller.isClosed) {
-    //   controller.sink.add('refresh');
-    // }
-  }
+  // void getTaxAmount() {
+  //   try {
+  //     discountPrice = total - promoAmount;
+  //     currentDiningTax = taxLinkDiningList.where((tax) => tax.dining_id == cart.selectedOptionId).toList();
+  //     if (currentDiningTax.isNotEmpty) {
+  //       for (int i = 0; i < currentDiningTax.length; i++) {
+  //         priceIncTaxes = discountPrice * (double.parse(currentDiningTax[i].tax_rate!) / 100);
+  //         currentDiningTax[i].tax_amount = priceIncTaxes;
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print('get tax amount error: $e');
+  //   }
+  //   // if (!controller.isClosed) {
+  //   //   controller.sink.add('refresh');
+  //   // }
+  // }
 
-  double sumAllTaxAmount() {
-    double total = 0.0;
-    for (int i = 0; i < currentDiningTax.length; i++) {
-      total = total + currentDiningTax[i].tax_amount!;
-    }
-    return total;
-  }
+  // double sumAllTaxAmount() {
+  //   double total = 0.0;
+  //   for (int i = 0; i < currentDiningTax.length; i++) {
+  //     total = total + currentDiningTax[i].tax_amount!;
+  //   }
+  //   return total;
+  // }
 
-  void getRounding() {
-    totalAmount = 0.0;
-    discountPrice = total - promoAmount;
-    totalAmount = discountPrice + sumAllTaxAmount();
-    rounding = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
-
-    // if (!controller.isClosed) {
-    //   controller.sink.add('refresh');
-    // }
-  }
+  // void getRounding() {
+  //   totalAmount = 0.0;
+  //   discountPrice = total - promoAmount;
+  //   totalAmount = discountPrice + sumAllTaxAmount();
+  //   rounding = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
+  //
+  //   // if (!controller.isClosed) {
+  //   //   controller.sink.add('refresh');
+  //   // }
+  // }
 
   getAllTotal() {
     try {

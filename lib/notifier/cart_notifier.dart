@@ -137,9 +137,7 @@ class CartModel extends ChangeNotifier {
 
   // Calculate the subtotal after promotion
   double get discountedSubtotal {
-    return Utils.convertTo2DecInDouble(subtotal) -
-        Utils.convertTo2DecInDouble(totalAutoPromotionDiscount) -
-        Utils.convertTo2DecInDouble(totalSelectedPromotionDiscount);
+    return subtotal - totalAutoPromotionDiscount - totalSelectedPromotionDiscount;
   }
 
   //get all tax and charges
@@ -149,7 +147,7 @@ class CartModel extends ChangeNotifier {
 
   //calculate the tax/charges amount after promotion
   double taxAmount(TaxLinkDining tax) {
-    return Utils.convertTo2DecInDouble(discountedSubtotal * (double.parse(tax.tax_rate!) / 100));
+    return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
   }
 
   // Total discount from all promotions
@@ -160,7 +158,7 @@ class CartModel extends ChangeNotifier {
   // Total before rounding
   double get grossTotal {
     var grossTotal = discountedSubtotal + totalTaxAmount;
-    return Utils.convertTo2DecInDouble(grossTotal);
+    return grossTotal;
   }
 
   // Total rounding

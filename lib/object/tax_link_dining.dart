@@ -32,7 +32,7 @@ class TaxLinkDining{
   String? tax_rate;
   String? tax_name;
   String? dining_name;
-  double? tax_amount;
+  String? tax_amount;
   int? tax_type;
 
   TaxLinkDining(
@@ -59,7 +59,7 @@ class TaxLinkDining{
     String? tax_rate,
     String? tax_name,
     int? tax_type,
-    double? tax_amount
+    String? tax_amount
   }) =>
       TaxLinkDining(
         tax_link_dining_id: tax_link_dining_id ?? this.tax_link_dining_id,
@@ -85,7 +85,7 @@ class TaxLinkDining{
     tax_name: json[TaxLinkDiningFields.tax_name] as String?,
     dining_name: json['dining_name'] as String?,
     tax_type: json[TaxLinkDiningFields.tax_type] as int?,
-    tax_amount: json[TaxLinkDiningFields.tax_amount] as double?
+    tax_amount: json[TaxLinkDiningFields.tax_amount] as String?
   );
 
   Map<String, Object?> toJson() => {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/payment/payment_method_widget.dart';
 import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/payment_link_company.dart';
@@ -72,6 +73,7 @@ class PaymentFunction extends ChangeNotifier {
     Map<String, dynamic> userMap = json.decode(pos_user!);
     User userData = User.fromJson(userMap);
     var orderData = Order(
+      payment_type_id: _paymentLinkCompany!.payment_type_id!,
       payment_received: _splitPayment ? '' : _paymentReceived.toStringAsFixed(2),
       payment_change: _splitPayment ? '' : _change.toStringAsFixed(2),
       payment_link_company_id: _splitPayment ? '' : _paymentLinkCompany!.payment_link_company_id!.toString(),
@@ -89,7 +91,8 @@ class PaymentFunction extends ChangeNotifier {
       'orderCacheList': cart.currentOrderCache,
       'orderData': orderData,
       'promotion': getTotalDiscountPerPromotion(cart),
-      'tax': getTotalAmountPerTax(cart)
+      'tax': getTotalAmountPerTax(cart),
+      'selectedTable': cart.selectedTable
     };
     await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
     // return _paymentMethodList;
@@ -98,7 +101,7 @@ class PaymentFunction extends ChangeNotifier {
   List<TaxLinkDining> getTotalAmountPerTax(CartModel cart) {
     return cart.applicableTax.map((tax) {
       return tax.copy(
-          tax_amount: cart.taxAmount(tax)
+          tax_amount: cart.taxAmount(tax).toStringAsFixed(2)
       );
     }).toList();
   }
