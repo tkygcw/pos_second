@@ -67,17 +67,17 @@ class _ButtonWidgetState extends State<ButtonWidget> {
         ),
         SizedBox(width: 10,),
         //split payment part
-        ElevatedButton.icon(
-          style: ButtonStyle(
-              backgroundColor: WidgetStateProperty.all(Colors.blue),
-              padding: WidgetStateProperty.all(EdgeInsets.all(20))),
-          onPressed: () async {},
-          icon: Icon(Icons.payments_outlined),
-          label: Text(!split_payment ? AppLocalizations.of(context)!.translate('split_payment')
-              : AppLocalizations.of(context)!.translate('split_payment_cancel'),
-              style: TextStyle(fontSize: 20)
-          ),
-        ),
+        // ElevatedButton.icon(
+        //   style: ButtonStyle(
+        //       backgroundColor: WidgetStateProperty.all(Colors.blue),
+        //       padding: WidgetStateProperty.all(EdgeInsets.all(20))),
+        //   onPressed: () async {},
+        //   icon: Icon(Icons.payments_outlined),
+        //   label: Text(!split_payment ? AppLocalizations.of(context)!.translate('split_payment')
+        //       : AppLocalizations.of(context)!.translate('split_payment_cancel'),
+        //       style: TextStyle(fontSize: 20)
+        //   ),
+        // ),
       ];
     } else {
       _widget = [
@@ -129,22 +129,22 @@ class _ButtonWidgetState extends State<ButtonWidget> {
           width: 5,
         ),
         //split payment button
-        SizedBox(
-          height: 70,
-          width: 150,
-          child:
-          ElevatedButton.icon(
-              onPressed: (){},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                elevation: 5,
-              ),
-              icon: Icon(Icons.payments_outlined, size: 24),
-              label: Text(!split_payment ? AppLocalizations.of(context)!.translate('split_payment')
-                  : AppLocalizations.of(context)!.translate('split_payment_cancel'),
-                style: TextStyle(fontSize: 20),
-              )),
-        )
+        // SizedBox(
+        //   height: 70,
+        //   width: 150,
+        //   child:
+        //   ElevatedButton.icon(
+        //       onPressed: (){},
+        //       style: ElevatedButton.styleFrom(
+        //         backgroundColor: Colors.blue,
+        //         elevation: 5,
+        //       ),
+        //       icon: Icon(Icons.payments_outlined, size: 24),
+        //       label: Text(!split_payment ? AppLocalizations.of(context)!.translate('split_payment')
+        //           : AppLocalizations.of(context)!.translate('split_payment_cancel'),
+        //         style: TextStyle(fontSize: 20),
+        //       )),
+        // )
       ];
     }
     return _widget;

@@ -8,6 +8,7 @@ import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 import '../../../notifier/cart_notifier.dart';
 import '../../../translation/AppLocalizations.dart';
+import '../function/payment_function.dart';
 import '../payment_method_widget.dart';
 import 'shared_widget/button_widget.dart';
 import 'shared_widget/final_amount_widget.dart';
@@ -112,6 +113,8 @@ class _ScanWidgetState extends State<_ScanWidget> {
 
   void _onQRViewCreated(QRViewController p1) {
     try{
+      var cart = context.read<CartModel>();
+      var paymentFunc = context.read<PaymentFunction>();
       this.controller = p1;
       p1.scannedDataStream.listen((scanData) async {
         result = scanData;
@@ -119,6 +122,7 @@ class _ScanWidgetState extends State<_ScanWidget> {
         p1.pauseCamera();
         //Make payment
         print("Call server make payment");
+        await paymentFunc.makePayment(cart, ipayResultCode: result!.code!);
         // assetsAudioPlayer.open(
         //   Audio("audio/scan_sound.mp3"),
         // );

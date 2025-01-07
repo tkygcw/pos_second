@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/payment/payment_method_widget.dart';
+import 'package:optimy_second_device/fragment/payment/payment_success.dart';
+import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
 import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/payment_link_company.dart';
@@ -16,14 +18,12 @@ class PaymentFunction extends ChangeNotifier {
   double _paymentReceived = 0.0;
   double _change = 0.0;
   bool _splitPayment = false;
-  String _ipayTransId  = '';
   PaymentLinkCompany? _paymentLinkCompany;
   List<PaymentLinkCompany> _paymentMethodList = [];
 
   double get change => _change;
   double get paymentReceived => _paymentReceived;
   bool get splitPayment => _splitPayment;
-  String get ipayTransId => _ipayTransId;
   PaymentLinkCompany? get paymentLinkCompany => _paymentLinkCompany;
 
   set setPaymentReceived(double value) {
@@ -36,10 +36,6 @@ class PaymentFunction extends ChangeNotifier {
 
   set setSplitPayment(bool value) {
     _splitPayment = value;
-  }
-
-  set setIpayTransId(String value) {
-    _ipayTransId = value;
   }
 
   PaymentFunction();
@@ -64,7 +60,7 @@ class PaymentFunction extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future makePayment(CartModel cart) async {
+  Future makePayment(CartModel cart, {String? ipayResultCode}) async {
     print("_paymentLinkCompany: ${_paymentLinkCompany!.payment_link_company_id}");
     print("change: ${change}");
     print("Payment received: ${_paymentReceived}");
@@ -78,7 +74,7 @@ class PaymentFunction extends ChangeNotifier {
       payment_change: _splitPayment ? '' : _change.toStringAsFixed(2),
       payment_link_company_id: _splitPayment ? '' : _paymentLinkCompany!.payment_link_company_id!.toString(),
       payment_split: _splitPayment ? 1 : 0,
-      ipay_trans_id: _splitPayment ? '' : _ipayTransId,
+      ipay_trans_id: '',
       close_by: userData.name,
       dining_id: cart.selectedOptionId,
       dining_name: cart.selectedOption,
@@ -92,7 +88,8 @@ class PaymentFunction extends ChangeNotifier {
       'orderData': orderData,
       'promotion': getTotalDiscountPerPromotion(cart),
       'tax': getTotalAmountPerTax(cart),
-      'selectedTable': cart.selectedTable
+      'selectedTable': cart.selectedTable,
+      'ipayResultCode': ipayResultCode
     };
     await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
     // return _paymentMethodList;
@@ -121,6 +118,17 @@ class PaymentFunction extends ChangeNotifier {
       switch(status){
         case '1': {
           print("payment success");
+          Navigator.pushReplacement(
+            MyApp.navigatorKey.currentContext!,
+            MaterialPageRoute<void>(
+              builder: (BuildContext context) => PaymentSuccessPage(change: _change.toStringAsFixed(2)),
+            ),
+          );
+        }break;
+        case '2': {
+          print("payment failed");
+          CustomFailedToast(title: '${json['error']}').showToast();
+          Navigator.of(MyApp.navigatorKey.currentContext!,).pop();
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
