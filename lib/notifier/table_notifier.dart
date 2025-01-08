@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/table/table_view_function.dart';
 
 import '../object/table.dart';
 
 class TableModel extends ChangeNotifier {
-  List<PosTable> notifierTableList = [];
+  List<PosTable> _notifierTableList = [];
+
+  List<PosTable> get notifierTableList => _notifierTableList;
+
   bool isChange = false;
+
+  Future<void> getTableFromServer() async {
+    _notifierTableList = await TableViewFunction().readAllTable();
+    notifyListeners();
+  }
 
   void initialLoad() async {
     print('table notifier called');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/table/table_view_function.dart';
 import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
+import 'package:optimy_second_device/notifier/table_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/cart_product.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -23,18 +24,18 @@ class TableView extends StatefulWidget {
 }
 
 class _TableViewState extends State<TableView> {
-  late Future<List<PosTable>> _readTableFromServer;
+  late Future<void> _readTableFromServer;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _readTableFromServer = tableViewFunc.readAllTable();
+    _readTableFromServer = Provider.of<TableModel>(context, listen: false).getTableFromServer();
   }
   @override
   Widget build(BuildContext context) {
     var color = widget.themeColor;
-    return FutureBuilder<List<PosTable>>(
+    return FutureBuilder(
       future: _readTableFromServer,
       builder: (context, snapshot) {
         print("connection state: ${snapshot.connectionState}");
@@ -47,15 +48,18 @@ class _TableViewState extends State<TableView> {
                 child: Text("Check main pos version"),
               );
             } else {
-              List<PosTable> tableList = snapshot.data!;
-              return GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: MediaQuery.of(context).size.height > 500 ? 5 : 3,
-                children: List.generate(
-                    tableList.length, (index) {
-                  return _TableCard(posTable: tableList[index], color: color);
-                }),
-              );
+              // List<PosTable> tableList = snapshot.data!;
+              return Consumer<TableModel>(
+                  builder: (context, tableModel, child) {
+                    return GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: MediaQuery.of(context).size.height > 500 ? 5 : 3,
+                      children: List.generate(
+                          tableModel.notifierTableList.length, (index) {
+                        return _TableCard(posTable: tableModel.notifierTableList[index], color: color);
+                      }),
+                    );
+                  });
             }
         }
       }

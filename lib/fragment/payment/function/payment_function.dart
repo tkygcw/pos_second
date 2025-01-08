@@ -9,12 +9,15 @@ import 'package:optimy_second_device/object/order.dart';
 import 'package:optimy_second_device/object/payment_link_company.dart';
 import 'package:optimy_second_device/object/promotion.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
+import '../../../notifier/table_notifier.dart';
 import '../../../object/user.dart';
 
 class PaymentFunction extends ChangeNotifier {
+  final _context = MyApp.navigatorKey.currentContext!;
   double _paymentReceived = 0.0;
   double _change = 0.0;
   bool _splitPayment = false;
@@ -119,16 +122,19 @@ class PaymentFunction extends ChangeNotifier {
         case '1': {
           print("payment success");
           Navigator.pushReplacement(
-            MyApp.navigatorKey.currentContext!,
+            _context,
             MaterialPageRoute<void>(
               builder: (BuildContext context) => PaymentSuccessPage(change: _change.toStringAsFixed(2)),
             ),
           );
         }break;
         case '2': {
-          print("payment failed");
           CustomFailedToast(title: '${json['error']}').showToast();
-          Navigator.of(MyApp.navigatorKey.currentContext!,).pop();
+          Navigator.of(_context).pop();
+          Future.delayed(const Duration(seconds: 1), () {
+            Provider.of<TableModel>(_context, listen: false).getTableFromServer();
+            Provider.of<CartModel>(_context, listen: false).initialLoad();
+          });
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);

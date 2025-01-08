@@ -118,38 +118,36 @@ class _TableMenuState extends State<TableMenu> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return Consumer<TableModel>(builder: (context, TableModel tableModel, child) {
-        // if (tableModel.isChange) {
-        //   readAllTable(model: tableModel);
-        // }
-        // if (notificationModel.contentLoad == true) {
-        //   isLoaded = false;
-        // }
-        // if (notificationModel.contentLoad == true && notificationModel.contentLoaded == true) {
-        //   notificationModel.resetContentLoaded();
-        //   notificationModel.resetContentLoad();
-        //   Future.delayed(const Duration(seconds: 1), () {
-        //     if (mounted) {
-        //       setState(() {
-        //         readAllTable(notification: true);
-        //       });
-        //     }
-        //   });
-        // }
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          appBar: AppBar(
-            primary: false,
-            elevation: 0,
-            automaticallyImplyLeading: false,
-            title: Text(
-              "Table",
-              style: TextStyle(fontSize: 25),
-            ),
+      // if (tableModel.isChange) {
+      //   readAllTable(model: tableModel);
+      // }
+      // if (notificationModel.contentLoad == true) {
+      //   isLoaded = false;
+      // }
+      // if (notificationModel.contentLoad == true && notificationModel.contentLoaded == true) {
+      //   notificationModel.resetContentLoaded();
+      //   notificationModel.resetContentLoad();
+      //   Future.delayed(const Duration(seconds: 1), () {
+      //     if (mounted) {
+      //       setState(() {
+      //         readAllTable(notification: true);
+      //       });
+      //     }
+      //   });
+      // }
+      return Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          primary: false,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            "Table",
+            style: TextStyle(fontSize: 25),
           ),
-          body: TableView(themeColor: color),
-        );
-      });
+        ),
+        body: TableView(themeColor: color),
+      );
     });
   }
 
