@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
+import 'package:optimy_second_device/notifier/table_notifier.dart';
 import 'package:optimy_second_device/object/branch_link_dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
@@ -98,7 +99,7 @@ class DecodeAction {
         case '0': {
           Iterable value1 = json['failedPrintOrderDetail'];
           List<OrderDetail> failOrderDetail = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
-          if( FailPrintModel.instance.failPrintOrderDetails.isEmpty){
+          if(FailPrintModel.instance.failPrintOrderDetails.isEmpty){
             FailPrintModel.instance.addAllFailedOrderDetail(failOrderDetail);
             showFlushBarAndPlaySound();
           } else {
@@ -110,6 +111,10 @@ class DecodeAction {
         case '1': {
           decodeAllFunction(clientAction.serverResponse);
           NotificationModel.instance.setNotification(true);
+        }
+        break;
+        case '2': {
+          TableModel.instance.getTableFromServer();
         }
         break;
         // case'17': {

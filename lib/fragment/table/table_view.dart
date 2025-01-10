@@ -32,6 +32,14 @@ class _TableViewState extends State<TableView> {
     super.initState();
     _readTableFromServer = Provider.of<TableModel>(context, listen: false).getTableFromServer();
   }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    TableModel.instance.unselectAllOrderCache();
+  }
+
   @override
   Widget build(BuildContext context) {
     var color = widget.themeColor;
@@ -109,6 +117,7 @@ class _TableCard extends StatelessWidget {
           Future.delayed(Duration(milliseconds: 500), () async {
             var cart = context.read<CartModel>();
             if(isInCart){
+              tableViewFunc.unselectSpecificSubPosOrderCache(posTable.table_use_key!);
               cart.removeGroupedTable(posTable);
               cart.removeSpecificItem(posTable.table_use_key);
             } else {

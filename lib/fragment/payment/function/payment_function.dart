@@ -92,7 +92,8 @@ class PaymentFunction extends ChangeNotifier {
       'promotion': getTotalDiscountPerPromotion(cart),
       'tax': getTotalAmountPerTax(cart),
       'selectedTable': cart.selectedTable,
-      'ipayResultCode': ipayResultCode
+      'ipayResultCode': ipayResultCode,
+      'user_id': userData.user_id
     };
     await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
     // return _paymentMethodList;
@@ -130,10 +131,11 @@ class PaymentFunction extends ChangeNotifier {
         }break;
         case '2': {
           CustomFailedToast(title: '${json['error']}').showToast();
-          Navigator.of(_context).pop();
-          Future.delayed(const Duration(seconds: 1), () {
-            Provider.of<TableModel>(_context, listen: false).getTableFromServer();
+          Future.delayed(const Duration(seconds: 1), () async {
+            await TableModel.instance.getTableFromServer();
+            await TableModel.instance.unselectAllOrderCache();
             Provider.of<CartModel>(_context, listen: false).initialLoad();
+            Navigator.of(_context).pop();
           });
         }break;
         default: {

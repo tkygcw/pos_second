@@ -65,4 +65,12 @@ class TableViewFunction {
       //readAllTable();
     }
   }
+
+  Future<void> unselectAllSubPosOrderCache() async {
+    await clientAction.connectRequestPort(action: '20', param: '');
+  }
+
+  Future<void> unselectSpecificSubPosOrderCache(String table_use_key) async {
+    await clientAction.connectRequestPort(action: '20', param: table_use_key);
+  }
 }
