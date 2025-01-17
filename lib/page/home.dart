@@ -280,7 +280,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ],
               ),
               Visibility(
-                visible: !isCartExpanded && currentPage == 'menu',
+                visible: !isCartExpanded && currentPage == 'menu' || currentPage == 'table',
                 child: Positioned(
                   bottom: 16,
                   right: 16,

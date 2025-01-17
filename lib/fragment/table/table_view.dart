@@ -56,12 +56,11 @@ class _TableViewState extends State<TableView> {
                 child: Text("Check main pos version"),
               );
             } else {
-              // List<PosTable> tableList = snapshot.data!;
               return Consumer<TableModel>(
                   builder: (context, tableModel, child) {
                     return GridView.count(
                       shrinkWrap: true,
-                      crossAxisCount: MediaQuery.of(context).size.height > 500 ? 5 : 3,
+                      crossAxisCount: crossAxisCount,
                       children: List.generate(
                           tableModel.notifierTableList.length, (index) {
                         return _TableCard(posTable: tableModel.notifierTableList[index], color: color);
@@ -73,6 +72,23 @@ class _TableViewState extends State<TableView> {
       }
     );
   }
+
+  int get crossAxisCount {
+    var screenSize = MediaQuery.of(context).size;
+    if(MediaQuery.of(context).orientation == Orientation.landscape){
+      if(screenSize.width > 900 && screenSize.height > 500){
+        return 5;
+      } else {
+        return 3;
+      }
+    } else {
+      if(screenSize.width > 500 && screenSize.height > 500){
+        return 4;
+      } else {
+        return 3;
+      }
+    }
+  }
 }
 
 class _TableCard extends StatelessWidget {
@@ -82,6 +98,7 @@ class _TableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var cart = context.read<CartModel>();
     var isInCart = context.select<CartModel, bool>(
       // Here, we are only interested whether [item] is inside the cart.
           (cart) {
@@ -115,41 +132,44 @@ class _TableCard extends StatelessWidget {
         onTap: () async {
           openLoadingDialogBox(context);
           Future.delayed(Duration(milliseconds: 500), () async {
-            var cart = context.read<CartModel>();
             if(isInCart){
               tableViewFunc.unselectSpecificSubPosOrderCache(posTable.table_use_key!);
               cart.removeGroupedTable(posTable);
               cart.removeSpecificItem(posTable.table_use_key);
             } else {
               if(posTable.status == 1){
-                await tableViewFunc.readSpecificTableDetail(posTable);
-                List<OrderDetail> orderDetail = tableViewFunc.orderDetailList;
-                List<OrderCache> orderCache = tableViewFunc.orderCacheList;
-                List<cartProductItem> itemList = [];
-                for(var order in orderDetail){
-                  var item = cartProductItem(
-                    product_sku: order.product_sku,
-                    product_name: order.productName,
-                    price: order.price,
-                    base_price: order.original_price,
-                    orderModifierDetail: order.orderModifierDetail,
-                    productVariantName: order.product_variant_name,
-                    unit: order.unit,
-                    quantity: num.parse(order.quantity!),
-                    remark: order.remark,
-                    refColor: Colors.black,
-                    first_cache_created_date_time: orderCache.last.created_at,  //orderCacheList[0].created_at,
-                    first_cache_batch: orderCache.last.batch_id,
-                    table_use_key: orderCache.last.table_use_key,
-                    per_quantity_unit: order.per_quantity_unit,
-                    status: 0,
-                    category_id: order.product_category_id,
-                  );
-                  itemList.add(item);
+                int status = await tableViewFunc.readSpecificTableDetail(posTable);
+                if(status == 1){
+                  List<OrderDetail> orderDetail = tableViewFunc.orderDetailList;
+                  List<OrderCache> orderCache = tableViewFunc.orderCacheList;
+                  List<cartProductItem> itemList = [];
+                  for(var order in orderDetail){
+                    var item = cartProductItem(
+                      product_sku: order.product_sku,
+                      product_name: order.productName,
+                      price: order.price,
+                      base_price: order.original_price,
+                      orderModifierDetail: order.orderModifierDetail,
+                      productVariantName: order.product_variant_name,
+                      unit: order.unit,
+                      quantity: num.parse(order.quantity!),
+                      remark: order.remark,
+                      refColor: Colors.black,
+                      first_cache_created_date_time: orderCache.last.created_at,
+                      first_cache_batch: orderCache.last.batch_id,
+                      table_use_key: orderCache.last.table_use_key,
+                      per_quantity_unit: order.per_quantity_unit,
+                      status: 0,
+                      category_id: order.product_category_id,
+                    );
+                    itemList.add(item);
+                  }
+                  cart.addAllItem(itemList, notifyListener: false);
+                  cart.addTable(posTable);
+                  cart.setCurrentOrderCache = orderCache;
+                } else {
+                  CustomFailedToast(title: 'table_is_in_payment').showToast();
                 }
-                cart.addAllItem(itemList, notifyListener: false);
-                cart.addTable(posTable);
-                cart.setCurrentOrderCache = orderCache;
               } else {
                 CustomFailedToast(title: 'Table not in used').showToast();
               }

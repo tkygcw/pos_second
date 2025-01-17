@@ -9,6 +9,7 @@ class TableViewFunction {
   List<PosTable> _tableList = [];
   List<OrderCache> _orderCacheList = [];
   List<OrderDetail> _orderDetailList = [];
+  int _responseStatus = 0;
 
   List<OrderDetail> get orderDetailList => _orderDetailList;
 
@@ -41,14 +42,16 @@ class TableViewFunction {
     }
   }
 
-  Future<void> readSpecificTableDetail(PosTable posTable) async {
+  Future<int> readSpecificTableDetail(PosTable posTable) async {
     await clientAction.connectRequestPort(action: '16', param: jsonEncode(posTable), callback: _decodeTableDetail);
+    return _responseStatus;
   }
 
   void _decodeTableDetail(response){
     try{
       var json = jsonDecode(clientAction.response!);
       String status = json['status'];
+      _responseStatus = int.parse(status);
       switch(status){
         case '1': {
           Iterable orderCache = json['data']['orderCacheList'];
@@ -56,6 +59,10 @@ class TableViewFunction {
           _orderCacheList = List<OrderCache>.from(orderCache.map((json) => OrderCache.fromJson(json)));
           _orderDetailList = List<OrderDetail>.from(orderDetail.map((json) => OrderDetail.fromJson(json)));
         }break;
+        case '2': {
+          _orderCacheList = [];
+          _orderDetailList = [];
+        } break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeTableDetail);
         }

@@ -13,6 +13,7 @@ import '../object/promotion.dart';
 import '../object/table.dart';
 
 class CartModel extends ChangeNotifier {
+  static final CartModel instance = CartModel._init();
   CartPaymentDetail? cartNotifierPayment;
   List<Promotion> autoPromotion = [];
   List<PosTable> _selectedTable = [];
@@ -171,6 +172,8 @@ class CartModel extends ChangeNotifier {
     var netTotal = Utils.roundToNearestFiveSen(grossTotal);
     return double.parse(netTotal.toStringAsFixed(2));
   }
+
+  CartModel._init();
 
   CartModel({
     List<PosTable>? selectedTable,

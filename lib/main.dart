@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
           create: (_) => ThemeColor(),
         ),
         ChangeNotifierProvider(
-          create: (_) => CartModel(),
+          create: (_) => CartModel.instance,
         ),
         ChangeNotifierProvider(
           create: (_) => PrinterModel(),
