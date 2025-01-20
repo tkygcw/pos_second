@@ -274,7 +274,7 @@ class ClientAction {
     }
   }
 
-  openReconnectDialog({String? action, String? param, bool? keepAlive, Function? callback}) async {
+  openReconnectDialog({String? action, String? param, bool? keepAlive, Function? callback, bool? disableQuickConnect}) async {
     print("is reconnect dialog opened: ${_isReconnectDialogOpen}");
     if (_isReconnectDialogOpen == false) {
       _isReconnectDialogOpen = true;
@@ -291,6 +291,7 @@ class ClientAction {
                   param: param,
                   callback: callback,
                   keepAliveCall: keepAlive,
+                  disableQuickConnect: disableQuickConnect,
                 ),
               ),
             );

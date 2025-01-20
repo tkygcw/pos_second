@@ -15,7 +15,8 @@ class ReconnectDialog extends StatefulWidget {
   final String? param;
   final Function? callback;
   final bool? keepAliveCall;
-  const ReconnectDialog({Key? key, this.action, this.param, this.keepAliveCall, this.callback}) : super(key: key);
+  final bool? disableQuickConnect;
+  const ReconnectDialog({Key? key, this.action, this.param, this.keepAliveCall, this.callback, this.disableQuickConnect}) : super(key: key);
 
   @override
   State<ReconnectDialog> createState() => _ReconnectDialogState();
@@ -31,62 +32,66 @@ class _ReconnectDialogState extends State<ReconnectDialog> {
     super.initState();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: AlertDialog(
-        title: const Text('Lost connection from server'),
-        content: const Text('Server Connection failed. Please check your devices wireless or mobile network setting and reconnect'),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                  onPressed: isButtonDisable ? null : () {
-                    clientAction.setReconnectDialogStatus = false;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      // the new route
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => ServerIpDialog(),
-                      ),
-
-                      // this function should return true when we're done removing routes
-                      // but because we want to remove all other screens, we make it
-                      // always return false
-                          (Route route) => false,
-                    );
-                  },
-                  child: const Text('Rescan server')
-              ),
-              const SizedBox(width: 20),
-              ElevatedButton(
-                  onPressed: isButtonDisable ? null : () async {
-                    setState(() {
-                      isButtonDisable = true;
-                    });
-                    Navigator.of(context).pop();
-                    if(widget.keepAliveCall == true){
+    return SafeArea(
+      child: PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text('Lost connection from server'),
+          content: const Text('Server Connection failed. Please check your devices wireless or mobile network setting and reconnect'),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                    onPressed: isButtonDisable ? null : () {
                       clientAction.setReconnectDialogStatus = false;
-                      await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
-                    } else {
-                      clientAction.setReconnectDialogStatus = false;
-                      clientAction.connectServer(clientAction.serverIp!);
-                      print("pass action: ${widget.action}");
-                      if(widget.action != null){
-                        await clientAction.connectRequestPort(action: widget.action!, param: widget.param, callback: widget.callback);
-                      } else {
-                        print("else called!!!");
-                        widget.callback!();
-                      }
-                    }
-                  },
-                  child: const Text('Quick connect')
-              ),
-            ],
-          ),
-        ],
+                      Navigator.of(context).pushAndRemoveUntil(
+                        // the new route
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => ServerIpDialog(),
+                        ),
+      
+                        // this function should return true when we're done removing routes
+                        // but because we want to remove all other screens, we make it
+                        // always return false
+                            (Route route) => false,
+                      );
+                    },
+                    child: const Text('Rescan server')
+                ),
+                const SizedBox(width: 20),
+                Visibility(
+                  visible: widget.disableQuickConnect == true ? false : true,
+                  child: ElevatedButton(
+                      onPressed: isButtonDisable ? null : () async {
+                        setState(() {
+                          isButtonDisable = true;
+                        });
+                        Navigator.of(context).pop();
+                        if(widget.keepAliveCall == true){
+                          clientAction.setReconnectDialogStatus = false;
+                          await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
+                        } else {
+                          clientAction.setReconnectDialogStatus = false;
+                          clientAction.connectServer(clientAction.serverIp!);
+                          print("pass action: ${widget.action}");
+                          if(widget.action != null){
+                            await clientAction.connectRequestPort(action: widget.action!, param: widget.param, callback: widget.callback);
+                          } else {
+                            print("else called!!!");
+                            widget.callback!();
+                          }
+                        }
+                      },
+                      child: const Text('Quick connect')
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
