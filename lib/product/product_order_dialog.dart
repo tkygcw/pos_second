@@ -1231,6 +1231,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     if(checkedModItem.isNotEmpty){
       for(int i = 0; i < checkedModItem.length; i++){
         String currentModItemId = checkedModItem[i].mod_item_id.toString();
+        branchLinkModifierList = [];
         BranchLinkModifier branchLinkModifier = branchLinkModifierList.firstWhere((item) => item.mod_item_id == currentModItemId);
         totalModPrice += double.parse(branchLinkModifier.price!);
       }
@@ -1259,6 +1260,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     } catch (error) {
       print('Get product base price error $error');
       finalPrice = '0.00';
+      clientAction.openReconnectDialog(action: '2', param: '', callback: decodeData, disableQuickConnect: true);
     }
     dialogPrice = finalPrice;
   }
