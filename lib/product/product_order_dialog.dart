@@ -1231,7 +1231,6 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     if(checkedModItem.isNotEmpty){
       for(int i = 0; i < checkedModItem.length; i++){
         String currentModItemId = checkedModItem[i].mod_item_id.toString();
-        branchLinkModifierList = [];
         BranchLinkModifier branchLinkModifier = branchLinkModifierList.firstWhere((item) => item.mod_item_id == currentModItemId);
         totalModPrice += double.parse(branchLinkModifier.price!);
       }
