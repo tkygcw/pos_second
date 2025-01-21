@@ -19,8 +19,7 @@ import '../../page/progress_bar.dart';
 import '../../utils/Utils.dart';
 
 class DisplayOrderPage extends StatefulWidget {
-  final CartModel cartModel;
-  const DisplayOrderPage({Key? key, required this.cartModel}) : super(key: key);
+  const DisplayOrderPage({Key? key}) : super(key: key);
 
   @override
   State<DisplayOrderPage> createState() => _DisplayOrderPageState();

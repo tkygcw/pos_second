@@ -84,6 +84,7 @@ class _PaymentSelectState extends State<_PaymentSelect> {
 
   @override
   Widget build(BuildContext context) {
+    var orientation = MediaQuery.of(context).orientation;
     return Column(
       mainAxisSize: MainAxisSize.min,
      children: [
@@ -98,6 +99,7 @@ class _PaymentSelectState extends State<_PaymentSelect> {
        const FinalAmountWidget(),
        _PaymentTypeView(paymentType: paymentType),
        const SizedBox(height: 20),
+       orientation == Orientation.landscape ?
        SizedBox(
          height: 100,
          child: ListView(
@@ -107,13 +109,19 @@ class _PaymentSelectState extends State<_PaymentSelect> {
            children: List.generate(widget.paymentLinkCompanyList.length, (i) {
              return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
            })
-         ),
+         )
+       ) :
+       GridView.count(
+         shrinkWrap: true,
+         crossAxisCount: MediaQuery.of(context).size.width < 500 ? 3 : 4,
+         children: List.generate(widget.paymentLinkCompanyList.length, (i) {
+           return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
+         }),
        )
      ],
     );
   }
 }
-
 
 class _PaymentCard extends StatelessWidget {
   final PaymentLinkCompany paymentLinkCompany;

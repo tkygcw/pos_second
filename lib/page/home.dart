@@ -331,11 +331,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }),
         isSelected: true,
       ),
+      if(widget.user!.sub_pos_payment == 1)
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('table'),
         icon: Icons.table_restaurant,
         onPressed: () => setState(() {
           currentPage = 'table';
+          cart.initialLoad();
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
+        }),
+      ),
+      CollapsibleItem(
+        text: AppLocalizations.of(context)!.translate('other_order'),
+        icon: Icons.shopping_cart,
+        onPressed: () => setState(() {
+          currentPage = 'other_order';
           cart.initialLoad();
           isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
@@ -356,6 +366,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       case 'menu':
         return OrderPage();
       case 'table':
+        return TableMenu();
+      case 'other_order':
         return TableMenu();
       case 'setting':
         return SettingMenu();

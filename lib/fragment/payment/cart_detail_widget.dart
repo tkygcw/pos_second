@@ -15,71 +15,86 @@ class CartDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     var cart = context.read<CartModel>();
     var color = context.read<ThemeColor>();
-    return Container(
-      padding: const EdgeInsets.all(15.0),
-      decoration: const BoxDecoration(
+    var orientation = MediaQuery.of(context).orientation;
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(15.0),
+        decoration: const BoxDecoration(
           border: Border(
             right: BorderSide(
-              color: Colors.blueGrey,
-              width: 0.5
+                color: Colors.blueGrey,
+                width: 0.5
             ),
           ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('${AppLocalizations.of(context)!.translate('table_no')}: ${getSelectedTable(cart)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-          Divider(
-            color: Colors.grey,
-            height: 1,
-            thickness: 1,
-            indent: 20,
-            endIndent: 20,
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ListView.builder(
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                itemCount: cart.cartNotifierItem.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return _CartItem(color: color, cartItem: cart.cartNotifierItem[index]);
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${AppLocalizations.of(context)!.translate('table_no')}: ${getSelectedTable(cart)}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+            Divider(
+              color: Colors.grey,
+              height: 1,
+              thickness: 1,
+              indent: 20,
+              endIndent: 20,
+            ),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  itemCount: cart.cartNotifierItem.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return _CartItem(color: color, cartItem: cart.cartNotifierItem[index]);
+                  },
+                ),
+              ),
+            ),
+            Divider(
+              color: Colors.grey,
+              height: 1,
+              thickness: 1,
+              indent: 20,
+              endIndent: 20,
+            ),
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: _CartPayment(cartPayment: cart.cartNotifierPayment!, selectedPromotion: cart.selectedPromotion),
+              ),
+            ),
+            orientation == Orientation.landscape ?
+            SizedBox(
+              width: double.maxFinite,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color.backgroundColor,
+                  padding: const EdgeInsets.all(20),
+                ),
+                onPressed: (){
+                  Navigator.of(context).pop();
                 },
+                child: Text("Cancel payment"),
               ),
-            ),
-          ),
-          Divider(
-            color: Colors.grey,
-            height: 1,
-            thickness: 1,
-            indent: 20,
-            endIndent: 20,
-          ),
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: _CartPayment(cartPayment: cart.cartNotifierPayment!, selectedPromotion: cart.selectedPromotion),
-            ),
-          ),
-          SizedBox(
-            width: double.maxFinite,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color.backgroundColor,
-                padding: const EdgeInsets.all(20),
+            ) : SizedBox(
+              width: double.maxFinite,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color.backgroundColor,
+                  padding: const EdgeInsets.all(20),
+                ),
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+                child: Text("Close"),
               ),
-              onPressed: (){
-                Navigator.of(context).pop();
-              },
-              child: Text("Cancel payment"),
-            ),
-          )
-
-        ],
-      ),
+            )
+          ],
+        ),
+      )
     );
   }
 
@@ -162,7 +177,7 @@ class _CartItem extends StatelessWidget {
           .toString()
           .replaceAll('[', '')
           .replaceAll(']', '')
-          .replaceAll(',', '+')
+          .replaceAll(',', '\n+')
           .replaceFirst('', '+ ');
     } else {
       return '';
@@ -218,6 +233,7 @@ class _CartPaymentState extends State<_CartPayment> {
           dense: true,
         ),
         ListView.builder(
+          padding: EdgeInsets.zero,
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           itemCount: cart.applicablePromotions.length,
@@ -249,6 +265,7 @@ class _CartPaymentState extends State<_CartPayment> {
           dense: true,
         ) : SizedBox.shrink(),
         ListView.builder(
+          padding: EdgeInsets.zero,
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           itemCount: cart.applicableTax.length,
