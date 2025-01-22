@@ -56,6 +56,7 @@ class OrderCacheFields {
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
+  static String dining_name = 'dining_name';
 }
 
 class OrderCache{
@@ -206,7 +207,7 @@ class OrderCache{
     updated_at: json[OrderCacheFields.updated_at] as String?,
     soft_delete: json[OrderCacheFields.soft_delete] as String?,
     card_color: json['card_color'] as String?,
-    dining_name: json['dining_name'] as String?,
+    dining_name: json[OrderCacheFields.dining_name] as String?,
     table_number: json['table_number'] as String?
   );
 

@@ -21,7 +21,7 @@ class OtherOrderPage extends StatefulWidget {
 
 class _OtherOrderPageState extends State<OtherOrderPage> {
   StreamController streamController = StreamController();
-  OtherOrderFunction otherOrderFunction = OtherOrderFunction();
+  OtherOrderFunction otherOrderFunction = OtherOrderFunction.instance;
   List<DiningOption> diningOption = [];
   late DiningOption selectedOption;
   late StreamSubscription subscription;
@@ -107,7 +107,9 @@ class _OtherOrderPageState extends State<OtherOrderPage> {
                       )).toList(),
                       value: selectedOption,
                       onChanged: (value) {
-                        selectedOption = value!;
+                        setState(() {
+                          selectedOption = value!;
+                        });
                         // actionController.sink.add("prod_sort_by");
                       },
                     ),
@@ -115,7 +117,7 @@ class _OtherOrderPageState extends State<OtherOrderPage> {
                 )
               ],
             ),
-            body: Placeholder(),
+            body: DisplayOrderPage(),
           );
         } else {
           return CustomProgressBar();
