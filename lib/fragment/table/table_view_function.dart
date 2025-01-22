@@ -18,7 +18,7 @@ class TableViewFunction {
 
   List<PosTable> get tableList => _tableList;
 
-  Future<List<PosTable>> readAllTable({model, notification}) async {
+  Future<List<PosTable>> readAllTable() async {
     await clientAction.connectRequestPort(action: '13', param: '', callback: _decodeData);
     return _tableList;
   }

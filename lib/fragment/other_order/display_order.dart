@@ -42,9 +42,9 @@ class _DisplayOrderPageState extends State<DisplayOrderPage> {
     super.initState();
     //getDiningList();
     getOrderList();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.cartModel.notDineInInitLoad();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   widget.cartModel.notDineInInitLoad();
+    // });
   }
 
   getOrderList({model}) async {

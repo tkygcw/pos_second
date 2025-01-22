@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:optimy_second_device/fragment/other_order/other_order.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
 import 'package:optimy_second_device/fragment/table/table_menu.dart';
 import 'package:path_provider/path_provider.dart';
@@ -368,7 +369,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       case 'table':
         return TableMenu();
       case 'other_order':
-        return TableMenu();
+        return OtherOrderPage();
       case 'setting':
         return SettingMenu();
       default:
