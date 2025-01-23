@@ -305,6 +305,11 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void removeSpecificBatchItem(String? batch) {
+    _cartNotifierItem.removeWhere((e) => e.first_cache_batch == batch);
+    notifyListeners();
+  }
+
   void removeAllCartItem(){
     _cartNotifierItem.clear();
     notifyListeners();
@@ -377,6 +382,15 @@ class CartModel extends ChangeNotifier {
 
   void removeAutoPromotion(){
     autoPromotion.clear();
+    notifyListeners();
+  }
+
+  void addCurrentOrderCache(OrderCache value){
+    _currentOrderCache.add(value);
+  }
+
+  void removeSpecificCurrentOrderCache(int? order_cache_sqlite_id) {
+    _currentOrderCache.removeWhere((e) => e.order_cache_sqlite_id == order_cache_sqlite_id);
     notifyListeners();
   }
 

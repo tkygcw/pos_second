@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
+import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:provider/provider.dart';
 
+import '../../object/cart_product.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
 
@@ -39,19 +41,60 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var color = context.read<ThemeColor>();
+    var cart = context.read<CartModel>();
+    var isInCart = context.select<CartModel, bool>(
+          (cart) {
+        return cart.currentOrderCache.contains(orderCache);
+      },
+    );
     return Card(
       elevation: 5,
       color: Colors.white,
-      shape: orderCache.is_selected
-          ? RoundedRectangleBorder(
+      shape: isInCart ? RoundedRectangleBorder(
           side: BorderSide(
-              color: color.backgroundColor, width: 3.0),
+            color: color.backgroundColor,
+            width: 3.0,
+          ),
           borderRadius: BorderRadius.circular(4.0))
           : RoundedRectangleBorder(
           side: BorderSide(color: Colors.white, width: 3.0),
           borderRadius: BorderRadius.circular(4.0)),
       child: InkWell(
-        onTap: (){},
+        onTap: () async {
+          OtherOrderFunction orderFunction = OtherOrderFunction.instance;
+          if(isInCart){
+            cart.removeSpecificCurrentOrderCache(orderCache.order_cache_sqlite_id);
+            cart.removeSpecificBatchItem(orderCache.batch_id);
+          } else {
+            int status = await orderFunction.readAllOrderDetail(orderCache);
+            if(status == 1){
+              List<cartProductItem> itemList = [];
+              for(var order in orderFunction.orderDetail){
+                var item = cartProductItem(
+                  product_sku: order.product_sku,
+                  product_name: order.productName,
+                  price: order.price,
+                  base_price: order.original_price,
+                  orderModifierDetail: order.orderModifierDetail,
+                  productVariantName: order.product_variant_name,
+                  unit: order.unit,
+                  quantity: num.parse(order.quantity!),
+                  remark: order.remark,
+                  refColor: Colors.black,
+                  first_cache_created_date_time: orderCache.created_at,
+                  first_cache_batch: orderCache.batch_id,
+                  table_use_key: orderCache.table_use_key,
+                  per_quantity_unit: order.per_quantity_unit,
+                  status: 0,
+                  category_id: order.product_category_id,
+                );
+                itemList.add(item);
+              }
+              cart.addCurrentOrderCache(orderCache);
+              cart.addAllItem(itemList);
+            }
+          }
+        },
         child: Padding(
           padding: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? const EdgeInsets.all(16.0) : EdgeInsets.fromLTRB(0, 16, 0, 16),
           child: ListTile(

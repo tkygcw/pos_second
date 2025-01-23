@@ -106,10 +106,11 @@ class _OtherOrderPageState extends State<OtherOrderPage> {
                         ),
                       )).toList(),
                       value: selectedOption,
-                      onChanged: (value) {
+                      onChanged: (value) async {
                         setState(() {
                           selectedOption = value!;
                         });
+                        await otherOrderFunction.readAllOrderCache(selectedOption.name!);
                         // actionController.sink.add("prod_sort_by");
                       },
                     ),
