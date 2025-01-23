@@ -385,12 +385,12 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addCurrentOrderCache(OrderCache value){
-    _currentOrderCache.add(value);
+  void addAllCurrentOrderCache(List<OrderCache> value){
+    _currentOrderCache.addAll(value);
   }
 
-  void removeSpecificCurrentOrderCache(int? order_cache_sqlite_id) {
-    _currentOrderCache.removeWhere((e) => e.order_cache_sqlite_id == order_cache_sqlite_id);
+  void removeSpecificCurrentOrderCacheWithBatch(String? batch) {
+    _currentOrderCache.removeWhere((e) => e.batch_id == batch);
     notifyListeners();
   }
 

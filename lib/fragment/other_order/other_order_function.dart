@@ -10,12 +10,13 @@ import '../../main.dart';
 class OtherOrderFunction extends ChangeNotifier {
   static final OtherOrderFunction instance = OtherOrderFunction._init();
   List<DiningOption> _diningOption = [];
-  List<OrderCache> _orderCache = [];
-  List<OrderDetail> _orderDetail = [];
+  List<OrderCache> _orderCacheList = [], _addOnOrderCacheList = [];
+  List<OrderDetail> _orderDetailList = [];
   int _responseStatus = 0;
 
-  List<OrderCache> get orderCache => _orderCache;
-  List<OrderDetail> get orderDetail => _orderDetail;
+  List<OrderCache> get orderCacheList => _orderCacheList;
+  List<OrderDetail> get orderDetailList => _orderDetailList;
+  List<OrderCache> get addOnOrderCacheList => _addOnOrderCacheList;
 
   OtherOrderFunction._init();
 
@@ -31,9 +32,11 @@ class OtherOrderFunction extends ChangeNotifier {
       _responseStatus = int.parse(status);
       switch(status){
         case '1': {
-          Iterable value1 = json['data'];
-          _orderDetail = List<OrderDetail>.from(value1.map((json) => OrderDetail.fromJson(json)));
-          print("order detail length: ${_orderDetail.length}");
+          Iterable orderCache = json['data']['orderCacheList'];
+          Iterable orderDetail = json['data']['orderDetailList'];
+          _addOnOrderCacheList = List<OrderCache>.from(orderCache.map((json) => OrderCache.fromJson(json)));
+          _orderDetailList = List<OrderDetail>.from(orderDetail.map((json) => OrderDetail.fromJson(json)));
+          print("order cache length: ${_orderCacheList.length}");
           // notifyListeners();
         }break;
         default: {
@@ -57,7 +60,7 @@ class OtherOrderFunction extends ChangeNotifier {
       switch(status){
         case '1': {
           Iterable value1 = json['data'];
-          _orderCache = List<OrderCache>.from(value1.map((json) => OrderCache.fromJson(json)));
+          _orderCacheList = List<OrderCache>.from(value1.map((json) => OrderCache.fromJson(json)));
           // print("order cache length: ${_orderCache.first.dining_name}");
           notifyListeners();
         }break;

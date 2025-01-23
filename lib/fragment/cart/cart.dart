@@ -696,7 +696,7 @@ class _CartPageState extends State<CartPage> {
                                         }
                                       }
                                     }
-                                  } else if (widget.currentPage == 'table'){
+                                  } else if (widget.currentPage == 'table' || widget.currentPage == 'other_order'){
                                     if(cart.cartNotifierItem.isNotEmpty){
                                       paymentAddToCart(cart);
                                       openPaymentSelect(cart);

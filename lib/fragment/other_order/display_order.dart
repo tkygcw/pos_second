@@ -21,12 +21,12 @@ class _DisplayOrderPageState extends State<DisplayOrderPage> {
   Widget build(BuildContext context) {
     return Consumer<OtherOrderFunction>(
         builder: (context, orderFunction, child){
-          return orderFunction.orderCache.isNotEmpty ? 
+          return orderFunction.orderCacheList.isNotEmpty ?
           ListView.builder(
             shrinkWrap: true,
-            itemCount: orderFunction.orderCache.length,
+            itemCount: orderFunction.orderCacheList.length,
             itemBuilder: (BuildContext context, int index) {
-              return _OrderCard(orderCache: orderFunction.orderCache[index],);
+              return _OrderCard(orderCache: orderFunction.orderCacheList[index]);
             },
           ):
               Center(child: Text("No data"),);
@@ -44,7 +44,8 @@ class _OrderCard extends StatelessWidget {
     var cart = context.read<CartModel>();
     var isInCart = context.select<CartModel, bool>(
           (cart) {
-        return cart.currentOrderCache.contains(orderCache);
+            List<int> list = cart.currentOrderCache.map((e) => e.order_cache_sqlite_id!).toList();
+            return list.contains(orderCache.order_cache_sqlite_id);
       },
     );
     return Card(
@@ -63,13 +64,13 @@ class _OrderCard extends StatelessWidget {
         onTap: () async {
           OtherOrderFunction orderFunction = OtherOrderFunction.instance;
           if(isInCart){
-            cart.removeSpecificCurrentOrderCache(orderCache.order_cache_sqlite_id);
+            cart.removeSpecificCurrentOrderCacheWithBatch(orderCache.batch_id);
             cart.removeSpecificBatchItem(orderCache.batch_id);
           } else {
             int status = await orderFunction.readAllOrderDetail(orderCache);
             if(status == 1){
               List<cartProductItem> itemList = [];
-              for(var order in orderFunction.orderDetail){
+              for(var order in orderFunction.orderDetailList){
                 var item = cartProductItem(
                   product_sku: order.product_sku,
                   product_name: order.productName,
@@ -87,10 +88,11 @@ class _OrderCard extends StatelessWidget {
                   per_quantity_unit: order.per_quantity_unit,
                   status: 0,
                   category_id: order.product_category_id,
+                  order_queue: orderCache.order_queue,
                 );
                 itemList.add(item);
               }
-              cart.addCurrentOrderCache(orderCache);
+              cart.addAllCurrentOrderCache(orderFunction.addOnOrderCacheList);
               cart.addAllItem(itemList);
             }
           }
