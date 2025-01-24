@@ -4,6 +4,7 @@ import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
+import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/dining_option.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
@@ -48,6 +49,7 @@ class _OtherOrderPageState extends State<OtherOrderPage> {
   @override
   Widget build(BuildContext context) {
     ThemeColor color = context.read<ThemeColor>();
+    CartModel cartModel = context.read<CartModel>();
     return StreamBuilder(
       stream: stream,
       builder: (context, snapshot) {
@@ -110,7 +112,8 @@ class _OtherOrderPageState extends State<OtherOrderPage> {
                         setState(() {
                           selectedOption = value!;
                         });
-                        await otherOrderFunction.readAllOrderCache(selectedOption.name!);
+                        cartModel.initialLoad();
+                        await otherOrderFunction.readAllOrderCache(diningName: selectedOption.name!);
                         // actionController.sink.add("prod_sort_by");
                       },
                     ),

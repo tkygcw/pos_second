@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/fragment/cart/other_order_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/promotion_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
 import 'package:optimy_second_device/fragment/payment/make_payment_dialog.dart';
 import 'package:optimy_second_device/fragment/payment/payment_page.dart';
+import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
@@ -51,6 +53,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  AppSettingModel appSettingModel = AppSettingModel.instance;
   StreamController cartController = StreamController();
   late Stream cartStream;
   late CartModel cart;
@@ -203,10 +206,7 @@ class _CartPageState extends State<CartPage> {
                 automaticallyImplyLeading: false,
                 title: Row(
                   children: [
-                    Visibility(
-                      visible: widget.currentPage == 'table' ? true : false,
-                      child: Text('${AppLocalizations.of(context)!.translate('table')}: ${getSelectedTable(cart)}'),
-                    ),
+                    Text('${getSelectedTable(cart)}')
                   ],
                 ),
                 toolbarHeight: isLandscapeOrien() ? null : MediaQuery.of(context).size.height * 0.06,
@@ -271,7 +271,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ),
                   Visibility(
-                    visible: widget.currentPage == 'table' ? true : false,
+                    visible: widget.currentPage == 'table' || widget.currentPage == 'other_order' ? true : false,
                     child: IconButton(
                       tooltip: 'promotion',
                       icon: Icon(Icons.discount),
@@ -658,41 +658,43 @@ class _CartPageState extends State<CartPage> {
                                   // await checkCashRecord();
                                   if (widget.currentPage == 'menu') {
                                     //disableButton();
-                                    if(cart.cartNotifierItem.isNotEmpty){
-                                      openLoadingDialogBox();
-                                      if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
-                                        if (cart.selectedTable.isNotEmpty) {
-                                          if (cart.cartNotifierItem[0].status == 1) {
-                                            await callPlaceOrder(cart, '9');
-                                          } else {
-                                            if (cart.cartNotifierItem[0].status == 0) {
-                                              await callPlaceOrder(cart, '8');
-                                            } else {
-                                              Fluttertoast.showToast(
-                                                  backgroundColor: Colors.red,
-                                                  msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
-                                              Navigator.of(context).pop();
-                                            }
-                                          }
-                                          // cart.removeAllCartItem();
-                                          // cart.removeAllTable();
+                                    if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
+                                      if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
+                                        openLoadingDialogBox();
+                                        if (cart.cartNotifierItem[0].status == 1) {
+                                          await callPlaceOrder(cart, '9');
                                         } else {
-                                          if(mounted){
+                                          if (cart.cartNotifierItem[0].status == 0) {
+                                            await callPlaceOrder(cart, '8');
+                                          } else {
                                             Fluttertoast.showToast(
                                                 backgroundColor: Colors.red,
-                                                msg: AppLocalizations.of(context)!.translate('make_sure_cart_is_not_empty_and_table_is_selected'));
+                                                msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
+                                            Navigator.of(context).pop();
                                           }
                                         }
+                                        // cart.removeAllCartItem();
+                                        // cart.removeAllTable();
                                       } else {
-                                        // not dine in call
-                                        print('not dine in');
-                                        cart.removeAllTable();
-                                        if (cart.cartNotifierItem.isNotEmpty) {
-                                          await callPlaceOrder(cart, '8');
+                                        if((cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+                                          openOtherOrderDialog(cart.selectedOptionId);
+                                        }
+                                      }
+                                    } else {
+                                      // not dine in call
+                                      print('not dine in');
+                                      cart.removeAllTable();
+                                      if (cart.cartNotifierItem.isNotEmpty) {
+                                        openLoadingDialogBox();
+                                        if (cart.cartNotifierItem[0].status == 1) {
+                                          await callPlaceOrder(cart, '9');
                                         } else {
-                                          Fluttertoast.showToast(
-                                              backgroundColor: Colors.red,
-                                              msg: "${AppLocalizations.of(context)?.translate('empty_cart')}");
+                                          await callPlaceOrder(cart, '8');
+                                        }
+                                      } else {
+                                        if((cart.selectedOption == 'Dine in' &&
+                                            appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+                                          openOtherOrderDialog(cart.selectedOptionId);
                                         }
                                       }
                                     }
@@ -704,7 +706,9 @@ class _CartPageState extends State<CartPage> {
                                   }
                                 },
                                 child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
-                                widget.currentPage == 'menu'?
+                                widget.currentPage == 'menu' ?
+                                cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in') ?
+                                Text(AppLocalizations.of(context)!.translate('select_order')) :
                                 Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM ${cart.netTotal.toStringAsFixed(2)})') :
                                 Text('${AppLocalizations.of(context)!.translate('pay')} (RM ${cart.netTotal.toStringAsFixed(2)})')
                                 : Text(AppLocalizations.of(context)!.translate('place_order')),
@@ -904,22 +908,17 @@ class _CartPageState extends State<CartPage> {
   Get Selected table
 */
   getSelectedTable(CartModel cart) {
-    List<String> result = [];
-    if (cart.selectedTable.isEmpty && cart.selectedOption == 'Dine in') {
-      result.add('-');
-    } else if (cart.selectedOption != 'Dine in') {
-      result.add('N/A');
+    List<String> result = ['-'];
+    if (cart.selectedTable.isNotEmpty) {
+      for (int i = 0; i < cart.selectedTable.length; i++) {
+        result.add('${cart.selectedTable[i].number}');
+      }
     } else {
-      if (cart.selectedTable.length > 1) {
-        for (int i = 0; i < cart.selectedTable.length; i++) {
-          result.add('${cart.selectedTable[i].number}');
-        }
-      } else {
-        result.add('${cart.selectedTable[0].number}');
+      if(cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem.first.order_queue != ''){
+        return '${AppLocalizations.of(context)!.translate('order')}: ${cart.cartNotifierItem.first.order_queue}';
       }
     }
-
-    return result.toString().replaceAll('[', '').replaceAll(']', '');
+    return '${AppLocalizations.of(context)!.translate('table')}: ${result.toString().replaceAll('[', '').replaceAll(']', '')}';
   }
 
 /*
@@ -1757,6 +1756,28 @@ class _CartPageState extends State<CartPage> {
   //         return null!;
   //       });
   // }
+
+  Future<Future<Object?>> openOtherOrderDialog(String diningOptionId) async {
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: const OtherOrderDialog(),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
+  }
 
   Future<Future<Object?>> openRemoveCartItemDialog(cartProductItem item, String currentPage) async {
     return showGeneralDialog(

@@ -24,7 +24,6 @@ class CartModel extends ChangeNotifier {
   bool isChange = false;
   List<cartProductItem> _cartNotifierItem = [];
   List<OrderCache> _currentOrderCache = [];
-
   int _cartScrollDown = 0;
 
   Promotion? get selectedPromotion => _selectedPromotion;
@@ -223,6 +222,7 @@ class CartModel extends ChangeNotifier {
   }
 
   void initialLoad({bool? notify = true}) {
+    _currentOrderCache.clear();
     _selectedTable.clear();
     _cartNotifierItem.clear();
     _selectedPromotion = null;

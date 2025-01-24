@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
 import 'package:provider/provider.dart';
 
 import '../../notifier/cart_notifier.dart';
@@ -17,6 +18,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
 
   @override
   Widget build(BuildContext context) {
+    var otherOrderFunction = Provider.of<OtherOrderFunction>(context, listen: false);
     var tableModel = Provider.of<TableModel>(context, listen: false);
     var cartModel = Provider.of<CartModel>(context, listen: false);
     return Scaffold(
@@ -33,6 +35,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
                 isButtonDisable = true;
                 await tableModel.getTableFromServer();
                 await tableModel.unselectAllOrderCache();
+                await otherOrderFunction.readAllOrderCache();
                 cartModel.initialLoad();
                 Navigator.of(context).pop();
               },

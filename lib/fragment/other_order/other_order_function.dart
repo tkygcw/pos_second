@@ -10,22 +10,23 @@ import '../../main.dart';
 class OtherOrderFunction extends ChangeNotifier {
   static final OtherOrderFunction instance = OtherOrderFunction._init();
   List<DiningOption> _diningOption = [];
-  List<OrderCache> _orderCacheList = [], _addOnOrderCacheList = [];
+  List<OrderCache> _orderCacheList = [], _selectedOrderCache = [];
   List<OrderDetail> _orderDetailList = [];
+  String _selectedDiningName = '';
   int _responseStatus = 0;
 
   List<OrderCache> get orderCacheList => _orderCacheList;
   List<OrderDetail> get orderDetailList => _orderDetailList;
-  List<OrderCache> get addOnOrderCacheList => _addOnOrderCacheList;
+  List<OrderCache> get selectedOrderCache => _selectedOrderCache;
 
   OtherOrderFunction._init();
 
   Future<int> readAllOrderDetail(OrderCache orderCache) async {
-    await clientAction.connectRequestPort(action: '23', param: jsonEncode(orderCache), callback: _decodeOrderDetail);
+    await clientAction.connectRequestPort(action: '23', param: jsonEncode(orderCache), callback: (response) => _decodeOrderDetail(response, orderCache));
     return _responseStatus;
   }
 
-  void _decodeOrderDetail(response){
+  void _decodeOrderDetail(response, OrderCache selectedOrderCache){
     try{
       var json = jsonDecode(clientAction.response!);
       String status = json['status'];
@@ -34,10 +35,13 @@ class OtherOrderFunction extends ChangeNotifier {
         case '1': {
           Iterable orderCache = json['data']['orderCacheList'];
           Iterable orderDetail = json['data']['orderDetailList'];
-          _addOnOrderCacheList = List<OrderCache>.from(orderCache.map((json) => OrderCache.fromJson(json)));
+          List<OrderCache> orderCacheResponseData = List<OrderCache>.from(orderCache.map((json) => OrderCache.fromJson(json)));
+          if(orderCacheResponseData.isNotEmpty){
+            _selectedOrderCache = orderCacheResponseData;
+          } else {
+            _selectedOrderCache = [selectedOrderCache];
+          }
           _orderDetailList = List<OrderDetail>.from(orderDetail.map((json) => OrderDetail.fromJson(json)));
-          print("order cache length: ${_orderCacheList.length}");
-          // notifyListeners();
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
@@ -49,8 +53,10 @@ class OtherOrderFunction extends ChangeNotifier {
     }
   }
 
-  Future<void> readAllOrderCache(String diningName) async {
-    await clientAction.connectRequestPort(action: '22', param: diningName, callback: _decodeOrderCache);
+  Future<List<OrderCache>> readAllOrderCache({String? diningName}) async {
+    _selectedDiningName = diningName ?? _selectedDiningName;
+    await clientAction.connectRequestPort(action: '22', param: _selectedDiningName, callback: _decodeOrderCache);
+    return _orderCacheList;
   }
 
   void _decodeOrderCache(response){
@@ -61,7 +67,6 @@ class OtherOrderFunction extends ChangeNotifier {
         case '1': {
           Iterable value1 = json['data'];
           _orderCacheList = List<OrderCache>.from(value1.map((json) => OrderCache.fromJson(json)));
-          // print("order cache length: ${_orderCache.first.dining_name}");
           notifyListeners();
         }break;
         default: {
@@ -88,7 +93,7 @@ class OtherOrderFunction extends ChangeNotifier {
           Iterable value1 = json['data'];
           _diningOption = [DiningOption(name: 'All')];
           _diningOption.addAll(List<DiningOption>.from(value1.map((json) => DiningOption.fromJson(json))));
-          readAllOrderCache(_diningOption.first.name!);
+          readAllOrderCache(diningName: _diningOption.first.name!);
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);

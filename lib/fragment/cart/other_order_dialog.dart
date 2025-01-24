@@ -1,54 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
-import 'package:optimy_second_device/notifier/cart_notifier.dart';
-import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
+import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:provider/provider.dart';
 
+import '../../notifier/cart_notifier.dart';
+import '../../notifier/theme_color.dart';
 import '../../object/cart_product.dart';
 import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
 import '../toast/custom_toastification.dart';
 
-class DisplayOrderPage extends StatefulWidget {
-  const DisplayOrderPage({Key? key}) : super(key: key);
+class OtherOrderDialog extends StatefulWidget {
+  const OtherOrderDialog({super.key});
 
   @override
-  State<DisplayOrderPage> createState() => _DisplayOrderPageState();
+  State<OtherOrderDialog> createState() => _OtherOrderDialogState();
 }
 
-class _DisplayOrderPageState extends State<DisplayOrderPage> {
+class _OtherOrderDialogState extends State<OtherOrderDialog> {
+  late OtherOrderFunction orderFunction;
   late CartModel cartModel;
+  late Future<List<OrderCache>> orderCache;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    orderFunction = context.read<OtherOrderFunction>();
     cartModel = context.read<CartModel>();
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => cartModel.initialLoad());
+    orderCache = orderFunction.readAllOrderCache(diningName: cartModel.selectedOption);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<OtherOrderFunction>(
-        builder: (context, orderFunction, child){
-          return orderFunction.orderCacheList.isNotEmpty ?
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: orderFunction.orderCacheList.length,
-            itemBuilder: (BuildContext context, int index) {
-              return _OrderCard(orderCache: orderFunction.orderCacheList[index]);
+    return AlertDialog(
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Select order"),
+          Spacer(),
+          IconButton(
+            onPressed: (){
+              Navigator.of(context).pop();
             },
-          ):
-              Center(child: Text("No data"),);
-    });
+            icon: Icon(Icons.close),
+            color: Colors.redAccent,
+          )
+        ],
+      ),
+      content: SizedBox(
+        width: 500,
+        child: FutureBuilder<List<OrderCache>>(
+          future: orderCache,
+          builder: (context, snapshot){
+            if(snapshot.connectionState == ConnectionState.waiting){
+              return CustomProgressBar();
+            } else {
+              if(snapshot.hasData){
+                if(snapshot.data!.isNotEmpty){
+                  return ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: orderFunction.orderCacheList.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return _OrderCard(orderCache: orderFunction.orderCacheList[index]);
+                    },
+                  );
+                } else {
+                  return Center(
+                    child: Text("No Order"),
+                  );
+                }
+              } else {
+                return Text("Something went wrong");
+              }
+            }
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -61,41 +92,16 @@ class _OrderCard extends StatelessWidget {
     OtherOrderFunction orderFunction = context.read<OtherOrderFunction>();
     ThemeColor color = context.read<ThemeColor>();
     CartModel cart = context.read<CartModel>();
-    bool isInCart = context.select<CartModel, bool>(
-          (cart) {
-            print("current order cache length: ${cart.currentOrderCache.length}");
-            List<int> list = cart.currentOrderCache.map((e) => e.order_cache_sqlite_id!).toList();
-            return list.contains(orderCache.order_cache_sqlite_id);
-      },
-    );
     return Card(
       elevation: 5,
       color: Colors.white,
-      shape: isInCart ? RoundedRectangleBorder(
-          side: BorderSide(
-            color: color.backgroundColor,
-            width: 3.0,
-          ),
-          borderRadius: BorderRadius.circular(4.0))
-          : RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
           side: BorderSide(color: Colors.white, width: 3.0),
           borderRadius: BorderRadius.circular(4.0)),
       child: InkWell(
         onTap: () async {
-          if(isInCart){
-            cart.removeSpecificCurrentOrderCacheWithBatch(orderCache.batch_id);
-            cart.removeSpecificBatchItem(orderCache.batch_id);
-          } else {
-            if(cart.cartNotifierItem.isEmpty){
-              await readOrderDetailAddToCart(orderFunction, cart);
-            } else {
-              if(orderCache.dining_name == cart.selectedOption){
-                await readOrderDetailAddToCart(orderFunction, cart);
-              } else {
-                CustomFailedToast(title: 'Order dining option not same').showToast();
-              }
-            }
-          }
+          await readOrderDetailAddToCart(orderFunction, cart);
+          Navigator.of(context).pop();
         },
         child: Padding(
           padding: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? const EdgeInsets.all(16.0) : EdgeInsets.fromLTRB(0, 16, 0, 16),
@@ -141,7 +147,7 @@ class _OrderCard extends StatelessWidget {
       ),
     );
   }
-  
+
   readOrderDetailAddToCart(OtherOrderFunction orderFunction, CartModel cart) async {
     int status = await orderFunction.readAllOrderDetail(orderCache);
     if(status == 1){
@@ -162,7 +168,7 @@ class _OrderCard extends StatelessWidget {
           first_cache_batch: orderCache.batch_id,
           table_use_key: orderCache.table_use_key,
           per_quantity_unit: order.per_quantity_unit,
-          status: 0,
+          status: 1,
           category_id: order.product_category_id,
           order_queue: orderCache.order_queue,
         );
@@ -174,5 +180,3 @@ class _OrderCard extends StatelessWidget {
     }
   }
 }
-
-
