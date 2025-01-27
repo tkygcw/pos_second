@@ -85,6 +85,7 @@ class _OrderCard extends StatelessWidget {
           if(isInCart){
             cart.removeSpecificCurrentOrderCacheWithBatch(orderCache.batch_id);
             cart.removeSpecificBatchItem(orderCache.batch_id);
+            orderFunction.unselectSpecificSubPosOrderCache(orderCache.batch_id!);
           } else {
             if(cart.cartNotifierItem.isEmpty){
               await readOrderDetailAddToCart(orderFunction, cart);
@@ -171,6 +172,8 @@ class _OrderCard extends StatelessWidget {
       cart.selectedOption = orderCache.dining_name!;
       cart.addAllCurrentOrderCache(orderFunction.selectedOrderCache);
       cart.addAllItem(itemList);
+    } else {
+      CustomFailedToast(title: 'order_is_in_payment').showToast();
     }
   }
 }

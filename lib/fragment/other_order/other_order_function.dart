@@ -21,6 +21,10 @@ class OtherOrderFunction extends ChangeNotifier {
 
   OtherOrderFunction._init();
 
+  Future<void> unselectSpecificSubPosOrderCache(String batch) async {
+    await clientAction.connectRequestPort(action: '24', param: batch);
+  }
+
   Future<int> readAllOrderDetail(OrderCache orderCache) async {
     await clientAction.connectRequestPort(action: '23', param: jsonEncode(orderCache), callback: (response) => _decodeOrderDetail(response, orderCache));
     return _responseStatus;
@@ -43,6 +47,10 @@ class OtherOrderFunction extends ChangeNotifier {
           }
           _orderDetailList = List<OrderDetail>.from(orderDetail.map((json) => OrderDetail.fromJson(json)));
         }break;
+        case '2': {
+          _selectedOrderCache = [];
+          _orderDetailList = [];
+        } break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
         }

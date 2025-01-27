@@ -910,6 +910,7 @@ class _CartPageState extends State<CartPage> {
   getSelectedTable(CartModel cart) {
     List<String> result = ['-'];
     if (cart.selectedTable.isNotEmpty) {
+      result.clear();
       for (int i = 0; i < cart.selectedTable.length; i++) {
         result.add('${cart.selectedTable[i].number}');
       }
