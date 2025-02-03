@@ -100,7 +100,37 @@ class _OrderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4.0)),
       child: InkWell(
         onTap: () async {
-          await readOrderDetailAddToCart(orderFunction, cart);
+          int status = await orderFunction.readAllOrderDetail(orderCache);
+          if(status == 1){
+            List<cartProductItem> itemList = [];
+            for(var order in orderFunction.orderDetailList){
+              var item = cartProductItem(
+                product_sku: order.product_sku,
+                product_name: order.productName,
+                price: order.price,
+                base_price: order.original_price,
+                orderModifierDetail: order.orderModifierDetail,
+                productVariantName: order.product_variant_name,
+                unit: order.unit,
+                quantity: num.parse(order.quantity!),
+                remark: order.remark,
+                refColor: Colors.black,
+                first_cache_created_date_time: orderCache.created_at,
+                first_cache_batch: orderCache.batch_id,
+                table_use_key: orderCache.table_use_key,
+                per_quantity_unit: order.per_quantity_unit,
+                status: 1,
+                category_id: order.product_category_id,
+                order_queue: orderCache.order_queue,
+              );
+              itemList.add(item);
+            }
+            cart.selectedOption = orderCache.dining_name!;
+            cart.addAllCurrentOrderCache(orderFunction.selectedOrderCache);
+            cart.addAllItem(itemList);
+          } else {
+            CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
+          }
           Navigator.of(context).pop();
         },
         child: Padding(
@@ -146,37 +176,5 @@ class _OrderCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  readOrderDetailAddToCart(OtherOrderFunction orderFunction, CartModel cart) async {
-    int status = await orderFunction.readAllOrderDetail(orderCache);
-    if(status == 1){
-      List<cartProductItem> itemList = [];
-      for(var order in orderFunction.orderDetailList){
-        var item = cartProductItem(
-          product_sku: order.product_sku,
-          product_name: order.productName,
-          price: order.price,
-          base_price: order.original_price,
-          orderModifierDetail: order.orderModifierDetail,
-          productVariantName: order.product_variant_name,
-          unit: order.unit,
-          quantity: num.parse(order.quantity!),
-          remark: order.remark,
-          refColor: Colors.black,
-          first_cache_created_date_time: orderCache.created_at,
-          first_cache_batch: orderCache.batch_id,
-          table_use_key: orderCache.table_use_key,
-          per_quantity_unit: order.per_quantity_unit,
-          status: 1,
-          category_id: order.product_category_id,
-          order_queue: orderCache.order_queue,
-        );
-        itemList.add(item);
-      }
-      cart.selectedOption = orderCache.dining_name!;
-      cart.addAllCurrentOrderCache(orderFunction.selectedOrderCache);
-      cart.addAllItem(itemList);
-    }
   }
 }

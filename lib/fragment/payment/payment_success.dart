@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../notifier/cart_notifier.dart';
 import '../../notifier/table_notifier.dart';
+import '../../translation/AppLocalizations.dart';
 
 class PaymentSuccessPage extends StatefulWidget {
   final String change;
@@ -27,11 +28,11 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text("Change: ${widget.change}", style: TextStyle(fontSize: 24),),
-            ElevatedButton(onPressed: isButtonDisable ? null : (){}, child: Text("Print receipt")),
-            ElevatedButton(onPressed: isButtonDisable ? null : (){}, child: Text("Open Cash Drawer")),
+            Text("${AppLocalizations.of(context)!.translate('change')}: ${widget.change}", style: TextStyle(fontSize: 24),),
+            // ElevatedButton(onPressed: isButtonDisable ? null : (){}, child: Text("Print receipt")),
+            // ElevatedButton(onPressed: isButtonDisable ? null : (){}, child: Text("Open Cash Drawer")),
             ElevatedButton(
-              onPressed: isButtonDisable ? null : () async  {
+              onPressed: isButtonDisable ? null : () async {
                 isButtonDisable = true;
                 await tableModel.getTableFromServer();
                 await tableModel.unselectAllOrderCache();
@@ -39,7 +40,7 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
                 cartModel.initialLoad();
                 Navigator.of(context).pop();
               },
-              child: Text("Close"),
+              child: Text(AppLocalizations.of(context)!.translate('close')),
             ),
           ],
         ),

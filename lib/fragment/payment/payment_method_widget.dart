@@ -15,15 +15,29 @@ enum PaymentTypeEnum {
   ipay
 }
 
-class PaymentMethod extends StatelessWidget {
+class PaymentMethod extends StatefulWidget {
   const PaymentMethod({super.key});
+
+  @override
+  State<PaymentMethod> createState() => _PaymentMethodState();
+}
+
+class _PaymentMethodState extends State<PaymentMethod> {
+  late Future<List<PaymentLinkCompany>> getPaymentMethod;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getPaymentMethod = context.read<PaymentFunction>().getPaymentMethod();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: FutureBuilder<List<PaymentLinkCompany>>(
-          future: context.read<PaymentFunction>().getPaymentMethod(),
+          future: getPaymentMethod,
           builder: (context, snapshot) {
             print("connection state in payment method: ${snapshot.connectionState}");
             switch(snapshot.connectionState){

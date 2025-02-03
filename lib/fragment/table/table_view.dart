@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../../notifier/cart_notifier.dart';
 import '../../page/loading_dialog.dart';
+import '../../translation/AppLocalizations.dart';
 
 var tableViewFunc = TableViewFunction();
 
@@ -46,7 +47,6 @@ class _TableViewState extends State<TableView> {
     return FutureBuilder(
       future: _readTableFromServer,
       builder: (context, snapshot) {
-        print("connection state: ${snapshot.connectionState}");
         switch(snapshot.connectionState){
           case ConnectionState.waiting:
             return CustomProgressBar();
@@ -168,10 +168,10 @@ class _TableCard extends StatelessWidget {
                   cart.addTable(posTable);
                   cart.setCurrentOrderCache = orderCache;
                 } else {
-                  CustomFailedToast(title: 'table_is_in_payment').showToast();
+                  CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
                 }
               } else {
-                CustomFailedToast(title: 'Table not in used').showToast();
+                CustomFailedToast(title: AppLocalizations.of(context)!.translate('table_not_in_used')).showToast();
               }
             }
             Navigator.of(context).pop();
