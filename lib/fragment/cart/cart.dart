@@ -8,11 +8,13 @@ import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/other_order_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/promotion_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
+import 'package:optimy_second_device/fragment/food/food_menu_content.dart';
 import 'package:optimy_second_device/fragment/payment/make_payment_dialog.dart';
 import 'package:optimy_second_device/fragment/payment/payment_page.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
+import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
 import 'package:page_transition/page_transition.dart';
@@ -687,7 +689,7 @@ class _CartPageState extends State<CartPage> {
                                       if (cart.cartNotifierItem.isNotEmpty) {
                                         openLoadingDialogBox();
                                         if (cart.cartNotifierItem[0].status == 1) {
-                                          await callPlaceOrder(cart, '9');
+                                          await callPlaceOrder(cart, '9', orderCache: cart.currentOrderCache.first);
                                         } else {
                                           await callPlaceOrder(cart, '8');
                                         }
@@ -1919,7 +1921,7 @@ class _CartPageState extends State<CartPage> {
   // }
 
   ///place order
-  callPlaceOrder(CartModel cart, String action) async {
+  callPlaceOrder(CartModel cart, String action, {OrderCache? orderCache}) async {
     CartModel newCart = cart;
     if(action == '9'){
       newCart = CartModel.addOrderCopy(cart);
@@ -1930,7 +1932,8 @@ class _CartPageState extends State<CartPage> {
     Map<String, dynamic> map = {
       'order_by_user_id': userData.user_id.toString(),
       'order_by': userData.name,
-      'cart':newCart
+      'cart':newCart,
+      'order_cache': orderCache ?? ''
     };
     await clientAction.connectRequestPort(action: action, param: jsonEncode(map), callback: responseStatusCheck);
   }
