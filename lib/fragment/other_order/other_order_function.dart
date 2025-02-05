@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
+import 'package:optimy_second_device/fragment/table/table_view_function.dart';
 import 'package:optimy_second_device/object/dining_option.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
@@ -61,13 +62,17 @@ class OtherOrderFunction extends ChangeNotifier {
     }
   }
 
-  Future<List<OrderCache>> readAllOrderCache({String? diningName}) async {
+  Future<List<OrderCache>> readAllOrderCache({String? diningName, bool? resetMainPosOrderCache}) async {
     _selectedDiningName = diningName ?? _selectedDiningName;
-    await clientAction.connectRequestPort(action: '22', param: _selectedDiningName, callback: _decodeOrderCache);
+    await clientAction.connectRequestPort(
+        action: '22',
+        param: _selectedDiningName,
+        callback: (response) => _decodeOrderCache(response, resetMainPosOrderCache),
+    );
     return _orderCacheList;
   }
 
-  void _decodeOrderCache(response){
+  void _decodeOrderCache(response, bool? resetMainPosOrderCache){
     try{
       var json = jsonDecode(clientAction.response!);
       String status = json['status'];
@@ -75,6 +80,9 @@ class OtherOrderFunction extends ChangeNotifier {
         case '1': {
           Iterable value1 = json['data'];
           _orderCacheList = List<OrderCache>.from(value1.map((json) => OrderCache.fromJson(json)));
+          if(resetMainPosOrderCache != null && resetMainPosOrderCache == true){
+            TableViewFunction().unselectAllSubPosOrderCache();
+          }
           notifyListeners();
         }break;
         default: {

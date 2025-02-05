@@ -687,15 +687,26 @@ class _CartPageState extends State<CartPage> {
                                       print('not dine in');
                                       cart.removeAllTable();
                                       if (cart.cartNotifierItem.isNotEmpty) {
-                                        openLoadingDialogBox();
-                                        if (cart.cartNotifierItem[0].status == 1) {
-                                          await callPlaceOrder(cart, '9', orderCache: cart.currentOrderCache.first);
+                                        if (cart.cartNotifierItem[0].status == 1 && cart.containNewItem()) {
+                                          try{
+                                            openLoadingDialogBox();
+                                            await callPlaceOrder(cart, '9', orderCache: cart.currentOrderCache.first);
+                                          }catch(e){
+                                            Navigator.of(context).pop();
+                                          }
+                                        } else if (cart.cartNotifierItem[0].status == 0) {
+                                          try{
+                                            openLoadingDialogBox();
+                                            await callPlaceOrder(cart, '8');
+                                          }catch(e){
+                                            Navigator.of(context).pop();
+                                          }
                                         } else {
-                                          await callPlaceOrder(cart, '8');
+                                          CustomFailedToast(title: AppLocalizations.of(context)!.translate('cannot_replace_same_order')).showToast();
                                         }
                                       } else {
-                                        if((cart.selectedOption == 'Dine in' &&
-                                            appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+                                        if(cart.selectedOption == 'Dine in' &&
+                                            appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in'){
                                           openOtherOrderDialog(cart.selectedOptionId);
                                         }
                                       }
@@ -707,13 +718,7 @@ class _CartPageState extends State<CartPage> {
                                     }
                                   }
                                 },
-                                child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
-                                widget.currentPage == 'menu' ?
-                                cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in') ?
-                                Text(AppLocalizations.of(context)!.translate('select_order')) :
-                                Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM ${cart.netTotal.toStringAsFixed(2)})') :
-                                Text('${AppLocalizations.of(context)!.translate('pay')} (RM ${cart.netTotal.toStringAsFixed(2)})')
-                                : Text(AppLocalizations.of(context)!.translate('place_order')),
+                                child: Text(generateCartButtonText()),
                               ),
                             ),
                           ],
@@ -727,6 +732,28 @@ class _CartPageState extends State<CartPage> {
         );
       });
     });
+  }
+
+  String generateCartButtonText(){
+    if(MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900) {
+      if(widget.currentPage == 'menu'){
+        if(cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+          return AppLocalizations.of(context)!.translate('select_order');
+        }
+        return '${AppLocalizations.of(context)!.translate('place_order')}\n (RM ${cart.netTotal.toStringAsFixed(2)})';
+      } else {
+        return '${AppLocalizations.of(context)!.translate('pay')} (RM ${cart.netTotal.toStringAsFixed(2)})';
+      }
+    } else {
+      if(widget.currentPage == 'menu'){
+        if(cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+          return AppLocalizations.of(context)!.translate('select_order');
+        }
+        return AppLocalizations.of(context)!.translate('place_order');
+      } else {
+        return AppLocalizations.of(context)!.translate('pay');
+      }
+    }
   }
 
   paymentAddToCart(CartModel cart) {

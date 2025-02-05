@@ -79,16 +79,13 @@ class _ScanWidgetState extends State<_ScanWidget> {
   @override
   Widget build(BuildContext context) {
     var scanArea = (MediaQuery.of(context).size.width < 400 || MediaQuery.of(context).size.height < 400)
-        ? 150.0
+        ? 200.0
         : 350.0;
     if(!widget.scanning) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(16.0),
-        child:
-        ///***If you have exported images you must have to copy those images in assets/images directory.
-        Image(
-          height: 250,
-          width: 250,
+        child: Image(
+          height: 150,
+          width: 150,
           image: AssetImage("drawable/TNG.jpg"),
         ),
       );

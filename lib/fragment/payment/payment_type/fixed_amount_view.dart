@@ -16,10 +16,13 @@ class FixedAmountView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         ClipRRect(
-          borderRadius: BorderRadius.circular(16.0),
           child:
           ///***If you have exported images you must have to copy those images in assets/images directory.
-          Image(image: AssetImage("drawable/duitNow.jpg")),
+          Image(
+            height: 150,
+            width: 150,
+            image: AssetImage("drawable/duitNow.jpg"),
+          ),
         ),
         ButtonWidget(paymentTypeEnum: PaymentTypeEnum.fixedAmount)
       ],

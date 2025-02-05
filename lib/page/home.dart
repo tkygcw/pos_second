@@ -281,7 +281,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ],
               ),
               Visibility(
-                visible: !isCartExpanded && currentPage == 'menu' || currentPage == 'table',
+                visible: !isCartExpanded && currentPage == 'menu' || currentPage == 'table' || currentPage == 'other_order',
                 child: Positioned(
                   bottom: 16,
                   right: 16,

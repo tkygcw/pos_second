@@ -18,23 +18,26 @@ class _TableMenuState extends State<TableMenu> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          elevation: 0,
-          leading: isLandscapeOrien() ? null : IconButton(
-            icon: Icon(Icons.menu, color: color.buttonColor),
-            onPressed: () {
-              isCollapsedNotifier.value = !isCollapsedNotifier.value;
-            },
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            leading: isLandscapeOrien() ? null : IconButton(
+              icon: Icon(Icons.menu, color: color.buttonColor),
+              onPressed: () {
+                isCollapsedNotifier.value = !isCollapsedNotifier.value;
+              },
+            ),
+            title: Text(
+              AppLocalizations.of(context)!.translate('table'),
+              style: TextStyle(fontSize: 20, color: color.backgroundColor),
+            ),
           ),
-          title: Text(
-            AppLocalizations.of(context)!.translate('table'),
-            style: TextStyle(fontSize: 20, color: color.backgroundColor),
-          ),
+          body: TableView(themeColor: color),
         ),
-        body: TableView(themeColor: color),
       );
     });
   }

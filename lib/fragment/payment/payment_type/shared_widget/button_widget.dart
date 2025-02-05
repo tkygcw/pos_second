@@ -90,6 +90,7 @@ class _ButtonWidgetState extends State<ButtonWidget> {
                 CustomFailedToast(title: 'Not enough balance').showToast();
                 return;
               }
+              isButtonDisable = true;
               _paymentFunction.makePayment(_cartModel);
             },
             style: ElevatedButton.styleFrom(

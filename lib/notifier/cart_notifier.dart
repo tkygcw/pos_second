@@ -326,6 +326,11 @@ class CartModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool containNewItem(){
+    List<int?> itemStatus = _cartNotifierItem.map((e) => e.status).toList();
+    return itemStatus.contains(0);
+  }
+
   void addTable(PosTable posTable){
     _selectedTable.add(posTable);
     notifyListeners();

@@ -99,40 +99,42 @@ class _PaymentSelectState extends State<_PaymentSelect> {
   @override
   Widget build(BuildContext context) {
     var orientation = MediaQuery.of(context).orientation;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-     children: [
-       Text(paymentName,
-         style: TextStyle(
-           color: Colors.blueGrey,
-           fontSize: 24,
-           fontWeight: FontWeight.bold
-         ),
-       ),
-       const SizedBox(height: 20),
-       const FinalAmountWidget(),
-       _PaymentTypeView(paymentType: paymentType),
-       const SizedBox(height: 20),
-       orientation == Orientation.landscape ?
-       SizedBox(
-         height: 100,
-         child: ListView(
-           padding: EdgeInsets.zero,
-           shrinkWrap: true,
-           scrollDirection: Axis.horizontal,
-           children: List.generate(widget.paymentLinkCompanyList.length, (i) {
-             return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
-           })
-         )
-       ) :
-       GridView.count(
-         shrinkWrap: true,
-         crossAxisCount: MediaQuery.of(context).size.width < 500 ? 3 : 4,
-         children: List.generate(widget.paymentLinkCompanyList.length, (i) {
-           return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
-         }),
-       )
-     ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Text(paymentName,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: Colors.blueGrey,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const FinalAmountWidget(),
+          _PaymentTypeView(paymentType: paymentType),
+          const SizedBox(height: 20),
+          orientation == Orientation.landscape ?
+          SizedBox(
+              height: 100,
+              child: ListView(
+                  padding: EdgeInsets.zero,
+                  shrinkWrap: true,
+                  scrollDirection: Axis.horizontal,
+                  children: List.generate(widget.paymentLinkCompanyList.length, (i) {
+                    return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
+                  })
+              )
+          ) :
+          GridView.count(
+            shrinkWrap: true,
+            crossAxisCount: MediaQuery.of(context).size.width < 500 ? 3 : 4,
+            children: List.generate(widget.paymentLinkCompanyList.length, (i) {
+              return _PaymentCard(paymentLinkCompany: widget.paymentLinkCompanyList[i], callback: _paymentSelectCallBack);
+            }),
+          )
+        ],
+      ),
     );
   }
 }
