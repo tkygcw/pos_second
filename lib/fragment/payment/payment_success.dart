@@ -35,7 +35,6 @@ class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
               onPressed: isButtonDisable ? null : () async {
                 isButtonDisable = true;
                 await tableModel.getTableFromServer();
-                await tableModel.unselectAllOrderCache();
                 await otherOrderFunction.readAllOrderCache();
                 cartModel.initialLoad();
                 Navigator.of(context).pop();

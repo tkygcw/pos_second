@@ -31,6 +31,7 @@ class TableViewFunction {
         case '1': {
           Iterable value1 = json['data']['table_list'];
           _tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
+          unselectAllSubPosOrderCache();
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);

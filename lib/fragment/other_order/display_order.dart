@@ -33,9 +33,9 @@ class _DisplayOrderPageState extends State<DisplayOrderPage> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    tableViewFunction.unselectAllSubPosOrderCache();
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => cartModel.initialLoad());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      cartModel.initialLoad();
+    });
   }
 
   @override

@@ -8,11 +8,10 @@ import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/other_order_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/promotion_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
-import 'package:optimy_second_device/fragment/food/food_menu_content.dart';
-import 'package:optimy_second_device/fragment/payment/make_payment_dialog.dart';
 import 'package:optimy_second_device/fragment/payment/payment_page.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
+import 'package:optimy_second_device/notifier/table_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
@@ -133,6 +132,7 @@ class _CartPageState extends State<CartPage> {
   @override
   dispose() {
     // cart.initialLoad(notify: false);
+    TableModel.instance.unselectAllOrderCache();
     super.dispose();
   }
 
@@ -404,15 +404,7 @@ class _CartPageState extends State<CartPage> {
                                                       onPressed: () {
                                                         if (cart.cartNotifierItem[index].status == 0) {
                                                           if (cart.cartNotifierItem[index].quantity! > 1) {
-                                                            if (cart.cartNotifierItem[index].unit != 'each' && cart.cartNotifierItem[index].unit != 'each_c') {
-                                                              setState(() {
-                                                                cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1).ceilToDouble();
-                                                              });
-                                                            } else {
-                                                              setState(() {
-                                                                cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1);
-                                                              });
-                                                            }
+                                                            cart.updateCartItemQuantity(index, removeItem: true);
                                                           } else {
                                                             cart.removeItem(cart.cartNotifierItem[index]);
                                                           }
@@ -435,9 +427,7 @@ class _CartPageState extends State<CartPage> {
                                                     onPressed: () async {
                                                       if (cart.cartNotifierItem[index].status == 0) {
                                                         if (checkProductStock(cart, cart.cartNotifierItem[index]) == true) {
-                                                          setState(() {
-                                                            cart.cartNotifierItem[index].quantity = cart.cartNotifierItem[index].quantity! + 1;
-                                                          });
+                                                          cart.updateCartItemQuantity(index);
                                                         } else {
                                                           Fluttertoast.showToast(
                                                               backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('product_out_of_stock'));
@@ -479,6 +469,7 @@ class _CartPageState extends State<CartPage> {
                                 physics: ClampingScrollPhysics(),
                                 shrinkWrap: true,
                                 children: [
+                                  //Subtotal
                                   ListTile(
                                     title: Text("Subtotal", style: TextStyle(fontSize: 14)),
                                     trailing: Text(cart.subtotal.toStringAsFixed(2),
@@ -486,21 +477,23 @@ class _CartPageState extends State<CartPage> {
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
                                   ),
+                                  //Auto promotion part
                                   ListView.builder(
                                     shrinkWrap: true,
                                     physics: NeverScrollableScrollPhysics(),
-                                    itemCount: cart.applicablePromotions.length,
+                                    itemCount: cart.autoPromotion.length,
                                     itemBuilder: (context, index) {
                                       return ListTile(
-                                          title: Text('${cart.applicablePromotions[index].name} (${cart.applicablePromotions[index].promoRate})',
+                                          title: Text('${cart.autoPromotion[index].name} (${cart.autoPromotion[index].promoRate})',
                                               style: TextStyle(fontSize: 14)),
                                           visualDensity: VisualDensity(vertical: -4),
                                           dense: true,
                                           trailing: Text(
-                                              '-${cart.discountForPromotion(cart.applicablePromotions[index]).toStringAsFixed(2)}',
+                                              '-${cart.autoPromotion[index].promoAmount!.toStringAsFixed(2)}',
                                               style: TextStyle(fontSize: 14)));
                                     },
                                   ),
+                                  //selected promotion part
                                   cart.selectedPromotion != null ?
                                   ListTile(
                                     title: SingleChildScrollView(
@@ -524,11 +517,12 @@ class _CartPageState extends State<CartPage> {
                                         ],
                                       ),
                                     ),
-                                    trailing: Text('-${cart.discountForPromotion(cart.selectedPromotion!).toStringAsFixed(2)}',
+                                    trailing: Text('-${cart.selectedPromotion!.promoAmount!.toStringAsFixed(2)}',
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
                                   ) : SizedBox.shrink(),
+                                  //bill page part
                                   Visibility(
                                     visible: widget.currentPage == 'bill' ? true : false,
                                     child: ListView.builder(
@@ -548,6 +542,7 @@ class _CartPageState extends State<CartPage> {
                                                   style: TextStyle(fontSize: 14)));
                                         }),
                                   ),
+                                  //Tax/Charges part
                                   Visibility(
                                     visible: widget.currentPage == 'menu' ||
                                         widget.currentPage == 'table' ||

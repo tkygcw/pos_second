@@ -236,15 +236,15 @@ class _CartPaymentState extends State<_CartPayment> {
           padding: EdgeInsets.zero,
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: cart.applicablePromotions.length,
+          itemCount: cart.autoPromotion.length,
           itemBuilder: (context, index) {
             return ListTile(
-                title: Text('${cart.applicablePromotions[index].name} (${cart.applicablePromotions[index].promoRate})',
+                title: Text('${cart.autoPromotion[index].name} (${cart.autoPromotion[index].promoRate})',
                     style: TextStyle(fontSize: 14)),
                 visualDensity: VisualDensity(vertical: -4),
                 dense: true,
                 trailing: Text(
-                    '-${cart.discountForPromotion(cart.applicablePromotions[index]).toStringAsFixed(2)}',
+                    '-${cart.autoPromotion[index].promoAmount!.toStringAsFixed(2)}',
                     style: TextStyle(fontSize: 14)));
           },
         ),
@@ -259,7 +259,7 @@ class _CartPaymentState extends State<_CartPayment> {
               ],
             ),
           ),
-          trailing: Text('-${cart.discountForPromotion(cart.selectedPromotion!).toStringAsFixed(2)}',
+          trailing: Text('-${cart.selectedPromotion?.promoAmount?.toStringAsFixed(2)}',
               style: TextStyle(fontSize: 14)),
           visualDensity: VisualDensity(vertical: -4),
           dense: true,

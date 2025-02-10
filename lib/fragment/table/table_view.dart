@@ -32,13 +32,9 @@ class _TableViewState extends State<TableView> {
     // TODO: implement initState
     super.initState();
     _readTableFromServer = Provider.of<TableModel>(context, listen: false).getTableFromServer();
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    TableModel.instance.unselectAllOrderCache();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CartModel>(context, listen: false).initialLoad();
+    });
   }
 
   @override

@@ -54,7 +54,7 @@ class PromotionFunction {
 
   bool isPromotionAvailable(Promotion promotion, CartModel cart){
     Promotion selectedPromotion = promotion;
-    if(selectedPromotion.specific_category == '1'){
+    if(selectedPromotion.specific_category == '1' || selectedPromotion.specific_category == '2'){
       if(containPromotionCategory(promotion, cart)){
         return _checkPromotionAvailability(selectedPromotion);
       } else {
@@ -67,10 +67,15 @@ class PromotionFunction {
   }
 
   bool containPromotionCategory(Promotion promotion, CartModel cart){
-    if(cart.cartNotifierItem.any((e) => e.category_id == promotion.category_id)){
-      return true;
+    if(promotion.specific_category == '1'){
+      return cart.cartNotifierItem.any((e) => e.category_id == promotion.category_id);
     } else {
-      return false;
+      // Extract categoryIds from promotion
+      Set<int> promotionCategorySet = promotion.multiple_category!.map((item) => item['category_id'] as int).toSet();
+      // Extract categoryIds from cartItems
+      Set<int> cartCategoryIds = cart.cartNotifierItem.map((item) => int.parse(item.category_id!)).toSet();
+      // If there's any intersection, it means there are common IDs.
+      return promotionCategorySet.intersection(cartCategoryIds).isNotEmpty;
     }
   }
 

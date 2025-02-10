@@ -108,7 +108,7 @@ class PaymentFunction extends ChangeNotifier {
   }
 
   List<Promotion> getTotalDiscountPerPromotion(CartModel cart) {
-    return cart.applicablePromotions.map((promotion) {
+    return cart.autoPromotion.map((promotion) {
       return promotion.copy(
         promoAmount: cart.discountForPromotion(promotion)
       );

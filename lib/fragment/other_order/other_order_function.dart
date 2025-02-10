@@ -109,7 +109,7 @@ class OtherOrderFunction extends ChangeNotifier {
           Iterable value1 = json['data'];
           _diningOption = [DiningOption(name: 'All')];
           _diningOption.addAll(List<DiningOption>.from(value1.map((json) => DiningOption.fromJson(json))));
-          readAllOrderCache(diningName: _diningOption.first.name!);
+          readAllOrderCache(diningName: _diningOption.first.name!, resetMainPosOrderCache: true);
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
