@@ -89,7 +89,7 @@ class PaymentFunction extends ChangeNotifier {
     Map<String, dynamic> param = {
       'orderCacheList': cart.currentOrderCache,
       'orderData': orderData,
-      'promotion': getTotalDiscountPerPromotion(cart),
+      'promotion': getAllAppliedPromotion(cart),
       'tax': getTotalAmountPerTax(cart),
       'selectedTable': cart.selectedTable,
       'ipayResultCode': ipayResultCode,
@@ -107,12 +107,12 @@ class PaymentFunction extends ChangeNotifier {
     }).toList();
   }
 
-  List<Promotion> getTotalDiscountPerPromotion(CartModel cart) {
-    return cart.autoPromotion.map((promotion) {
-      return promotion.copy(
-        promoAmount: cart.discountForPromotion(promotion)
-      );
-    }).toList();
+  List<Promotion> getAllAppliedPromotion(CartModel cart) {
+    List<Promotion> allPromotion = cart.autoPromotion;
+    if(cart.selectedPromotion != null){
+      allPromotion.add(cart.selectedPromotion!);
+    }
+    return allPromotion;
   }
 
   void _decodePaymentRes(response){

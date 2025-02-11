@@ -18,12 +18,12 @@ class TableViewFunction {
 
   List<PosTable> get tableList => _tableList;
 
-  Future<List<PosTable>> readAllTable() async {
-    await clientAction.connectRequestPort(action: '13', param: '', callback: _decodeData);
+  Future<List<PosTable>> readAllTable({bool? resetMainPosOrderCache}) async {
+    await clientAction.connectRequestPort(action: '13', param: '', callback: (response) => _decodeData(response, resetMainPosOrderCache));
     return _tableList;
   }
 
-  void _decodeData(response){
+  void _decodeData(response, bool? resetMainPosOrderCache){
     try{
       var json = jsonDecode(clientAction.response!);
       String status = json['status'];
@@ -31,7 +31,9 @@ class TableViewFunction {
         case '1': {
           Iterable value1 = json['data']['table_list'];
           _tableList = List<PosTable>.from(value1.map((json) => PosTable.fromJson(json)));
-          unselectAllSubPosOrderCache();
+          if(resetMainPosOrderCache != null && resetMainPosOrderCache == true) {
+            unselectAllSubPosOrderCache();
+          }
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);

@@ -31,7 +31,7 @@ class _TableViewState extends State<TableView> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _readTableFromServer = Provider.of<TableModel>(context, listen: false).getTableFromServer();
+    _readTableFromServer = Provider.of<TableModel>(context, listen: false).getTableFromServer(resetMainPosOrderCache: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CartModel>(context, listen: false).initialLoad();
     });

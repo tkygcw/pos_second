@@ -64,11 +64,13 @@ class OtherOrderFunction extends ChangeNotifier {
 
   Future<List<OrderCache>> readAllOrderCache({String? diningName, bool? resetMainPosOrderCache}) async {
     _selectedDiningName = diningName ?? _selectedDiningName;
-    await clientAction.connectRequestPort(
+    if(_selectedDiningName != ''){
+      await clientAction.connectRequestPort(
         action: '22',
         param: _selectedDiningName,
         callback: (response) => _decodeOrderCache(response, resetMainPosOrderCache),
-    );
+      );
+    }
     return _orderCacheList;
   }
 

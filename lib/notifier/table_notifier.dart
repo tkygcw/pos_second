@@ -17,8 +17,8 @@ class TableModel extends ChangeNotifier {
     await TableViewFunction().unselectAllSubPosOrderCache();
   }
 
-  Future<void> getTableFromServer() async {
-    _notifierTableList = await TableViewFunction().readAllTable();
+  Future<void> getTableFromServer({bool? resetMainPosOrderCache}) async {
+    _notifierTableList = await TableViewFunction().readAllTable(resetMainPosOrderCache: resetMainPosOrderCache);
     notifyListeners();
   }
 
