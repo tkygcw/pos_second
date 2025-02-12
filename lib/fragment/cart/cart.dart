@@ -354,9 +354,9 @@ class _CartPageState extends State<CartPage> {
                                         ),
                                         key: ValueKey(cart.cartNotifierItem[index].product_name),
                                         direction: widget.currentPage == 'menu' &&
-                                            cart.cartNotifierItem[index].status == 0 ||
-                                            widget.currentPage == 'table' ||
-                                            widget.currentPage == 'other_order'
+                                            cart.cartNotifierItem[index].status == 0
+                                            // || widget.currentPage == 'table' ||
+                                            // widget.currentPage == 'other_order'
                                             ? DismissDirection.startToEnd
                                             : DismissDirection.none,
                                         confirmDismiss: (direction) async {

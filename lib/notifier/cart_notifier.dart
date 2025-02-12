@@ -398,6 +398,7 @@ class CartModel extends ChangeNotifier {
     _cartNotifierItem = cartItem;
     _cartNotifierItem.addAll(notPlacedItem);
     _cartScrollDown = 0;
+    getAllApplicablePromotion();
     if(notify = true){
       notifyListeners();
     }
@@ -423,17 +424,13 @@ class CartModel extends ChangeNotifier {
 
   void removeAllCartItem(){
     _cartNotifierItem.clear();
+    getAllApplicablePromotion();
     notifyListeners();
   }
 
   void removePartialCartItem(){
-    List<cartProductItem> removeItem = [];
-    for(int j = 0; j < _cartNotifierItem.length; j++){
-      if(_cartNotifierItem[j].status == 0){
-        removeItem.add(_cartNotifierItem[j]);
-      }
-    }
-    _cartNotifierItem.removeWhere((element) => removeItem.contains(element));
+    _cartNotifierItem.removeWhere((item) => item.status == 0);
+    getAllApplicablePromotion();
     notifyListeners();
   }
 
