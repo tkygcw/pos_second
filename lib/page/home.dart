@@ -342,6 +342,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
       ),
+      if(widget.user!.sub_pos_payment == 1)
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('other_order'),
         icon: Icons.shopping_cart,
