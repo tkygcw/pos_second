@@ -123,7 +123,6 @@ class _CartPageState extends State<CartPage> {
     // preload();
     cartStream = cartController.stream;
     cart = context.read<CartModel>();
-    cart.initBranchLinkDiningOption();
     getPreferences();
     cartController.sink.add('refresh');
     super.initState();

@@ -85,13 +85,16 @@ class _ButtonWidgetState extends State<ButtonWidget> {
           height: 70,
           width: 150,
           child: ElevatedButton.icon(
-            onPressed: isButtonDisable ? null : () {
+            onPressed: () {
+              print("isButtonDisable: $isButtonDisable");
               if(_paymentFunction.paymentReceived < _cartModel.netTotal){
                 CustomFailedToast(title: 'Not enough balance').showToast();
                 return;
               }
-              isButtonDisable = true;
-              _paymentFunction.makePayment(_cartModel);
+              if(isButtonDisable == false){
+                isButtonDisable = true;
+                _paymentFunction.makePayment(_cartModel);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: color.backgroundColor,

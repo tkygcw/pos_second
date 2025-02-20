@@ -64,39 +64,54 @@ class PaymentFunction extends ChangeNotifier {
   }
 
   Future makePayment(CartModel cart, {String? ipayResultCode}) async {
-    print("_paymentLinkCompany: ${_paymentLinkCompany!.payment_link_company_id}");
-    print("change: ${change}");
-    print("Payment received: ${_paymentReceived}");
     final prefs = await SharedPreferences.getInstance();
     final String? pos_user = prefs.getString('pos_pin_user');
-    Map<String, dynamic> userMap = json.decode(pos_user!);
+    if (pos_user == null) {
+      throw Exception("User data is missing in SharedPreferences.");
+    }
+    Map<String, dynamic> userMap = json.decode(pos_user);
     User userData = User.fromJson(userMap);
-    var orderData = Order(
-      payment_type_id: _paymentLinkCompany!.payment_type_id!,
-      payment_received: _splitPayment ? '' : _paymentReceived.toStringAsFixed(2),
-      payment_change: _splitPayment ? '' : _change.toStringAsFixed(2),
-      payment_link_company_id: _splitPayment ? '' : _paymentLinkCompany!.payment_link_company_id!.toString(),
-      payment_split: _splitPayment ? 1 : 0,
-      ipay_trans_id: '',
-      close_by: userData.name,
-      dining_id: cart.selectedOptionId,
-      dining_name: cart.selectedOption,
-      subtotal: cart.subtotal.toStringAsFixed(2),
-      amount: cart.grossTotal.toStringAsFixed(2),
-      rounding: cart.rounding.toStringAsFixed(2),
-      final_amount: cart.netTotal.toStringAsFixed(2)
-    );
-    Map<String, dynamic> param = {
-      'orderCacheList': cart.currentOrderCache,
-      'orderData': orderData,
-      'promotion': getAllAppliedPromotion(cart),
-      'tax': getTotalAmountPerTax(cart),
-      'selectedTable': cart.selectedTable,
-      'ipayResultCode': ipayResultCode,
-      'user_id': userData.user_id
-    };
-    await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
-    // return _paymentMethodList;
+    if(_paymentLinkCompany != null){
+      var orderData = Order(
+          payment_type_id: _paymentLinkCompany!.payment_type_id!,
+          payment_received: _splitPayment ? '' : _paymentReceived.toStringAsFixed(2),
+          payment_change: _splitPayment ? '' : _change.toStringAsFixed(2),
+          payment_link_company_id: _splitPayment ? '' : _paymentLinkCompany!.payment_link_company_id!.toString(),
+          payment_split: _splitPayment ? 1 : 0,
+          ipay_trans_id: '',
+          close_by: userData.name,
+          dining_id: cart.selectedOptionId,
+          dining_name: cart.selectedOption,
+          subtotal: cart.subtotal.toStringAsFixed(2),
+          amount: cart.grossTotal.toStringAsFixed(2),
+          rounding: cart.rounding.toStringAsFixed(2),
+          final_amount: cart.netTotal.toStringAsFixed(2)
+      );
+      Map<String, dynamic> param = {
+        'orderCacheList': cart.currentOrderCache,
+        'orderData': orderData,
+        'promotion': getAllAppliedPromotion(cart),
+        'tax': getTotalAmountPerTax(cart),
+        'selectedTable': cart.selectedTable,
+        'ipayResultCode': ipayResultCode,
+        'user_id': userData.user_id
+      };
+      try{
+        await clientAction.connectRequestPort(action: '19', param: jsonEncode(param), callback: _decodePaymentRes);
+      } catch(e) {
+        CustomFailedToast(title: 'Send request error').showToast();
+        await TableModel.instance.getTableFromServer();
+        await TableModel.instance.unselectAllOrderCache();
+        Provider.of<CartModel>(_context, listen: false).initialLoad();
+        Navigator.of(_context).pop();
+      }
+    } else {
+      CustomFailedToast(title: 'Cannot get payment link company data ').showToast();
+      await TableModel.instance.getTableFromServer();
+      await TableModel.instance.unselectAllOrderCache();
+      Provider.of<CartModel>(_context, listen: false).initialLoad();
+      Navigator.of(_context).pop();
+    }
   }
 
   List<TaxLinkDining> getTotalAmountPerTax(CartModel cart) {
