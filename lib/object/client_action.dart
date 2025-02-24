@@ -209,6 +209,7 @@ class ClientAction {
 
   connectRequestPort({required String action, String? param, Function? callback}) async {
     print("request port called!");
+    int retries = 3;
     notificationModel.showReconnectDialog = false;
     Map<String, dynamic>? result;
     if(param != null){
@@ -217,47 +218,52 @@ class ClientAction {
       result = {'action': action, 'param': ''};
     }
     if(serverIp != '0.0.0.0'){
-      try{
-        requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
-      }catch(e){
-        print("connect request port error: $e");
-        if(callback != null){
-          result = {'status': '0', 'action': action, 'param': param};
-          callback(jsonEncode(result));
-        }
-        return;
-      }
-      try{
-        final buffer = StringBuffer();
-        String receivedData = '';
-        requestSocket.write('${jsonEncode(result)}\n');
-        //handle data
-        StreamSubscription streamSubscription = requestSocket.cast<List<int>>().transform(utf8.decoder).listen((data) {
-          receivedData = data;
-          buffer.write(receivedData);
-          if (receivedData.endsWith(messageDelimiter)) {
-            final messages = buffer.toString().trim();
-            print("message: ${messages}");
-            response = messages;
-            if(callback != null){
-              callback(response);
-            }
-
-            receivedData = '';
-
-            //Reset buffer
-            buffer.clear();
-            requestSocket.flush();
-            requestSocket.destroy();
+      while(retries > 0){
+        try{
+          requestSocket = await Socket.connect(serverIp, 8888, timeout: const Duration(seconds: 3));
+        }catch(e){
+          print("connect request port error: $e");
+          retries = 0;
+          if(callback != null){
+            result = {'status': '0', 'action': action, 'param': param};
+            callback(jsonEncode(result));
           }
-        });
-        await streamSubscription.asFuture<void>().timeout(Duration(seconds: getTimeoutLimit(action)));
-      } catch(e) {
-        print("connect request port error: $e");
-        requestSocket.destroy();
-        if(callback != null){
-          result = {'status': '0', 'action': action, 'param': param};
-          callback(jsonEncode(result));
+          return;
+        }
+        try{
+          final buffer = StringBuffer();
+          String receivedData = '';
+          requestSocket.write('${jsonEncode(result)}\n');
+          //handle data
+          StreamSubscription streamSubscription = requestSocket.cast<List<int>>().transform(utf8.decoder).listen((data) {
+            receivedData = data;
+            buffer.write(receivedData);
+            if (receivedData.endsWith(messageDelimiter)) {
+              final messages = buffer.toString().trim();
+              print("message: ${messages}");
+              response = messages;
+              if(callback != null){
+                callback(response);
+              }
+
+              receivedData = '';
+
+              //Reset buffer
+              buffer.clear();
+              requestSocket.flush();
+              requestSocket.destroy();
+            }
+          });
+          await streamSubscription.asFuture<void>().timeout(Duration(seconds: getTimeoutLimit(action)));
+          break;
+        } catch(e) {
+          print("connect request port error: $e");
+          retries--;
+          requestSocket.destroy();
+          if(callback != null){
+            result = {'status': '0', 'action': action, 'param': param};
+            callback(jsonEncode(result));
+          }
         }
       }
     } else {

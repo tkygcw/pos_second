@@ -5,11 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/fragment/cart/other_order_dialog.dart';
+import 'package:optimy_second_device/fragment/cart/promotion_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
+import 'package:optimy_second_device/fragment/payment/payment_page.dart';
+import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/notifier/fail_print_notifier.dart';
+import 'package:optimy_second_device/notifier/table_notifier.dart';
 import 'package:optimy_second_device/object/app_setting.dart';
+import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/tax_link_dining.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,6 +54,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  AppSettingModel appSettingModel = AppSettingModel.instance;
   StreamController cartController = StreamController();
   late Stream cartStream;
   late CartModel cart;
@@ -105,7 +113,9 @@ class _CartPageState extends State<CartPage> {
   AppSetting appSetting = decodeAction.decodedAppSetting!;
 
   void _scrollDown() {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    }
   }
 
   @override
@@ -113,14 +123,15 @@ class _CartPageState extends State<CartPage> {
     // preload();
     cartStream = cartController.stream;
     cart = context.read<CartModel>();
-    cart.initBranchLinkDiningOption();
     getPreferences();
+    cartController.sink.add('refresh');
     super.initState();
   }
 
   @override
   dispose() {
     // cart.initialLoad(notify: false);
+    TableModel.instance.unselectAllOrderCache();
     super.dispose();
   }
 
@@ -184,9 +195,10 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
       return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          getSubTotal();
-        });
+        // _scrollDown();
+        // WidgetsBinding.instance.addPostFrameCallback((_) {
+        //   getSubTotal();
+        // });
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: Scaffold(
@@ -195,10 +207,7 @@ class _CartPageState extends State<CartPage> {
                 automaticallyImplyLeading: false,
                 title: Row(
                   children: [
-                    Visibility(
-                      visible: widget.currentPage == 'table' ? true : false,
-                      child: Text('${getSelectedTable(cart)}'),
-                    ),
+                    Text('${getSelectedTable(cart)}')
                   ],
                 ),
                 toolbarHeight: isLandscapeOrien() ? null : MediaQuery.of(context).size.height * 0.06,
@@ -260,6 +269,17 @@ class _CartPageState extends State<CartPage> {
                           //cart.removeAllTable();
                         },
                       ),
+                    ),
+                  ),
+                  Visibility(
+                    visible: widget.currentPage == 'table' || widget.currentPage == 'other_order' ? true : false,
+                    child: IconButton(
+                      tooltip: 'promotion',
+                      icon: Icon(Icons.discount),
+                      color: color.backgroundColor,
+                      onPressed: () {
+                        openPromotionDialog();
+                      },
                     ),
                   ),
                 ],
@@ -333,9 +353,9 @@ class _CartPageState extends State<CartPage> {
                                         ),
                                         key: ValueKey(cart.cartNotifierItem[index].product_name),
                                         direction: widget.currentPage == 'menu' &&
-                                            cart.cartNotifierItem[index].status == 0 ||
-                                            widget.currentPage == 'table' ||
-                                            widget.currentPage == 'other_order'
+                                            cart.cartNotifierItem[index].status == 0
+                                            // || widget.currentPage == 'table' ||
+                                            // widget.currentPage == 'other_order'
                                             ? DismissDirection.startToEnd
                                             : DismissDirection.none,
                                         confirmDismiss: (direction) async {
@@ -383,15 +403,7 @@ class _CartPageState extends State<CartPage> {
                                                       onPressed: () {
                                                         if (cart.cartNotifierItem[index].status == 0) {
                                                           if (cart.cartNotifierItem[index].quantity! > 1) {
-                                                            if (cart.cartNotifierItem[index].unit != 'each' && cart.cartNotifierItem[index].unit != 'each_c') {
-                                                              setState(() {
-                                                                cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1).ceilToDouble();
-                                                              });
-                                                            } else {
-                                                              setState(() {
-                                                                cart.cartNotifierItem[index].quantity = (cart.cartNotifierItem[index].quantity! - 1);
-                                                              });
-                                                            }
+                                                            cart.updateCartItemQuantity(index, removeItem: true);
                                                           } else {
                                                             cart.removeItem(cart.cartNotifierItem[index]);
                                                           }
@@ -414,9 +426,7 @@ class _CartPageState extends State<CartPage> {
                                                     onPressed: () async {
                                                       if (cart.cartNotifierItem[index].status == 0) {
                                                         if (checkProductStock(cart, cart.cartNotifierItem[index]) == true) {
-                                                          setState(() {
-                                                            cart.cartNotifierItem[index].quantity = cart.cartNotifierItem[index].quantity! + 1;
-                                                          });
+                                                          cart.updateCartItemQuantity(index);
                                                         } else {
                                                           Fluttertoast.showToast(
                                                               backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('product_out_of_stock'));
@@ -458,62 +468,60 @@ class _CartPageState extends State<CartPage> {
                                 physics: ClampingScrollPhysics(),
                                 shrinkWrap: true,
                                 children: [
+                                  //Subtotal
                                   ListTile(
                                     title: Text("Subtotal", style: TextStyle(fontSize: 14)),
-                                    trailing: Text(total.toStringAsFixed(2),
+                                    trailing: Text(cart.subtotal.toStringAsFixed(2),
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
                                   ),
-                                  Visibility(
-                                    visible: cart.selectedPromotion != null ? true : false,
-                                    child: ListTile(
-                                      title: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          children: [
-                                            Text('$allPromo ($selectedPromoRate)',
-                                                style: TextStyle(fontSize: 14)),
-                                            IconButton(
-                                              padding: EdgeInsets.only(left: 10),
-                                              constraints: BoxConstraints(),
-                                              icon: Icon(Icons.close),
-                                              iconSize: 20.0,
-                                              color: Colors.red,
-                                              onPressed: () {
-                                                cart.removePromotion();
-                                                selectedPromo = 0.0;
-                                                hasSelectedPromo = false;
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      trailing: Text('-${selectedPromo.toStringAsFixed(2)}',
-                                          style: TextStyle(fontSize: 14)),
-                                      visualDensity: VisualDensity(vertical: -4),
-                                      dense: true,
-                                    ),
+                                  //Auto promotion part
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: cart.autoPromotion.length,
+                                    itemBuilder: (context, index) {
+                                      return ListTile(
+                                          title: Text('${cart.autoPromotion[index].name} (${cart.autoPromotion[index].promoRate})',
+                                              style: TextStyle(fontSize: 14)),
+                                          visualDensity: VisualDensity(vertical: -4),
+                                          dense: true,
+                                          trailing: Text(
+                                              '-${cart.autoPromotion[index].promoAmount!.toStringAsFixed(2)}',
+                                              style: TextStyle(fontSize: 14)));
+                                    },
                                   ),
-                                  Visibility(
-                                      visible: hasPromo == true ? true : false,
-                                      child: ListView.builder(
-                                          shrinkWrap: true,
-                                          physics: NeverScrollableScrollPhysics(),
-                                          itemCount: autoApplyPromotionList.length,
-                                          itemBuilder: (context, index) {
-                                            return ListTile(
-                                                title: Text('${autoApplyPromotionList[index]
-                                                    .name} (${autoApplyPromotionList[index]
-                                                    .promoRate})',
-                                                    style: TextStyle(fontSize: 14)),
-                                                visualDensity: VisualDensity(vertical: -4),
-                                                dense: true,
-                                                trailing: Text(
-                                                    '-${autoApplyPromotionList[index].promoAmount!
-                                                        .toStringAsFixed(2)}',
-                                                    style: TextStyle(fontSize: 14)));
-                                          })),
+                                  //selected promotion part
+                                  cart.selectedPromotion != null ?
+                                  ListTile(
+                                    title: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          Text('${cart.selectedPromotion?.name} (${cart.selectedPromotion?.promoRate})',
+                                              style: TextStyle(fontSize: 14)),
+                                          IconButton(
+                                            padding: EdgeInsets.only(left: 10),
+                                            constraints: BoxConstraints(),
+                                            icon: Icon(Icons.close),
+                                            iconSize: 20.0,
+                                            color: Colors.red,
+                                            onPressed: () {
+                                              cart.removePromotion();
+                                              selectedPromo = 0.0;
+                                              hasSelectedPromo = false;
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    trailing: Text('-${cart.selectedPromotion!.promoAmount!.toStringAsFixed(2)}',
+                                        style: TextStyle(fontSize: 14)),
+                                    visualDensity: VisualDensity(vertical: -4),
+                                    dense: true,
+                                  ) : SizedBox.shrink(),
+                                  //bill page part
                                   Visibility(
                                     visible: widget.currentPage == 'bill' ? true : false,
                                     child: ListView.builder(
@@ -533,6 +541,7 @@ class _CartPageState extends State<CartPage> {
                                                   style: TextStyle(fontSize: 14)));
                                         }),
                                   ),
+                                  //Tax/Charges part
                                   Visibility(
                                     visible: widget.currentPage == 'menu' ||
                                         widget.currentPage == 'table' ||
@@ -543,12 +552,12 @@ class _CartPageState extends State<CartPage> {
                                     child: ListView.builder(
                                         shrinkWrap: true,
                                         physics: NeverScrollableScrollPhysics(),
-                                        itemCount: currentDiningTax.length,
+                                        itemCount: cart.applicableTax.length,
                                         itemBuilder: (context, index) {
                                           return ListTile(
-                                            title: Text('${currentDiningTax[index].tax_name}(${currentDiningTax[index].tax_rate}%)',
+                                            title: Text('${cart.applicableTax[index].tax_name}(${cart.applicableTax[index].tax_rate}%)',
                                                 style: TextStyle(fontSize: 14)),
-                                            trailing: Text('${currentDiningTax[index].tax_amount?.toStringAsFixed(2)}',
+                                            trailing: Text(cart.taxAmount(cart.applicableTax[index]).toStringAsFixed(2),
                                                 style: TextStyle(fontSize: 14)),
                                             visualDensity: VisualDensity(vertical: -4),
                                             dense: true,
@@ -575,14 +584,14 @@ class _CartPageState extends State<CartPage> {
                                   ),
                                   ListTile(
                                     title: Text("Amount", style: TextStyle(fontSize: 14)),
-                                    trailing: Text(totalAmount.toStringAsFixed(2),
+                                    trailing: Text(cart.grossTotal.toStringAsFixed(2),
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
                                   ),
                                   ListTile(
                                     title: Text("Rounding", style: TextStyle(fontSize: 14)),
-                                    trailing: Text(rounding.toStringAsFixed(2),
+                                    trailing: Text(cart.rounding.toStringAsFixed(2),
                                         style: TextStyle(fontSize: 14)),
                                     visualDensity: VisualDensity(vertical: -4),
                                     dense: true,
@@ -591,7 +600,7 @@ class _CartPageState extends State<CartPage> {
                                     visualDensity: VisualDensity(vertical: -4),
                                     title: Text("Final Amount", style: TextStyle(
                                         fontSize: 18, fontWeight: FontWeight.bold)),
-                                    trailing: Text(finalAmount, style: TextStyle(
+                                    trailing: Text(cart.netTotal.toStringAsFixed(2), style: TextStyle(
                                         fontSize: 18, fontWeight: FontWeight.bold)),
                                     dense: true,
                                   ),
@@ -632,69 +641,78 @@ class _CartPageState extends State<CartPage> {
                             //cart place order button
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: color.backgroundColor,
-                                        minimumSize: const Size.fromHeight(50), // NEW
-                                      ),
-                                      onPressed: isButtonDisabled ? null : () async {
-                                        setState(() {
-                                          isButtonDisabled = false;
-                                          placingOrder = true;
-                                        });
-                                        // await checkCashRecord();
-                                        if (widget.currentPage == 'menu') {
-                                          //disableButton();
-                                          if(cart.cartNotifierItem.isNotEmpty){
-                                            openLoadingDialogBox();
-                                            if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
-                                              if (cart.selectedTable.isNotEmpty) {
-                                                if (cart.cartNotifierItem[0].status == 1 && hasNewItem == true) {
-                                                  await callPlaceOrder(cart, '9');
-                                                } else {
-                                                  if (cart.cartNotifierItem[0].status == 0) {
-                                                    await callPlaceOrder(cart, '8');
-                                                  } else {
-                                                    Fluttertoast.showToast(
-                                                        backgroundColor: Colors.red,
-                                                        msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
-                                                    Navigator.of(context).pop();
-                                                  }
-                                                }
-                                                // cart.removeAllCartItem();
-                                                // cart.removeAllTable();
-                                              } else {
-                                                if(mounted){
-                                                  Fluttertoast.showToast(
-                                                      backgroundColor: Colors.red,
-                                                      msg: AppLocalizations.of(context)!.translate('make_sure_cart_is_not_empty_and_table_is_selected'));
-                                                }
-                                              }
-                                            } else {
-                                              // not dine in call
-                                              print('not dine in');
-                                              cart.removeAllTable();
-                                              if (cart.cartNotifierItem.isNotEmpty) {
-                                                await callPlaceOrder(cart, '8');
-                                              } else {
-                                                Fluttertoast.showToast(
-                                                    backgroundColor: Colors.red,
-                                                    msg: "${AppLocalizations.of(context)?.translate('empty_cart')}");
-                                              }
-                                            }
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: color.backgroundColor,
+                                  minimumSize: const Size.fromHeight(50)
+                                ),
+                                onPressed: isButtonDisabled ? null : () async {
+                                  setState(() {
+                                    isButtonDisabled = false;
+                                    placingOrder = true;
+                                  });
+                                  // await checkCashRecord();
+                                  if (widget.currentPage == 'menu') {
+                                    //disableButton();
+                                    if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
+                                      if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
+                                        openLoadingDialogBox();
+                                        if (cart.cartNotifierItem[0].status == 1) {
+                                          await callPlaceOrder(cart, '9');
+                                        } else {
+                                          if (cart.cartNotifierItem[0].status == 0) {
+                                            await callPlaceOrder(cart, '8');
+                                          } else {
+                                            Fluttertoast.showToast(
+                                                backgroundColor: Colors.red,
+                                                msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
+                                            Navigator.of(context).pop();
                                           }
                                         }
-                                      },
-                                      child: MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900 ?
-                                      Text('${AppLocalizations.of(context)!.translate('place_order')}\n (RM $finalAmount)') :
-                                      Text(AppLocalizations.of(context)!.translate('place_order')),
-                                    ),
-                                  ),
-                                  //some spacing for second button
-                                ],
+                                        // cart.removeAllCartItem();
+                                        // cart.removeAllTable();
+                                      } else {
+                                        if((cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+                                          openOtherOrderDialog(cart.selectedOptionId);
+                                        }
+                                      }
+                                    } else {
+                                      // not dine in call
+                                      print('not dine in');
+                                      cart.removeAllTable();
+                                      if (cart.cartNotifierItem.isNotEmpty) {
+                                        if (cart.cartNotifierItem[0].status == 1 && cart.containNewItem()) {
+                                          try{
+                                            openLoadingDialogBox();
+                                            await callPlaceOrder(cart, '9', orderCache: cart.currentOrderCache.first);
+                                          }catch(e){
+                                            Navigator.of(context).pop();
+                                          }
+                                        } else if (cart.cartNotifierItem[0].status == 0) {
+                                          try{
+                                            openLoadingDialogBox();
+                                            await callPlaceOrder(cart, '8');
+                                          }catch(e){
+                                            Navigator.of(context).pop();
+                                          }
+                                        } else {
+                                          CustomFailedToast(title: AppLocalizations.of(context)!.translate('cannot_replace_same_order')).showToast();
+                                        }
+                                      } else {
+                                        if(cart.selectedOption == 'Dine in' &&
+                                            appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in'){
+                                          openOtherOrderDialog(cart.selectedOptionId);
+                                        }
+                                      }
+                                    }
+                                  } else if (widget.currentPage == 'table' || widget.currentPage == 'other_order'){
+                                    if(cart.cartNotifierItem.isNotEmpty){
+                                      paymentAddToCart(cart);
+                                      openPaymentSelect(cart);
+                                    }
+                                  }
+                                },
+                                child: Text(generateCartButtonText()),
                               ),
                             ),
                           ],
@@ -708,6 +726,66 @@ class _CartPageState extends State<CartPage> {
         );
       });
     });
+  }
+
+  String generateCartButtonText(){
+    if(MediaQuery.of(context).size.height > 500 && MediaQuery.of(context).size.width > 900) {
+      if(widget.currentPage == 'menu'){
+        if(cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+          return AppLocalizations.of(context)!.translate('select_order');
+        }
+        return '${AppLocalizations.of(context)!.translate('place_order')}\n (RM ${cart.netTotal.toStringAsFixed(2)})';
+      } else {
+        return '${AppLocalizations.of(context)!.translate('pay')} (RM ${cart.netTotal.toStringAsFixed(2)})';
+      }
+    } else {
+      if(widget.currentPage == 'menu'){
+        if(cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
+          return AppLocalizations.of(context)!.translate('select_order');
+        }
+        return AppLocalizations.of(context)!.translate('place_order');
+      } else {
+        return AppLocalizations.of(context)!.translate('pay');
+      }
+    }
+  }
+
+  paymentAddToCart(CartModel cart) {
+    var value = CartPaymentDetail('', total, totalAmount, rounding, finalAmount, 0.0, 0.0, [], [],
+        promotionList: autoApplyPromotionList, manualPromo: cart.selectedPromotion, dining_name: cart.selectedOption, diningTax: currentDiningTax);
+    cart.addPaymentDetail(value);
+  }
+
+  openPaymentSelect(CartModel cart) async {
+    Navigator.push(
+      context,
+      PageTransition(
+        type: PageTransitionType.rightToLeft,
+        child: const MakePaymentPage()
+      ),
+    );
+  }
+
+  openPromotionDialog(){
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: const PromotionDialog(),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
   }
 
   String getCartUnit(cartProductItem productItem){
@@ -773,17 +851,6 @@ class _CartPageState extends State<CartPage> {
       return totalQuantity;
     } else {
       return 0;
-    }
-  }
-
-  paymentAddToCart(CartModel cart) {
-    var value = cartPaymentDetail('', total, totalAmount, rounding, finalAmount, 0.0, 0.0, [], [],
-        promotionList: autoApplyPromotionList, manualPromo: cart.selectedPromotion, taxList: taxRateList, dining_name: cart.selectedOption);
-    if(cart.cartNotifierPayment.isNotEmpty){
-      cart.cartNotifierPayment.clear();
-      cart.addPaymentDetail(value);
-    } else {
-      cart.addPaymentDetail(value);
     }
   }
 
@@ -864,22 +931,18 @@ class _CartPageState extends State<CartPage> {
   Get Selected table
 */
   getSelectedTable(CartModel cart) {
-    List<String> result = [];
-    if (cart.selectedTable.isEmpty && cart.selectedOption == 'Dine in') {
-      result.add('-');
-    } else if (cart.selectedOption != 'Dine in') {
-      result.add('N/A');
+    List<String> result = ['-'];
+    if (cart.selectedTable.isNotEmpty) {
+      result.clear();
+      for (int i = 0; i < cart.selectedTable.length; i++) {
+        result.add('${cart.selectedTable[i].number}');
+      }
     } else {
-      if (cart.selectedTable.length > 1) {
-        for (int i = 0; i < cart.selectedTable.length; i++) {
-          result.add('${cart.selectedTable[i].number}');
-        }
-      } else {
-        result.add('${cart.selectedTable[0].number}');
+      if(cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem.first.order_queue != ''){
+        return '${AppLocalizations.of(context)!.translate('order')}: ${cart.cartNotifierItem.first.order_queue}';
       }
     }
-
-    return result.toString().replaceAll('[', '').replaceAll(']', '');
+    return '${AppLocalizations.of(context)!.translate('table')}: ${result.toString().replaceAll('[', '').replaceAll(']', '')}';
   }
 
 /*
@@ -895,29 +958,32 @@ class _CartPageState extends State<CartPage> {
   }
 
   getManualApplyPromotion(CartModel cart) {
-    List<cartProductItem> sameCategoryList = [];
+    List<cartProductItem> _sameCategoryList = [];
     allPromo = '';
     selectedPromoRate = '';
+    double rate = 0.0;
     try {
       if (cart.selectedPromotion != null) {
         allPromo = cart.selectedPromotion!.name!;
         if (cart.selectedPromotion!.type == 0) {
-          selectedPromoRate = '${cart.selectedPromotion!.amount}%';
+          selectedPromoRate = cart.selectedPromotion!.amount.toString() + '%';
+          rate = double.parse(cart.selectedPromotion!.amount!) / 100;
           cart.selectedPromotion!.promoRate = selectedPromoRate;
         } else {
-          selectedPromoRate = '${cart.selectedPromotion!.amount!}.00';
+          selectedPromoRate = double.parse(cart.selectedPromotion!.amount!).toStringAsFixed(2);
+          rate = double.parse(cart.selectedPromotion!.amount!);
           cart.selectedPromotion!.promoRate = selectedPromoRate;
         }
 
         if (cart.selectedPromotion!.specific_category == '1') {
           for (int i = 0; i < cart.cartNotifierItem.length; i++) {
             if (cart.cartNotifierItem[i].category_id == cart.selectedPromotion!.category_id) {
-              sameCategoryList.add(cart.cartNotifierItem[i]);
+              _sameCategoryList.add(cart.cartNotifierItem[i]);
             }
           }
-          specificCategoryAmount(cart.selectedPromotion!, sameCategoryList, cart);
+          specificCategoryAmount(cart.selectedPromotion!, _sameCategoryList, cart);
         } else {
-          nonSpecificCategoryAmount(cart);
+          nonSpecificCategoryAmount(cart, rate);
         }
       }
     } catch (error) {
@@ -952,30 +1018,31 @@ class _CartPageState extends State<CartPage> {
     //controller.add('refresh');
   }
 
-  nonSpecificCategoryAmount(CartModel cart) {
+  nonSpecificCategoryAmount(CartModel cart, double rate) {
     try {
       selectedPromo = 0.0;
       hasSelectedPromo = false;
 
       if (cart.selectedPromotion!.type == 0) {
         hasSelectedPromo = true;
-        selectedPromo = total * 0.10;
+        selectedPromo = double.parse((total * rate).toStringAsFixed(2));
       } else {
         if (cart.cartNotifierItem.isNotEmpty) {
           for (int i = 0; i < cart.cartNotifierItem.length; i++) {
             hasSelectedPromo = true;
-            selectedPromo += double.parse(cart.selectedPromotion!.amount!) * cart.cartNotifierItem[i].quantity!;
+            selectedPromo = double.parse(cart.selectedPromotion!.amount!);
             cart.selectedPromotion!.promoAmount = selectedPromo;
           }
         }
       }
       promoAmount += selectedPromo;
+      print('promotion amount: ${promoAmount}');
       cart.selectedPromotion!.promoAmount = selectedPromo;
     } catch (error) {
       print('check promotion type error: $error');
       selectedPromo = 0.0;
     }
-    //controller.add('refresh');
+    // controller.add('refresh');
   }
 
   promotionDateTimeChecking({
@@ -1537,7 +1604,7 @@ class _CartPageState extends State<CartPage> {
         total += (double.parse((cart.cartNotifierItem[i].price!)) * cart.cartNotifierItem[i].quantity!);
         if (cart.cartNotifierItem[i].status == 0) {
           newOrderSubtotal += (double.parse((cart.cartNotifierItem[i].price!)) * cart.cartNotifierItem[i].quantity!);
-          cart.subtotal = newOrderSubtotal.toStringAsFixed(2);
+          // cart.subtotal = newOrderSubtotal.toStringAsFixed(2);
         }
       }
     } catch (e) {
@@ -1546,8 +1613,8 @@ class _CartPageState extends State<CartPage> {
     }
     //await getDiningTax(cart);
     calPromotion(cart);
-    getTaxAmount();
-    getRounding();
+    // getTaxAmount();
+    // getRounding();
     getAllTotal();
     checkCartItem(cart);
     if (cart.cartScrollDown == 0) {
@@ -1562,42 +1629,42 @@ class _CartPageState extends State<CartPage> {
     // }
   }
 
-  void getTaxAmount() {
-    try {
-      discountPrice = total - promoAmount;
-      currentDiningTax = taxLinkDiningList.where((tax) => tax.dining_id == cart.selectedOptionId).toList();
-      if (currentDiningTax.isNotEmpty) {
-        for (int i = 0; i < currentDiningTax.length; i++) {
-          priceIncTaxes = discountPrice * (double.parse(currentDiningTax[i].tax_rate!) / 100);
-          currentDiningTax[i].tax_amount = priceIncTaxes;
-        }
-      }
-    } catch (e) {
-      print('get tax amount error: $e');
-    }
-    // if (!controller.isClosed) {
-    //   controller.sink.add('refresh');
-    // }
-  }
+  // void getTaxAmount() {
+  //   try {
+  //     discountPrice = total - promoAmount;
+  //     currentDiningTax = taxLinkDiningList.where((tax) => tax.dining_id == cart.selectedOptionId).toList();
+  //     if (currentDiningTax.isNotEmpty) {
+  //       for (int i = 0; i < currentDiningTax.length; i++) {
+  //         priceIncTaxes = discountPrice * (double.parse(currentDiningTax[i].tax_rate!) / 100);
+  //         currentDiningTax[i].tax_amount = priceIncTaxes;
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print('get tax amount error: $e');
+  //   }
+  //   // if (!controller.isClosed) {
+  //   //   controller.sink.add('refresh');
+  //   // }
+  // }
 
-  double sumAllTaxAmount() {
-    double total = 0.0;
-    for (int i = 0; i < currentDiningTax.length; i++) {
-      total = total + currentDiningTax[i].tax_amount!;
-    }
-    return total;
-  }
+  // double sumAllTaxAmount() {
+  //   double total = 0.0;
+  //   for (int i = 0; i < currentDiningTax.length; i++) {
+  //     total = total + currentDiningTax[i].tax_amount!;
+  //   }
+  //   return total;
+  // }
 
-  void getRounding() {
-    totalAmount = 0.0;
-    discountPrice = total - promoAmount;
-    totalAmount = discountPrice + sumAllTaxAmount();
-    rounding = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
-
-    // if (!controller.isClosed) {
-    //   controller.sink.add('refresh');
-    // }
-  }
+  // void getRounding() {
+  //   totalAmount = 0.0;
+  //   discountPrice = total - promoAmount;
+  //   totalAmount = discountPrice + sumAllTaxAmount();
+  //   rounding = Utils.roundToNearestFiveSen(double.parse(totalAmount.toStringAsFixed(2))) - double.parse(totalAmount.toStringAsFixed(2));
+  //
+  //   // if (!controller.isClosed) {
+  //   //   controller.sink.add('refresh');
+  //   // }
+  // }
 
   getAllTotal() {
     try {
@@ -1713,6 +1780,28 @@ class _CartPageState extends State<CartPage> {
   //         return null!;
   //       });
   // }
+
+  Future<Future<Object?>> openOtherOrderDialog(String diningOptionId) async {
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+              opacity: a1.value,
+              child: const OtherOrderDialog(),
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
+  }
 
   Future<Future<Object?>> openRemoveCartItemDialog(cartProductItem item, String currentPage) async {
     return showGeneralDialog(
@@ -1853,7 +1942,7 @@ class _CartPageState extends State<CartPage> {
   // }
 
   ///place order
-  callPlaceOrder(CartModel cart, String action) async {
+  callPlaceOrder(CartModel cart, String action, {OrderCache? orderCache}) async {
     CartModel newCart = cart;
     if(action == '9'){
       newCart = CartModel.addOrderCopy(cart);
@@ -1864,7 +1953,8 @@ class _CartPageState extends State<CartPage> {
     Map<String, dynamic> map = {
       'order_by_user_id': userData.user_id.toString(),
       'order_by': userData.name,
-      'cart':newCart
+      'cart':newCart,
+      'order_cache': orderCache ?? ''
     };
     await clientAction.connectRequestPort(action: action, param: jsonEncode(map), callback: responseStatusCheck);
   }

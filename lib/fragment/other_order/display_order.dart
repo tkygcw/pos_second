@@ -1,330 +1,185 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:optimy_second_device/main.dart';
+import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
+import 'package:optimy_second_device/notifier/cart_notifier.dart';
+import 'package:optimy_second_device/notifier/theme_color.dart';
+import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:provider/provider.dart';
 
-import '../../notifier/cart_notifier.dart';
-import '../../notifier/table_notifier.dart';
-import '../../notifier/theme_color.dart';
 import '../../object/cart_product.dart';
-import '../../object/modifier_group.dart';
-import '../../object/modifier_item.dart';
-import '../../object/order_cache.dart';
-import '../../object/order_detail.dart';
-import '../../object/order_modifier_detail.dart';
-import '../../object/product_variant.dart';
-import '../../object/variant_group.dart';
-import '../../page/progress_bar.dart';
+import '../../translation/AppLocalizations.dart';
 import '../../utils/Utils.dart';
+import '../table/table_view_function.dart';
+import '../toast/custom_toastification.dart';
 
 class DisplayOrderPage extends StatefulWidget {
-  final CartModel cartModel;
-  const DisplayOrderPage({Key? key, required this.cartModel}) : super(key: key);
+  const DisplayOrderPage({Key? key}) : super(key: key);
 
   @override
   State<DisplayOrderPage> createState() => _DisplayOrderPageState();
 }
 
 class _DisplayOrderPageState extends State<DisplayOrderPage> {
-  List<String> list = [];
-  String? selectDiningOption = 'All';
-  List<OrderCache> orderCacheList = [];
-  List<OrderDetail> orderDetailList = [];
-  List<OrderModifierDetail> orderModifierDetail = [];
-  List<ProductVariant> orderProductVariant = [];
-  List<VariantGroup> variantGroup = [];
-  List<ModifierGroup> modifierGroup = [];
-
+  TableViewFunction tableViewFunction = TableViewFunction();
+  late CartModel cartModel;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    //getDiningList();
-    getOrderList();
+    cartModel = context.read<CartModel>();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      widget.cartModel.notDineInInitLoad();
+      cartModel.initialLoad();
     });
-  }
-
-  getOrderList({model}) async {
-    print('refresh UI!');
-    Map<String, dynamic>? objectData;
-    if (model != null) {
-      model.changeContent2(false);
-    }
-    objectData = {
-      'dining_option': selectDiningOption,
-    };
-    await clientAction.connectRequestPort(action: '17', param: jsonEncode(objectData));
-    decodeData();
-  }
-
-  listenData({data}){
-    //print("call: ${data}");
-    // var json = jsonDecode(data);
-    // Iterable value1 = json['data']['orderCacheList'];
-    // orderCacheList = value1.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
-    // list = List.from(json['data']['diningList']);
-  }
-
-  decodeData(){
-    try{
-      print("decode data called");
-      var json = jsonDecode(clientAction.response!);
-      Iterable value1 = json['data']['orderCacheList'];
-      orderCacheList = value1.map((tagJson) => OrderCache.fromJson(tagJson)).toList();
-      list = List.from(json['data']['diningList']);
-      decodeAction.otherOrderController.sink.add("refresh");
-    } catch(e){
-      print("decode data error: $e");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return  Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      return Consumer<CartModel>(builder: (context, CartModel cart, child) {
-        return Consumer<TableModel>(builder: (context, TableModel tableModel, child) {
-          if (tableModel.isChange) {
-            getOrderList(model: tableModel);
-          }
-          return StreamBuilder(
-              stream: decodeAction.otherOrderStream,
-              builder: (context, snapShot) {
-                if(snapShot.hasData){
-                  print("rebuild");
-                  return  Scaffold(
-                      appBar: AppBar(
-                        automaticallyImplyLeading: false,
-                        elevation: 0,
-                        title: const Text("Other Order", style: TextStyle(fontSize: 25)),
-                        actions: [
-                          Container(
-                            width: MediaQuery.of(context).size.height / 3,
-                            padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
-                            child: DropdownButton<String>(
-                              onChanged: (String? value) {
-                                setState(() {
-                                  selectDiningOption = value!;
-                                });
-                                getOrderList();
-                              },
-                              menuMaxHeight: 300,
-                              value: selectDiningOption,
-                              // Hide the default underline
-                              underline: Container(),
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: color.backgroundColor,
-                              ),
-                              isExpanded: true,
-                              // The list of options
-                              items: list
-                                  .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Container(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    e,
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                ),
-                              ))
-                                  .toList(),
-                              // Customize the selected item
-                              selectedItemBuilder: (BuildContext context) => list.map((e) => Center(
-                                child: Text(e),
-                              ))
-                                  .toList(),
-                            ),
-                          ),
-                        ],
-                      ),
-                      body: Container(
-                        padding: EdgeInsets.all(10),
-                        child: orderCacheList.isNotEmpty ?
-                        ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: orderCacheList.length,
-                            itemBuilder: (BuildContext context, int index) {
-                              return Card(
-                                elevation: 5,
-                                shape: orderCacheList[index].is_selected
-                                    ? new RoundedRectangleBorder(
-                                    side: new BorderSide(
-                                        color: color.backgroundColor, width: 3.0),
-                                    borderRadius: BorderRadius.circular(4.0))
-                                    : new RoundedRectangleBorder(
-                                    side: new BorderSide(
-                                        color: Colors.white, width: 3.0),
-                                    borderRadius: BorderRadius.circular(4.0)),
-                                child: InkWell(
-                                  onTap: () async {
-                                    if(orderCacheList[index].is_selected == false){
-                                      //reset other selected order
-                                      for(int i = 0; i < orderCacheList.length; i++){
-                                        orderCacheList[i].is_selected = false;
-                                        cart.notDineInInitLoad();
-                                      }
-                                      orderCacheList[index].is_selected = true;
-                                      await getOrderDetail(orderCacheList[index]);
-                                      addToCart(cart, orderCacheList[index]);
-
-
-                                    } else if(orderCacheList[index].is_selected == true) {
-                                      orderCacheList[index].is_selected = false;
-                                      cart.notDineInInitLoad();
-                                    }
-                                    //openViewOrderDialog(orderCacheList[index]);
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16.0),
-                                    child: ListTile(
-                                        leading:
-                                        orderCacheList[index].dining_name == 'Take Away'
-                                            ? Icon(
-                                          Icons.fastfood_sharp,
-                                          color: color.backgroundColor,
-                                          size: 30.0,
-                                        )
-                                            : Icon(
-                                          Icons.delivery_dining,
-                                          color: color.backgroundColor,
-                                          size: 30.0,
-                                        ),
-                                        trailing: Text(
-                                          '#'+orderCacheList[index].batch_id.toString(),
-                                          style: TextStyle(fontSize: 20),
-                                        ),
-                                        subtitle: Text('Order by: ' +
-                                            orderCacheList[index].order_by!,
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                        title: Text(
-                                          "${Utils.convertTo2Dec(orderCacheList[index].total_amount!,)}",
-                                          style: TextStyle(fontSize: 20),
-                                        )),
-                                  ),
-                                ),
-                              );
-                            })
-                            :
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.list,
-                                color: Colors.grey,
-                                size: 36.0,
-                              ),
-                              Text("No Order", style: TextStyle(fontSize: 24),),
-                            ],
-                          ),
-                        ),
-                      )
-                  );
-                } else {
-                  return CustomProgressBar();
-                }
-              }
-          );
-        });
-      });
+    return Consumer<OtherOrderFunction>(
+        builder: (context, orderFunction, child){
+          return orderFunction.orderCacheList.isNotEmpty ?
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: orderFunction.orderCacheList.length,
+            itemBuilder: (BuildContext context, int index) {
+              return _OrderCard(orderCache: orderFunction.orderCacheList[index]);
+            },
+          ):
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.list),
+                    Text("No Order")
+                  ],
+                ),
+              );
     });
   }
+}
 
-  getOrderDetail(OrderCache orderCache) async {
-    await clientAction.connectRequestPort(action: '18', param: jsonEncode(orderCache));
-    decodeData2();
-  }
+class _OrderCard extends StatelessWidget {
+  final OrderCache orderCache;
+  const _OrderCard({super.key, required this.orderCache});
 
-  decodeData2(){
-    var json = jsonDecode(clientAction.response!);
-    Iterable value1 = json['data']['orderDetailList'];
-    orderDetailList = value1.map((tagJson) => OrderDetail.fromJson(tagJson)).toList();
-  }
-
-  getVariantGroupItem(OrderDetail orderDetail) {
-    variantGroup = [];
-    //loop all order detail variant
-    for (int i = 0; i < orderDetail.variantItem!.length; i++) {
-      variantGroup.add(VariantGroup(
-          child: orderDetail.variantItem,
-          variant_group_id:
-          int.parse(orderDetail.variantItem![i].variant_group_id!)));
-    }
-    //print('variant group length: ${variantGroup.length}');
-    return variantGroup;
-  }
-
-  getModifierGroupItem(OrderDetail orderDetail) {
-    modifierGroup = [];
-    List<ModifierItem> temp = List.from(orderDetail.modifierItem!);
-
-    for (int j = 0; j < orderDetail.mod_group_id!.length; j++) {
-      List<ModifierItem> modItemChild = [];
-      //check modifier group is existed or not
-      bool isModifierExisted = false;
-      int position = 0;
-      for (int g = 0; g < modifierGroup.length; g++) {
-        if (modifierGroup[g].mod_group_id == orderDetail.mod_group_id![j]) {
-          isModifierExisted = true;
-          position = g;
-          break;
-        }
-      }
-      //if new category
-      if (!isModifierExisted) {
-        modifierGroup.add(ModifierGroup(
-            modifierChild: [],
-            mod_group_id: int.parse(orderDetail.mod_group_id![j])));
-        position = modifierGroup.length - 1;
-      }
-
-      for (int k = 0; k < temp.length; k++) {
-        if (modifierGroup[position].mod_group_id.toString() == temp[k].mod_group_id) {
-          modItemChild.add(ModifierItem(
-              mod_group_id: orderDetail.mod_group_id![position],
-              mod_item_id: temp[k].mod_item_id,
-              name: temp[k].name,
-              isChecked: true));
-          temp.removeAt(k);
-        }
-      }
-      modifierGroup[position].modifierChild = modItemChild;
-    }
-    return modifierGroup;
-  }
-
-  addToCart(CartModel cart, OrderCache orderCache) {
-    var value;
-    for (int i = 0; i < orderDetailList.length; i++) {
-      value = cartProductItem(
-        branch_link_product_sqlite_id: orderDetailList[i].branch_link_product_sqlite_id!,
-        product_name: orderDetailList[i].productName!,
-        category_id: orderDetailList[i].product_category_id!,
-        price: orderDetailList[i].price!,
-        quantity: int.parse(orderDetailList[i].quantity!),
-        checkedModifierItem: [],
-        modifier: getModifierGroupItem(orderDetailList[i]),
-        variant: getVariantGroupItem(orderDetailList[i]),
-        remark: orderDetailList[i].remark!,
-        status: 0,
-        order_cache_sqlite_id: orderCache.order_cache_sqlite_id.toString(),
-        order_cache_key: orderCache.order_cache_key,
-        category_sqlite_id: orderDetailList[i].category_sqlite_id,
-        order_detail_sqlite_id: orderDetailList[i].order_detail_sqlite_id.toString(),
-        refColor: Colors.black,
-      );
-      cart.addItem(value);
-      if(orderCache.dining_name == 'Take Away'){
-        cart.selectedOption = 'Take Away';
-      } else {
-        cart.selectedOption = 'Delivery';
-      }
-    }
+  @override
+  Widget build(BuildContext context) {
+    OtherOrderFunction orderFunction = context.read<OtherOrderFunction>();
+    ThemeColor color = context.read<ThemeColor>();
+    CartModel cart = context.read<CartModel>();
+    bool isInCart = context.select<CartModel, bool>(
+          (cart) {
+            List<int> list = cart.currentOrderCache.map((e) => e.order_cache_sqlite_id!).toList();
+            return list.contains(orderCache.order_cache_sqlite_id);
+      },
+    );
+    return Card(
+      elevation: 5,
+      color: Colors.white,
+      shape: isInCart ? RoundedRectangleBorder(
+          side: BorderSide(
+            color: color.backgroundColor,
+            width: 3.0,
+          ),
+          borderRadius: BorderRadius.circular(4.0))
+          : RoundedRectangleBorder(
+          side: BorderSide(color: Colors.white, width: 3.0),
+          borderRadius: BorderRadius.circular(4.0)),
+      child: InkWell(
+        onTap: () async {
+          if(isInCart){
+            cart.removeSpecificCurrentOrderCacheWithBatch(orderCache.batch_id);
+            cart.removeSpecificBatchItem(orderCache.batch_id);
+            orderFunction.unselectSpecificSubPosOrderCache(orderCache.batch_id!);
+          } else {
+            if(cart.cartNotifierItem.isEmpty || orderCache.dining_name == cart.selectedOption){
+              int status = await orderFunction.readAllOrderDetail(orderCache);
+              if(status == 1){
+                List<cartProductItem> itemList = [];
+                for(var order in orderFunction.orderDetailList){
+                  var item = cartProductItem(
+                    product_sku: order.product_sku,
+                    product_name: order.productName,
+                    price: order.price,
+                    base_price: order.original_price,
+                    orderModifierDetail: order.orderModifierDetail,
+                    productVariantName: order.product_variant_name,
+                    unit: order.unit,
+                    quantity: num.parse(order.quantity!),
+                    remark: order.remark,
+                    refColor: Colors.black,
+                    first_cache_created_date_time: orderCache.created_at,
+                    first_cache_batch: orderCache.batch_id,
+                    table_use_key: orderCache.table_use_key,
+                    per_quantity_unit: order.per_quantity_unit,
+                    status: 0,
+                    category_id: order.product_category_id,
+                    order_queue: orderCache.order_queue,
+                  );
+                  itemList.add(item);
+                }
+                cart.selectedOption = orderCache.dining_name!;
+                cart.selectedOptionId = orderCache.dining_id!;
+                cart.addAllCurrentOrderCache(orderFunction.selectedOrderCache);
+                cart.addAllItem(itemList);
+              } else {
+                CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
+              }
+            } else {
+              CustomFailedToast(title: 'Order dining option not same').showToast();
+            }
+          }
+        },
+        child: Padding(
+          padding: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? const EdgeInsets.all(16.0) : EdgeInsets.fromLTRB(0, 16, 0, 16),
+          child: ListTile(
+              leading:
+              orderCache.dining_name == 'Take Away'
+                  ? Icon(
+                Icons.fastfood_sharp,
+                color: color.backgroundColor,
+                size: 30.0,
+              )
+                  : orderCache.dining_name == 'Delivery'
+                  ? Icon(
+                Icons.delivery_dining,
+                color: color.backgroundColor,
+                size: 30.0,
+              )
+                  : Icon(
+                Icons.local_dining_sharp,
+                color: color.backgroundColor,
+                size: 30.0,
+              ),
+              trailing: Text(
+                '#${orderCache.batch_id}',
+                style: TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? 20 : 15),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${AppLocalizations.of(context)!.translate('order_by')}: ${orderCache.order_by!}',
+                    style: TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? 14 : 13),
+                  ),
+                  Text('${AppLocalizations.of(context)!.translate('order_at')}: ${Utils.formatDate(orderCache.created_at!)}',
+                    style: TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? 14 : 13),
+                  ),
+                ],
+              ),
+              title: Text(
+                Utils.convertTo2Dec(orderCache.total_amount!,),
+                style: TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? 20 : 18),
+              )),
+        ),
+      ),
+    );
   }
 }
+
+

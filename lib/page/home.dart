@@ -7,13 +7,16 @@ import 'package:flutter/services.dart';
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:optimy_second_device/fragment/other_order/other_order.dart';
 import 'package:optimy_second_device/fragment/setting/setting.dart';
+import 'package:optimy_second_device/fragment/table/table_menu.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../fragment/cart/cart.dart';
 import '../fragment/order/order.dart';
+import '../fragment/table/table_page.dart';
 import '../main.dart';
 import '../notifier/cart_notifier.dart';
 import '../notifier/theme_color.dart';
@@ -24,121 +27,34 @@ import 'login.dart';
 
 class HomePage extends StatefulWidget {
   final User? user;
-  final bool isNewDay;
 
-  const HomePage({Key? key, this.user, required this.isNewDay}) : super(key: key);
+  const HomePage({Key? key, this.user}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  late List<CollapsibleItem> _items;
-  late String currentPage;
-  late String role;
+  List<CollapsibleItem> _items = [];
+  String role = '';
+  String currentPage = "menu";
   String? branchName;
   Timer? timer, notificationTimer;
-  bool hasNotification = false, willPop = false;
+  bool hasNotification = false, willPop = false, loading = true;
   int count = 0;
-  late ThemeColor themeColor;
   List<AppSetting> appSettingList = [];
   bool isCartExpanded = false;
 
   @override
   void initState() {
     // TODO: implement initState
-    WidgetsBinding.instance.addObserver(this);
     super.initState();
-    // if(notificationModel.notificationStarted == false){
-    //   setupFirebaseMessaging();
-    // }
-    // setScreenLayout();
-    // initSecondDisplay();
-    // _items = _generateItems;
-    // currentPage = 'menu';
-    // getRoleName();
-    // getBranchName();
-    // if (widget.isNewDay) {
-    //   WidgetsBinding.instance.addPostFrameCallback((_) {
-    //     showDialog(
-    //         barrierDismissible: false,
-    //         context: context,
-    //         builder: (BuildContext context) {
-    //           return WillPopScope(child: CashDialog(isCashIn: true, callBack: () {}, isCashOut: false, isNewDay: true), onWillPop: () async => false);
-    //           //CashDialog(isCashIn: true, callBack: (){}, isCashOut: false, isNewDay: true,);
-    //         });
-    //   });
-    // }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      // Reconnect to the server when the app comes to the foreground
-      await clientAction.connectServer(clientAction.serverIp!, callback: checkStatus);
-    }
-  }
-
-  checkStatus(response) async {
-    var json = jsonDecode(response);
-    print('status: ${json['status']}');
-    switch(json['status']){
-      case '0': {
-        clientAction.openReconnectDialog(keepAlive: true, callback: checkStatus);
-      }break;
-      case '2': {
-        Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
-        await logout();
-      }break;
-      case '3': {
-        Fluttertoast.showToast(
-            backgroundColor: Colors.redAccent,
-            msg: "Sub POS version not supported, please update to latest version");
-        await logout();
-      }break;
-    }
-  }
-
-  logout() async{
-    final prefs = await SharedPreferences.getInstance();
-    prefs.clear();
-    deleteDirectory();
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (context) => LoginPage()));
-  }
-
-  Future<Directory> get _localDirectory async {
-    final directory = await getApplicationSupportDirectory();
-    final path = directory.path;
-    return Directory('$path/assets');
-  }
-
-  Future<int> deleteDirectory() async {
-    try {
-      final folder = await _localDirectory;
-      folder.delete(recursive: true);
-      print("delete successful");
-      return 1;
-    } catch (e) {
-      print(e);
-      return 0;
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    _items = _generateItems;
-    currentPage = 'menu';
-    getRoleName();
-    getBranchName();
-    super.didChangeDependencies();
-  }
-
-  @override
-  dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _items = _generateItems;
+      getRoleName();
+      getBranchName();
+    });
   }
 
   setScreenLayout() {
@@ -152,81 +68,81 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeColor>(builder: (context, ThemeColor color, child) {
-      this.themeColor = color;
-      return PopScope(
-        canPop: willPop,
-        onPopInvokedWithResult: (didPop, result) => showSecondDialog(context, color),
-        child: Scaffold(
-            resizeToAvoidBottomInset: false,
-            body: SafeArea(
-              child: isLandscapeOrien() ? CollapsibleSidebar(
-                  sidebarBoxShadow: [
-                    BoxShadow(
-                      color: Colors.transparent,
+    var color = context.read<ThemeColor>();
+    return loading ? Container() : PopScope(
+      canPop: willPop,
+      onPopInvokedWithResult: (didPop, result) => showSecondDialog(context, color),
+      child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: SafeArea(
+            child: isLandscapeOrien() ?
+            CollapsibleSidebar(
+                sidebarBoxShadow: [
+                  BoxShadow(
+                    color: Colors.transparent,
+                  ),
+                ],
+                // maxWidth: 80,
+                isCollapsed: true,
+                items: _items,
+                avatarImg: AssetImage("drawable/logo.png"),
+                title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
+                backgroundColor: color.backgroundColor,
+                selectedTextColor: color.iconColor,
+                textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                customItemOffsetX: 20,
+                selectedIconColor: color.iconColor,
+                selectedIconBox: color.buttonColor,
+                unselectedIconColor: Colors.white,
+                body: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _body(),
+                    ),
+                    //cart page
+                    Visibility(
+                      visible: currentPage != 'product' &&
+                          currentPage != 'setting' &&
+                          currentPage != 'settlement' &&
+                          currentPage != 'qr_order' &&
+                          currentPage != 'setting' &&
+                          currentPage != 'report'
+                          ? true
+                          : false,
+                      child: Expanded(
+                          flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
+                          child: CartPage(
+                            currentPage: currentPage,
+                          )),
+                    )
+                  ],
+                )) :
+            Stack(
+              children: [
+                Stack(
+                  children: [
+                    _buildBody(context),
+                    ValueListenableBuilder<bool>(
+                        valueListenable: isCollapsedNotifier,
+                        builder: (context, isCollapsed, child) {
+                          return !isCollapsed ? GestureDetector(
+                            child: Container(
+                              color: Colors.black.withOpacity(0.5),
+                            ),
+                            onTap: () {
+                              setState(() {
+                                isCollapsedNotifier.value = !isCollapsedNotifier.value;
+                              });
+                            },
+                          ) : Container();
+                        }
                     ),
                   ],
-                  // maxWidth: 80,
-                  isCollapsed: true,
-                  items: _items,
-                  avatarImg: AssetImage("drawable/logo.png"),
-                  title: widget.user!.name! + "\n" + _truncateTitle((branchName ?? ''), 17) + "\n" + AppLocalizations.of(context)!.translate(role.toLowerCase()),
-                  backgroundColor: color.backgroundColor,
-                  selectedTextColor: color.iconColor,
-                  textStyle: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
-                  titleStyle: TextStyle(fontSize: 17, fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
-                  toggleTitleStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  customItemOffsetX: 20,
-                  selectedIconColor: color.iconColor,
-                  selectedIconBox: color.buttonColor,
-                  unselectedIconColor: Colors.white,
-                  body: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: _body(context),
-                      ),
-                      //cart page
-                      Visibility(
-                        visible: currentPage != 'product' &&
-                            currentPage != 'setting' &&
-                            currentPage != 'settlement' &&
-                            currentPage != 'qr_order' &&
-                            currentPage != 'setting' &&
-                            currentPage != 'report'
-                            ? true
-                            : false,
-                        child: Expanded(
-                            flex: MediaQuery.of(context).size.height > 500 ? 1 : 2,
-                            child: CartPage(
-                              currentPage: currentPage,
-                            )),
-                      )
-                    ],
-                  ))
-                  : Stack(
-                children: [
-                  Stack(
-                    children: [
-                      _buildBody(context),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: isCollapsedNotifier,
-                          builder: (context, isCollapsed, child) {
-                            return !isCollapsed ? GestureDetector(
-                              child: Container(
-                                color: Colors.black.withOpacity(0.5),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  isCollapsedNotifier.value = !isCollapsedNotifier.value;
-                                });
-                              },
-                            ) : Container();
-                          }
-                        ),
-                    ],
-                  ),
-                  Positioned(
+                ),
+                Positioned(
                     left: 0,
                     top: 0,
                     bottom: 0,
@@ -261,11 +177,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         );
                       },
                     ))
-                ],
-              ),
-            )),
-      );
-    });
+              ],
+            ),
+          )),
+    );
   }
 
   Widget _buildBody(BuildContext context) {
@@ -276,7 +191,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             children: [
               Expanded(
                 flex: 3,
-                child: _body(context),
+                child: _body(),
               ),
               Visibility(
                 visible: currentPage != 'product' &&
@@ -304,7 +219,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     flex: 1,
                     child: Stack(
                       children: [
-                        _body(context),
+                        _body(),
                         if (isCartExpanded)
                           GestureDetector(
                             child: Container(
@@ -366,7 +281,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ],
               ),
               Visibility(
-                visible: !isCartExpanded && currentPage == 'menu',
+                visible: !isCartExpanded && currentPage == 'menu' || currentPage == 'table' || currentPage == 'other_order',
                 child: Positioned(
                   bottom: 16,
                   right: 16,
@@ -405,7 +320,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
 
   List<CollapsibleItem> get _generateItems {
-    CartModel cart = Provider.of<CartModel>(context, listen: false);
+    CartModel cart = context.read<CartModel>();
     return [
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('menu'),
@@ -416,6 +331,26 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
         isSelected: true,
+      ),
+      if(widget.user!.sub_pos_payment == 1)
+      CollapsibleItem(
+        text: AppLocalizations.of(context)!.translate('table'),
+        icon: Icons.table_restaurant,
+        onPressed: () => setState(() {
+          currentPage = 'table';
+          cart.initialLoad();
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
+        }),
+      ),
+      if(widget.user!.sub_pos_payment == 1)
+      CollapsibleItem(
+        text: AppLocalizations.of(context)!.translate('other_order'),
+        icon: Icons.shopping_cart,
+        onPressed: () => setState(() {
+          currentPage = 'other_order';
+          cart.initialLoad();
+          isCollapsedNotifier.value = !isCollapsedNotifier.value;
+        }),
       ),
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('setting'),
@@ -428,10 +363,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     ];
   }
 
-  Widget _body(BuildContext context) {
+  Widget _body() {
     switch (currentPage) {
       case 'menu':
         return OrderPage();
+      case 'table':
+        return TableMenu();
+      case 'other_order':
+        return OtherOrderPage();
       case 'setting':
         return SettingMenu();
       default:
@@ -457,6 +396,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     Map branchObject = json.decode(branch!);
     setState(() {
       branchName = branchObject['name'];
+      loading = false;
     });
   }
 

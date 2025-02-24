@@ -99,6 +99,7 @@ class _LoadingPageState extends State<LoadingPage> {
     } else {
       AppSettingModel.instance.setShowSKUStatus(false);
     }
+    AppSettingModel.instance.setTableOrder = decodeAction.decodedAppSetting!.table_order!;
     appLanguage.changeLanguage(Locale(decodeAction.appLanguageCode));
   }
 

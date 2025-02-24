@@ -1,4 +1,4 @@
-import '../../object/table.dart';
+import '../../../object/table.dart';
 
 class CartDialogFunction {
 
