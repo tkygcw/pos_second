@@ -54,6 +54,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       _items = _generateItems;
       getRoleName();
       getBranchName();
+      Provider.of<CartModel>(context, listen: false).initBranchLinkDiningOption();
     });
   }
 
