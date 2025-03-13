@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
@@ -235,7 +236,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ),
                   Visibility(
-                    visible: cart.selectedOption == 'Dine in' && widget.currentPage == 'menu'
+                    visible: cart.selectedOption == 'Dine in' && widget.currentPage == 'menu' && appSetting.table_order != 0
                         ? true
                         : false,
                     child: Expanded(
@@ -250,7 +251,11 @@ class _CartPageState extends State<CartPage> {
                         ),
                         color: color.backgroundColor,
                         onPressed: () {
-                          openChooseTableDialog(cart);
+                          if(appSetting.table_order == 2){
+                            enterTableNumberDialog(cart, context, color);
+                          } else {
+                            openChooseTableDialog(cart);
+                          }
                         },
                       ),
                     ),
@@ -264,9 +269,14 @@ class _CartPageState extends State<CartPage> {
                           Icons.delete,
                         ),
                         color: color.backgroundColor,
-                        onPressed: () {
-                          cart.removePartialCartItem();
+                        onPressed: () async {
+                          // cart.removePartialCartItem();
                           //cart.removeAllTable();
+                          cart.removeAllCartItem();
+                          cart.removeSelectedTableIndex();
+                          cart.removeAllTable();
+                          // clear all SubPosOrderCache
+                          await clientAction.connectRequestPort(action: '25');
                         },
                       ),
                     ),
@@ -654,7 +664,7 @@ class _CartPageState extends State<CartPage> {
                                   // await checkCashRecord();
                                   if (widget.currentPage == 'menu') {
                                     //disableButton();
-                                    if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
+                                    if (cart.selectedOption == 'Dine in' && appSetting.table_order == 1) {
                                       if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
                                         openLoadingDialogBox();
                                         if (cart.cartNotifierItem[0].status == 1) {
@@ -691,7 +701,8 @@ class _CartPageState extends State<CartPage> {
                                         } else if (cart.cartNotifierItem[0].status == 0) {
                                           try{
                                             openLoadingDialogBox();
-                                            await callPlaceOrder(cart, '8');
+                                            print("cart.selectedTableIndex3: ${cart.selectedTableIndex}");
+                                            await callPlaceOrder(cart, '8', customTable: cart.selectedTableIndex);
                                           }catch(e){
                                             Navigator.of(context).pop();
                                           }
@@ -763,6 +774,106 @@ class _CartPageState extends State<CartPage> {
         type: PageTransitionType.rightToLeft,
         child: const MakePaymentPage()
       ),
+    );
+  }
+
+  Future<void> enterTableNumberDialog(CartModel cart, BuildContext context, ThemeColor color) async {
+    TextEditingController tableController = TextEditingController();
+    bool isButtonDisabled = true;
+    if(cart.selectedTableIndex != ''){
+      tableController.text = cart.selectedTableIndex;
+      isButtonDisabled = false;
+    }
+
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.translate('table_mode_custom_note')),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
+                      height: 75,
+                      width: 350,
+                      child: TextField(
+                        autofocus: true,
+                        controller: tableController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          errorText: tableController.text.isEmpty ? AppLocalizations.of(context)!.translate('enter_table_number') : null,
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: color.backgroundColor),
+                          ),
+                          hintText: AppLocalizations.of(context)!.translate('enter_table_number'),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            tableController.text = value.replaceFirst(RegExp(r'^0+'), '');
+                            tableController.selection = TextSelection.fromPosition(
+                              TextPosition(offset: tableController.text.length),
+                            );
+                            isButtonDisabled = tableController.text.isEmpty;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color.backgroundColor,
+                          ),
+                          child: Text(AppLocalizations.of(context)!.translate('close'), style: TextStyle(color: Colors.white)),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      flex: 1,
+                      child: SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: color.buttonColor,
+                          ),
+                          child: Text(AppLocalizations.of(context)!.translate('ok'), style: TextStyle(color: Colors.white)),
+                          onPressed: isButtonDisabled
+                              ? null
+                              : () {
+                            cart.selectedTableIndex = tableController.text;
+                            Navigator.of(context).pop(tableController.text);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1942,7 +2053,7 @@ class _CartPageState extends State<CartPage> {
   // }
 
   ///place order
-  callPlaceOrder(CartModel cart, String action, {OrderCache? orderCache}) async {
+  callPlaceOrder(CartModel cart, String action, {OrderCache? orderCache, String? customTable}) async {
     CartModel newCart = cart;
     if(action == '9'){
       newCart = CartModel.addOrderCopy(cart);
@@ -1954,7 +2065,8 @@ class _CartPageState extends State<CartPage> {
       'order_by_user_id': userData.user_id.toString(),
       'order_by': userData.name,
       'cart':newCart,
-      'order_cache': orderCache ?? ''
+      'order_cache': orderCache ?? '',
+      'custom_table': customTable ?? '',
     };
     await clientAction.connectRequestPort(action: action, param: jsonEncode(map), callback: responseStatusCheck);
   }

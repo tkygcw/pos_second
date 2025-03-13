@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -36,6 +37,8 @@ class _DisplayOrderPageState extends State<DisplayOrderPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       cartModel.initialLoad();
     });
+    // clear all SubPosOrderCache
+    clientAction.connectRequestPort(action: '25');
   }
 
   @override

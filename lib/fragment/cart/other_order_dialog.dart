@@ -100,6 +100,8 @@ class _OrderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4.0)),
       child: InkWell(
         onTap: () async {
+          if(orderCache.custom_table_number != '' && orderCache.custom_table_number != null)
+            cart.selectedTableIndex = orderCache.custom_table_number!;
           int status = await orderFunction.readAllOrderDetail(orderCache);
           if(status == 1){
             List<cartProductItem> itemList = [];
