@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -133,15 +135,29 @@ class CartModel extends ChangeNotifier {
     _groupCategoryPrice = totalByCategory;
   }
 
-  void updateGroupCategoryPrice(double remainingPromoAmount){
+  void updateGroupCategoryPrice(double remainingPromoAmount, Promotion promo){
     double remainingPromo = remainingPromoAmount;
     for (var item in _groupCategoryPrice.entries) {
-      if (item.value >= remainingPromo) {
-        _groupCategoryPrice[item.key] = item.value - remainingPromo;
-        remainingPromo = 0;
-      } else {
-        remainingPromo -= item.value;
-        _groupCategoryPrice[item.key] = 0;
+      if(promo.specific_category == '1') {
+        if(promo.category_id == item.key) {
+          if (item.value >= remainingPromo) {
+            _groupCategoryPrice[item.key] = item.value - remainingPromo;
+            remainingPromo = 0;
+          } else {
+            remainingPromo -= item.value;
+            _groupCategoryPrice[item.key] = 0;
+          }
+        }
+      } else if(promo.specific_category == '2') {
+        if (promo.multiple_category!.any((category) => category['category_id'].toString() == item.key)) {
+          if (item.value >= remainingPromo) {
+            _groupCategoryPrice[item.key] = item.value - remainingPromo;
+            remainingPromo = 0;
+          } else {
+            remainingPromo -= item.value;
+            _groupCategoryPrice[item.key] = 0;
+          }
+        }
       }
     }
   }
@@ -164,7 +180,7 @@ class CartModel extends ChangeNotifier {
         } else {
           totalDiscount = categoryTotalPrice * (double.parse(promo.amount!) / 100);
         }
-        updateGroupCategoryPrice(totalDiscount);
+        updateGroupCategoryPrice(totalDiscount, promo);
       } else if (promo.specific_category == '2') {
         //multiple category promo
         for (var item in _groupCategoryPrice.entries) {
@@ -179,7 +195,7 @@ class CartModel extends ChangeNotifier {
           // Percentage discount
           totalDiscount += categoryTotalPrice * (double.parse(promo.amount!) / 100);
         }
-        updateGroupCategoryPrice(totalDiscount);
+        updateGroupCategoryPrice(totalDiscount, promo);
       } else {
         //non specific category promotion (specific_category == 0)
         double totalAmount = _groupCategoryPrice.values.reduce((a, b) => a + b);
@@ -197,7 +213,7 @@ class CartModel extends ChangeNotifier {
               totalDiscount += totalAmount * (double.parse(promo.amount!) / 100);
             }
           }
-          updateGroupCategoryPrice(totalDiscount);
+          updateGroupCategoryPrice(totalDiscount, promo);
         } else {
           //manual apply all category promotion
           if (promo.type == 0) {
@@ -213,7 +229,7 @@ class CartModel extends ChangeNotifier {
               totalDiscount = double.parse(promo.amount!);
             }
           }
-          updateGroupCategoryPrice(totalDiscount);
+          updateGroupCategoryPrice(totalDiscount, promo);
           // if (promo.type == 0) {
           //   // Percentage discount
           //   totalDiscount += subtotal * (double.parse(promo.amount!) / 100);
@@ -255,7 +271,18 @@ class CartModel extends ChangeNotifier {
 
   //calculate the tax/charges amount after promotion
   double taxAmount(TaxLinkDining tax) {
-    return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+    if(tax.specific_category == 0){
+      return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+    } else {
+      double taxCategoryAmount = 0;
+      List<dynamic> taxCategoryList = jsonDecode(tax.multiple_category!);
+      for (var item in _groupCategoryPrice.entries) {
+        if (taxCategoryList.any((category) => category['category_id'].toString() == item.key)) {
+          taxCategoryAmount += item.value;
+        }
+      }
+      return taxCategoryAmount * (double.parse(tax.tax_rate!) / 100);
+    }
   }
 
   // Total discount from all promotions
