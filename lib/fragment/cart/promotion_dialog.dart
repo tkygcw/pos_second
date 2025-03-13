@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/object/promotion.dart';
 import 'package:provider/provider.dart';
@@ -202,7 +203,7 @@ class _AdjustPromotionDialogState extends State<_AdjustPromotionDialog> {
                       border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(),
                       labelText: "Discount",
-                      prefixText: 'RM '
+                      prefixText: '$currency_symbol '
                   ),
                 ),
               );

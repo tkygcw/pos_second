@@ -390,7 +390,7 @@ class _CartPageState extends State<CartPage> {
                                                       fontWeight: FontWeight.bold),
                                                 ),
                                                 TextSpan(
-                                                    text: "RM${cart.cartNotifierItem[index].price!} (${getCartUnit(cart.cartNotifierItem[index])})",
+                                                    text: "$currency_symbol${cart.cartNotifierItem[index].price!} (${getCartUnit(cart.cartNotifierItem[index])})",
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       color: cart.cartNotifierItem[index].status == 1 ? font : cart.cartNotifierItem[index].refColor,
@@ -745,9 +745,9 @@ class _CartPageState extends State<CartPage> {
         if(cart.cartNotifierItem.isEmpty && (cart.selectedOption == 'Dine in' && appSettingModel.tableOrder != 1 || cart.selectedOption != 'Dine in')){
           return AppLocalizations.of(context)!.translate('select_order');
         }
-        return '${AppLocalizations.of(context)!.translate('place_order')}\n (RM ${cart.netTotal.toStringAsFixed(2)})';
+        return '${AppLocalizations.of(context)!.translate('place_order')}\n ($currency_symbol ${cart.netTotal.toStringAsFixed(2)})';
       } else {
-        return '${AppLocalizations.of(context)!.translate('pay')} (RM ${cart.netTotal.toStringAsFixed(2)})';
+        return '${AppLocalizations.of(context)!.translate('pay')} ($currency_symbol ${cart.netTotal.toStringAsFixed(2)})';
       }
     } else {
       if(widget.currentPage == 'menu'){
@@ -1600,7 +1600,7 @@ class _CartPageState extends State<CartPage> {
         if (promotion.type == 1) {
           promo += (double.parse(promotion.amount!) * cart.cartNotifierItem[i].quantity!);
           promotion.promoAmount = promo;
-          promoRate = 'RM${promotion.amount!}';
+          promoRate = '$currency_symbol${promotion.amount!}';
           promotion.promoRate = promoRate;
         } else {
           promo += (double.parse(cart.cartNotifierItem[i].price!) * cart.cartNotifierItem[i].quantity!) * (double.parse(promotion.amount!) / 100);
@@ -1625,7 +1625,7 @@ class _CartPageState extends State<CartPage> {
       if (promotion.type == 1) {
         promo += (double.parse(promotion.amount!) * cartItem.quantity!);
         promotion.promoAmount = promotion.promoAmount! + promo;
-        promoRate = 'RM${promotion.amount!}';
+        promoRate = '$currency_symbol${promotion.amount!}';
         promotion.promoRate = promoRate;
       } else {
         promo += (double.parse(cartItem.price!) * cartItem.quantity!) * (double.parse(promotion.amount!) / 100);

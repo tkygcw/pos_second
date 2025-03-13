@@ -62,7 +62,7 @@ class CartModel extends ChangeNotifier {
     List<Promotion> promotionList = decodeAction.decodedBranchPromotionList!.where((e) => e.auto_apply == '1' && e.specific_category != '0').toList();
     _autoPromotion = promotionList.where((promotion) {
       if (cartNotifierItem.isEmpty) return false;
-      promotion.promoRate = promotion.type == 0 ?  '${promotion.amount!}%' : 'RM${promotion.amount!}';
+      promotion.promoRate = promotion.type == 0 ?  '${promotion.amount!}%' : '$currency_symbol${promotion.amount!}';
       //compare with cart item category
       bool status =  _promoFunc.isPromotionAvailable(promotion, CartModel(cartNotifierItem: cartNotifierItem));
       if(status) {
@@ -75,7 +75,7 @@ class CartModel extends ChangeNotifier {
   void getManualApplyCategorizedPromotions() {
     if(_selectedPromotion != null && _selectedPromotion!.specific_category != '0'){
       _selectedPromotion!.promoRate =  _selectedPromotion!.type == 0 ?
-      '${_selectedPromotion!.amount!}%' : 'RM${_selectedPromotion!.amount!}';
+      '${_selectedPromotion!.amount!}%' : '$currency_symbol${_selectedPromotion!.amount!}';
       _selectedPromotion!.promoAmount = discountForPromotion(_selectedPromotion!);
     }
   }
@@ -84,7 +84,7 @@ class CartModel extends ChangeNotifier {
     List<Promotion> promotionList = decodeAction.decodedBranchPromotionList!.where((e) => e.auto_apply == '1' && e.specific_category == '0').toList();
     _autoPromotion.addAll(promotionList.where((promotion) {
       if (cartNotifierItem.isEmpty) return false;
-      promotion.promoRate =  promotion.type == 0 ? '${promotion.amount!}%' : 'RM${promotion.amount!}';
+      promotion.promoRate =  promotion.type == 0 ? '${promotion.amount!}%' : '$currency_symbol${promotion.amount!}';
       if (promotion.all_day == '1' && promotion.all_time == '1') {
         promotion.promoAmount = discountForPromotion(promotion);
         return true;
@@ -110,7 +110,7 @@ class CartModel extends ChangeNotifier {
   void getManualApplyNonCategorizedPromotions() {
     if(_selectedPromotion != null && _selectedPromotion!.specific_category == '0'){
       _selectedPromotion!.promoRate =  _selectedPromotion!.type == 0 ?
-      '${_selectedPromotion!.amount!}%' : 'RM${_selectedPromotion!.amount!}';
+      '${_selectedPromotion!.amount!}%' : '$currency_symbol${_selectedPromotion!.amount!}';
       _selectedPromotion!.promoAmount = discountForPromotion(_selectedPromotion!);
     }
   }
