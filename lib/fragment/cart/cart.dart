@@ -1042,18 +1042,47 @@ class _CartPageState extends State<CartPage> {
   Get Selected table
 */
   getSelectedTable(CartModel cart) {
-    List<String> result = ['-'];
-    if (cart.selectedTable.isNotEmpty) {
-      result.clear();
-      for (int i = 0; i < cart.selectedTable.length; i++) {
-        result.add('${cart.selectedTable[i].number}');
+    List<String> result = [];
+    List<String> orderQueue = [];
+    List<String> customTableNumber = [];
+    for (int i = 0; i < cart.cartNotifierItem.length; i++) {
+      if (cart.cartNotifierItem[i].order_queue != '' && cart.cartNotifierItem[i].order_queue != null) {
+        if (!orderQueue.contains(cart.cartNotifierItem[i].order_queue)) {
+          orderQueue.add(cart.cartNotifierItem[i].order_queue!);
+        }
       }
-    } else {
-      if(cart.cartNotifierItem.isNotEmpty && cart.cartNotifierItem.first.order_queue != ''){
-        return '${AppLocalizations.of(context)!.translate('order')}: ${cart.cartNotifierItem.first.order_queue}';
+      if (cart.cartNotifierItem[i].custom_table_number != null && cart.cartNotifierItem[i].custom_table_number != '') {
+        if (!customTableNumber.contains(cart.cartNotifierItem[i].custom_table_number)) {
+          customTableNumber.add(cart.cartNotifierItem[i].custom_table_number!);
+        }
       }
     }
-    return '${AppLocalizations.of(context)!.translate('table')}: ${result.toString().replaceAll('[', '').replaceAll(']', '')}';
+
+    if (customTableNumber.isNotEmpty && cart.selectedOption == 'Dine in') {
+      result = customTableNumber;
+    } else if (cart.selectedTable.isEmpty && cart.selectedOption == 'Dine in') {
+      result.add('-');
+    } else if (cart.selectedOption != 'Dine in') {
+      result.add('-');
+    } else {
+      if (cart.selectedTable.length > 1) {
+        for (int i = 0; i < cart.selectedTable.length; i++) {
+          result.add('${cart.selectedTable[i].number}');
+        }
+      } else {
+        result.add('${cart.selectedTable[0].number}');
+      }
+    }
+
+    if (result[0] == '-') {
+      if (orderQueue.isNotEmpty) {
+        result = orderQueue;
+        result[0] = '${AppLocalizations.of(context)!.translate('order')}: ${result.toString().replaceAll('[', '').replaceAll(']', '')}';
+        return result[0];
+      }
+    }
+    result[0] = '${AppLocalizations.of(context)!.translate('table')}: ${result.toString().replaceAll('[', '').replaceAll(']', '')}';
+    return result[0];
   }
 
 /*
