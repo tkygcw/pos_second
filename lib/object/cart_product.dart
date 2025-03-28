@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:optimy_second_device/object/product.dart';
 import 'package:optimy_second_device/object/variant_group.dart';
 
 import 'modifier_group.dart';
@@ -42,6 +43,7 @@ class cartProductItem{
   String? ticket_exp;
   String? product_sku;
   String? table_use_key;
+  String? internal_name;
 
   cartProductItem(
       {
@@ -79,7 +81,8 @@ class cartProductItem{
         this.ticket_count,
         this.ticket_exp,
         this.product_sku,
-        this.table_use_key
+        this.table_use_key,
+        this.internal_name,
       });
 
   static cartProductItem fromJson(Map<String, Object?> json) {
@@ -126,7 +129,8 @@ class cartProductItem{
         ticket_count: json['ticketCount'] as int?,
         ticket_exp: json['ticket_exp'] as String?,
         product_sku: json['product_sku'] as String?,
-        table_use_key: json['table_use_key'] as String?
+        table_use_key: json['table_use_key'] as String?,
+        internal_name: json[ProductFields.internal_name] as String?
     );
   }
 
@@ -165,7 +169,8 @@ class cartProductItem{
     'ticket_count': ticket_count,
     'ticket_exp': ticket_exp,
     'product_sku': product_sku,
-    'table_use_key': table_use_key
+    'table_use_key': table_use_key,
+    ProductFields.internal_name: internal_name
   };
 
 }

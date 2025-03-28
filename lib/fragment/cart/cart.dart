@@ -373,7 +373,7 @@ class _CartPageState extends State<CartPage> {
                                             text: TextSpan(
                                               children: <TextSpan>[
                                                 TextSpan(
-                                                  text: '${cart.cartNotifierItem[index].product_name!}\n',
+                                                  text: '${displayMenuName(cart.cartNotifierItem[index])}\n',
                                                   style: TextStyle(
                                                       fontSize: 14,
                                                       color: cart.cartNotifierItem[index].status == 1 ? font : cart.cartNotifierItem[index].refColor,
@@ -726,6 +726,13 @@ class _CartPageState extends State<CartPage> {
         );
       });
     });
+  }
+
+  String displayMenuName(cartProductItem cartItem) {
+    if (cartItem.internal_name?.isNotEmpty ?? false) {
+      return cartItem.internal_name!;
+    }
+    return cartItem.product_name ?? "Unnamed Product";
   }
 
   String generateCartButtonText(){
@@ -2023,7 +2030,7 @@ class _CartPageState extends State<CartPage> {
                             elevation: 5,
                             child: ListTile(
                               isThreeLine: true,
-                              title: Text(item[index].product_name!, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                              title: Text(displayMenuName(item[index]), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
                               subtitle: Text(getCartVariant(item[index]) + getCartModifier(item[index])),
                               trailing: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,

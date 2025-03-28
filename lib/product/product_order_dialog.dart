@@ -290,7 +290,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                       children: [
                         Container(
                           constraints: BoxConstraints(maxWidth: 300),
-                          child: Text(productName,
+                          child: Text(displayMenuName(widget.productDetail!),
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -639,7 +639,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           children: [
                             Container(
                               constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width / 2),
-                              child: Text(productName,
+                              child: Text(displayMenuName(widget.productDetail!),
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -1022,6 +1022,13 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     });
   }
 
+  String displayMenuName(Product product) {
+    if (product.internal_name?.isNotEmpty ?? false) {
+      return product.internal_name!;
+    }
+    return product.name ?? "Unnamed Product";
+  }
+
   String? getErrorText(String textInController){
     if(textInController.isEmpty || textInController.trim().isEmpty){
       return "${AppLocalizations.of(context)?.translate('product_name_empty')}";
@@ -1388,7 +1395,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         allow_ticket: widget.productDetail!.allow_ticket,
         ticket_count: widget.productDetail!.ticket_count,
         ticket_exp: widget.productDetail!.ticket_exp,
-        product_sku: widget.productDetail!.SKU
+        product_sku: widget.productDetail!.SKU,
+        internal_name: widget.productDetail!.internal_name ?? ''
     );
     List<cartProductItem> item = [];
     if(cart.cartNotifierItem.isEmpty){

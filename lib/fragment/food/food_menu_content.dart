@@ -143,7 +143,7 @@ class _FoodMenuContentState extends State<FoodMenuContent> with TickerProviderSt
                           width: 200,
                           alignment: Alignment.center,
                           child: Text(
-                            '${getSKU(data[index].SKU!)} ${data[index].name!}',
+                            '${getSKU(data[index].SKU!)} ${displayMenuName(data[index])}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -186,7 +186,7 @@ class _FoodMenuContentState extends State<FoodMenuContent> with TickerProviderSt
                           width: 200,
                           alignment: Alignment.center,
                           child: Text(
-                            '${getSKU(data[index].SKU!)} ${data[index].name!}',
+                            '${getSKU(data[index].SKU!)} ${displayMenuName(data[index])}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -208,6 +208,13 @@ class _FoodMenuContentState extends State<FoodMenuContent> with TickerProviderSt
     if(!mounted) return;
     refresh();
     print("init product length: ${initProduct.length}");
+  }
+
+  String displayMenuName(Product product) {
+    if (product.internal_name?.isNotEmpty ?? false) {
+      return product.internal_name!;
+    }
+    return product.name ?? "Unnamed Product";
   }
 
   Future<Future<Object?>> openProductOrderDialog(Product product) async {
