@@ -157,6 +157,7 @@ class _TableCard extends StatelessWidget {
                       per_quantity_unit: order.per_quantity_unit,
                       status: 0,
                       category_id: order.product_category_id,
+                      internal_name: order.internal_name
                     );
                     itemList.add(item);
                   }

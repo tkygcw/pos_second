@@ -97,6 +97,13 @@ class _FoodMenuContentMobileState extends State<FoodMenuContentMobile> with Tick
     }
   }
 
+  String displayMenuName(Product product) {
+    if (product.internal_name?.isNotEmpty ?? false) {
+      return product.internal_name!;
+    }
+    return product.name ?? "Unnamed Product";
+  }
+
   readAllCategories() async {
     categoryList.clear();
     categoryTab.clear();
@@ -142,7 +149,7 @@ class _FoodMenuContentMobileState extends State<FoodMenuContentMobile> with Tick
                           width: 200,
                           alignment: Alignment.center,
                           child: Text(
-                            '${getSKU(data[index].SKU!)} ${data[index].name!}',
+                            '${getSKU(data[index].SKU!)} ${displayMenuName(data[index])}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -185,7 +192,7 @@ class _FoodMenuContentMobileState extends State<FoodMenuContentMobile> with Tick
                           width: 200,
                           alignment: Alignment.center,
                           child: Text(
-                            '${getSKU(data[index].SKU!)} ${data[index].name!}',
+                            '${getSKU(data[index].SKU!)} ${displayMenuName(data[index])}',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(

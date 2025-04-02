@@ -126,7 +126,7 @@ class _CartItem extends StatelessWidget {
         text: TextSpan(
           children: <TextSpan>[
             TextSpan(
-              text: '${cartItem.product_name!} (${cartItem.price!}/${cartItem.per_quantity_unit!}${cartItem.unit! == 'each' || cartItem.unit! == 'each_c' ? 'each' : cartItem.unit!})\n',
+              text: '${displayMenuName(cartItem)} (${cartItem.price!}/${cartItem.per_quantity_unit!}${cartItem.unit! == 'each' || cartItem.unit! == 'each_c' ? 'each' : cartItem.unit!})\n',
               style: TextStyle(
                 fontSize: MediaQuery.of(context).size.height > 500 ? 20 : 15,
                 color: color.backgroundColor,
@@ -157,6 +157,13 @@ class _CartItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String displayMenuName(cartProductItem cartItem) {
+    if (cartItem.internal_name?.isNotEmpty ?? false) {
+      return cartItem.internal_name!;
+    }
+    return cartItem.product_name ?? "Unnamed Product";
   }
 
   getItemTotalPrice({required cartProductItem productItem}){

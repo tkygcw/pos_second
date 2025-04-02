@@ -16,6 +16,13 @@ class ProductSearchDelegate extends SearchDelegate{
     this.imagePath
   });
 
+  String displayInternalName(Product product) {
+    if (product.internal_name?.isNotEmpty ?? false) {
+      return '(${product.internal_name})';
+    }
+    return '';
+  }
+
   @override
   List<Widget>? buildActions(BuildContext context) {
     // TODO: implement buildActions
@@ -77,13 +84,17 @@ class ProductSearchDelegate extends SearchDelegate{
         matchQuery.add(productList![i]);
       } else if (productList![i].SKU!.toLowerCase().contains(query.toLowerCase())){
         matchQuery.add(productList![i]);
+      } else if (productList![i].internal_name != null && productList![i].internal_name != '') {
+        if(productList![i].internal_name!.toLowerCase().contains(query.toLowerCase())){
+          matchQuery.add(productList![i]);
+        }
       }
     }
     if(matchQuery.isNotEmpty){
       return ListView.builder(
         itemCount: matchQuery.length,
         itemBuilder: (context, index) {
-          var result = matchQuery[index].SKU! + ' ' + matchQuery[index].name!;
+          var result = '${matchQuery[index].SKU!} ${matchQuery[index].name!} ${displayInternalName(matchQuery[index])}';
           return ListTile(
             title: Text(result),
             leading: matchQuery[index].graphic_type == '2' ?
@@ -118,13 +129,17 @@ class ProductSearchDelegate extends SearchDelegate{
         matchQuery.add(productList![i]);
       } else if (productList![i].SKU!.toLowerCase().contains(query.toLowerCase())){
         matchQuery.add(productList![i]);
+      } else if (productList![i].internal_name != null && productList![i].internal_name != '') {
+        if(productList![i].internal_name!.toLowerCase().contains(query.toLowerCase())){
+          matchQuery.add(productList![i]);
+        }
       }
     }
     if(matchQuery.isNotEmpty){
       return ListView.builder(
         itemCount: matchQuery.length,
         itemBuilder: (context, index) {
-          var result = matchQuery[index].SKU! + ' ' + matchQuery[index].name!;
+          var result = '${matchQuery[index].SKU!} ${matchQuery[index].name!} ${displayInternalName(matchQuery[index])}';
           return ListTile(
             title: Text(result),
             leading: matchQuery[index].graphic_type == '2' ?

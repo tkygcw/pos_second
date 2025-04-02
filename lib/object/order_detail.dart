@@ -1,5 +1,3 @@
-
-
 import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/variant_item.dart';
 
@@ -35,6 +33,7 @@ class OrderDetailFields {
     unit,
     per_quantity_unit,
     product_sku,
+    internal_name,
     created_at,
     updated_at,
     soft_delete
@@ -65,6 +64,7 @@ class OrderDetailFields {
   static String unit = 'unit';
   static String per_quantity_unit = 'per_quantity_unit';
   static String product_sku = 'product_sku';
+  static String internal_name = 'internal_name';
   static String created_at = 'created_at';
   static String updated_at = 'updated_at';
   static String soft_delete = 'soft_delete';
@@ -96,6 +96,7 @@ class OrderDetail{
   String? unit;
   String? per_quantity_unit;
   String? product_sku;
+  String? internal_name;
   String? created_at;
   String? updated_at;
   String? soft_delete;
@@ -159,6 +160,7 @@ class OrderDetail{
         this.unit,
         this.per_quantity_unit,
         this.product_sku,
+        this.internal_name,
         this.created_at,
         this.updated_at,
         this.soft_delete,
@@ -216,6 +218,7 @@ class OrderDetail{
     String? unit,
     String? per_quantity_unit,
     String? product_sku,
+    String? internal_name,
     String? created_at,
     String? updated_at,
     String? soft_delete
@@ -246,6 +249,7 @@ class OrderDetail{
           unit: unit ?? this.unit,
           per_quantity_unit: per_quantity_unit ?? this.per_quantity_unit,
           product_sku: product_sku ?? this.product_sku,
+          internal_name: internal_name ?? this.internal_name,
           created_at: created_at ?? this.created_at,
           updated_at: updated_at ?? this.updated_at,
           soft_delete: soft_delete ?? this.soft_delete);
@@ -281,6 +285,7 @@ class OrderDetail{
         unit: json[OrderDetailFields.unit] as String?,
         per_quantity_unit: json[OrderDetailFields.per_quantity_unit] as String?,
         product_sku: json[OrderDetailFields.product_sku] as String?,
+        internal_name: json[OrderDetailFields.internal_name] as String?,
         created_at: json[OrderDetailFields.created_at] as String?,
         updated_at: json[OrderDetailFields.updated_at] as String?,
         soft_delete: json[OrderDetailFields.soft_delete] as String?,
@@ -335,6 +340,7 @@ class OrderDetail{
     OrderDetailFields.unit: unit,
     OrderDetailFields.per_quantity_unit: per_quantity_unit,
     OrderDetailFields.product_sku: product_sku,
+    OrderDetailFields.internal_name: internal_name,
     OrderDetailFields.created_at: created_at,
     OrderDetailFields.updated_at: updated_at,
     OrderDetailFields.soft_delete: soft_delete,
@@ -346,64 +352,5 @@ class OrderDetail{
     'allow_ticket': allow_ticket,
     'ticket_count': ticket_count,
     'ticket_exp': ticket_exp
-  };
-
-  Map<String, Object?> toInsertJson() => {
-    OrderDetailFields.order_detail_sqlite_id: order_detail_sqlite_id,
-    OrderDetailFields.order_detail_id: order_detail_id,
-    OrderDetailFields.order_detail_key: order_detail_key,
-    OrderDetailFields.order_cache_sqlite_id: order_cache_sqlite_id,
-    OrderDetailFields.order_cache_key: order_cache_key,
-    OrderDetailFields.branch_link_product_sqlite_id: branch_link_product_sqlite_id,
-    OrderDetailFields.category_sqlite_id: category_sqlite_id,
-    OrderDetailFields.category_name: category_name,
-    OrderDetailFields.productName: productName,
-    OrderDetailFields.has_variant: has_variant,
-    OrderDetailFields.product_variant_name: product_variant_name,
-    OrderDetailFields.price: price,
-    OrderDetailFields.original_price: original_price,
-    OrderDetailFields.quantity: quantity,
-    OrderDetailFields.remark: remark,
-    OrderDetailFields.account: account,
-    OrderDetailFields.edited_by: edited_by,
-    OrderDetailFields.edited_by_user_id: edited_by_user_id,
-    OrderDetailFields.cancel_by: cancel_by,
-    OrderDetailFields.cancel_by_user_id: cancel_by_user_id,
-    OrderDetailFields.status: status,
-    OrderDetailFields.sync_status: sync_status,
-    OrderDetailFields.unit: unit,
-    OrderDetailFields.per_quantity_unit: per_quantity_unit,
-    OrderDetailFields.product_sku: product_sku,
-    OrderDetailFields.created_at: created_at,
-    OrderDetailFields.updated_at: updated_at,
-    OrderDetailFields.soft_delete: soft_delete
-  };
-
-  Map syncJson() => {
-    OrderDetailFields.order_detail_key: order_detail_key,
-    OrderDetailFields.order_cache_key: order_cache_key,
-    OrderDetailFields.category_name: category_name,
-    OrderDetailFields.productName: productName,
-    OrderDetailFields.has_variant: has_variant,
-    OrderDetailFields.product_variant_name: product_variant_name,
-    OrderDetailFields.price: price,
-    OrderDetailFields.original_price: original_price,
-    OrderDetailFields.quantity: quantity,
-    OrderDetailFields.remark: remark,
-    OrderDetailFields.account: account,
-    OrderDetailFields.edited_by: edited_by,
-    OrderDetailFields.edited_by_user_id: edited_by_user_id,
-    OrderDetailFields.cancel_by: cancel_by,
-    OrderDetailFields.cancel_by_user_id: cancel_by_user_id,
-    OrderDetailFields.status: status,
-    OrderDetailFields.sync_status: sync_status,
-    OrderDetailFields.unit: unit,
-    OrderDetailFields.per_quantity_unit: per_quantity_unit,
-    OrderDetailFields.product_sku: product_sku,
-    OrderDetailFields.created_at: created_at,
-    OrderDetailFields.updated_at: updated_at,
-    OrderDetailFields.soft_delete: soft_delete,
-    // CategoriesFields.category_id: category_id,
-    // BranchLinkProductFields.branch_link_product_id: branch_link_product_id
   };
 }

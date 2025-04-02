@@ -122,6 +122,7 @@ class _OrderCard extends StatelessWidget {
                 status: 1,
                 category_id: order.product_category_id,
                 order_queue: orderCache.order_queue,
+                internal_name: order.internal_name ?? ''
               );
               itemList.add(item);
             }

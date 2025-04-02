@@ -682,7 +682,8 @@ class _CartDialogState extends State<CartDialog> {
         allow_ticket: orderDetailList[i].allow_ticket,
         ticket_count: orderDetailList[i].ticket_count,
         ticket_exp: orderDetailList[i].ticket_exp,
-        product_sku: orderDetailList[i].product_sku
+        product_sku: orderDetailList[i].product_sku,
+        internal_name: orderDetailList[i].internal_name,
       );
       itemList.add(value);
     }
