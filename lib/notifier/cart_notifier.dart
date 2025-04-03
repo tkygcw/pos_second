@@ -158,6 +158,15 @@ class CartModel extends ChangeNotifier {
             _groupCategoryPrice[item.key] = 0;
           }
         }
+      } else {
+        // all category
+        if (item.value >= remainingPromo) {
+          _groupCategoryPrice[item.key] = item.value - remainingPromo;
+          remainingPromo = 0;
+        } else {
+          remainingPromo -= item.value;
+          _groupCategoryPrice[item.key] = 0;
+        }
       }
     }
   }
@@ -247,7 +256,9 @@ class CartModel extends ChangeNotifier {
 
   // Total discount from all auto apply promotions
   double get totalAutoPromotionDiscount {
-    return _autoPromotion.fold(0, (sum, promo) => sum + promo.promoAmount!);
+    return _autoPromotion.fold(0, (sum, promo) =>
+      promo.auto_apply == '1' ? sum + promo.promoAmount! : sum
+    );
   }
 
   // Total discount from selected promotions
@@ -358,6 +369,8 @@ class CartModel extends ChangeNotifier {
 
   void initialLoad({bool? notify = true}) {
     removeSelectedTableIndex();
+    removeAllTable();
+    removeAllCartItem();
     _currentOrderCache.clear();
     _selectedTable.clear();
     _cartNotifierItem.clear();

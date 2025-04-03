@@ -142,6 +142,7 @@ class _TableCard extends StatelessWidget {
                   List<cartProductItem> itemList = [];
                   for(var order in orderDetail){
                     var item = cartProductItem(
+                      order_detail_sqlite_id: order.order_detail_sqlite_id.toString(),
                       product_sku: order.product_sku,
                       product_name: order.productName,
                       price: order.price,

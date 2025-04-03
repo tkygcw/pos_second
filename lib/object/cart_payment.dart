@@ -48,4 +48,23 @@ class CartPaymentDetail {
     this.orderTaxList = orderTaxList;
     this.orderPromotionDetail = orderPromotionDetail;
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'localOrderId': localOrderId,
+      'subtotal': subtotal,
+      'amount': amount,
+      'rounding': rounding,
+      'finalAmount': finalAmount,
+      'paymentReceived': paymentReceived,
+      'paymentChange': paymentChange,
+      'orderTaxList': orderTaxList.map((tax) => tax.toJson()).toList(),
+      'orderPromotionDetail': orderPromotionDetail.map((promo) => promo.toJson()).toList(),
+      'promotionList': promotionList?.map((promo) => promo.toJson()).toList(),
+      'manualPromo': manualPromo?.toJson(),
+      'taxList': taxList?.map((tax) => tax.toJson()).toList(),
+      'diningTax': diningTax?.map((dining) => dining.toJson()).toList(),
+      'dining_name': dining_name,
+    };
+  }
 }

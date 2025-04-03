@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/object/variant_group.dart';
 
@@ -43,6 +45,9 @@ class cartProductItem{
   String? ticket_exp;
   String? product_sku;
   String? table_use_key;
+  Map<String, double>? promo = {};
+  Map<String, double>? charge = {};
+  Map<String, double>? tax = {};
 
   cartProductItem(
       {
@@ -81,7 +86,10 @@ class cartProductItem{
         this.ticket_count,
         this.ticket_exp,
         this.product_sku,
-        this.table_use_key
+        this.table_use_key,
+        this.promo,
+        this.charge,
+        this.tax,
       });
 
   static cartProductItem fromJson(Map<String, Object?> json) {
@@ -129,7 +137,40 @@ class cartProductItem{
         ticket_count: json['ticketCount'] as int?,
         ticket_exp: json['ticket_exp'] as String?,
         product_sku: json['product_sku'] as String?,
-        table_use_key: json['table_use_key'] as String?
+        table_use_key: json['table_use_key'] as String?,
+        promo: json['promo'] == null
+            ? {}
+            : (json['promo'] is String)
+            ? (json['promo'].toString().trim().isNotEmpty
+            ? Map<String, double>.from(jsonDecode(json['promo'] as String).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {})
+            : (json['promo'] is Map)
+            ? Map<String, double>.from((json['promo'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {},
+        charge: json['charge'] == null
+            ? {}
+            : (json['charge'] is String)
+            ? (json['charge'].toString().trim().isNotEmpty
+            ? Map<String, double>.from(jsonDecode(json['charge'] as String).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {})
+            : (json['charge'] is Map)
+            ? Map<String, double>.from((json['charge'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {},
+        tax: json['tax'] == null
+            ? {}
+            : (json['tax'] is String)
+            ? (json['tax'].toString().trim().isNotEmpty
+            ? Map<String, double>.from(jsonDecode(json['tax'] as String).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {})
+            : (json['tax'] is Map)
+            ? Map<String, double>.from((json['tax'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {},
     );
   }
 
@@ -169,7 +210,10 @@ class cartProductItem{
     'ticket_count': ticket_count,
     'ticket_exp': ticket_exp,
     'product_sku': product_sku,
-    'table_use_key': table_use_key
+    'table_use_key': table_use_key,
+    'promo': promo,
+    'charge': charge,
+    'tax': tax,
   };
 
 }
