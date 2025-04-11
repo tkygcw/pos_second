@@ -283,7 +283,7 @@ class CartModel extends ChangeNotifier {
     }catch(e){
       totalDiscount = 0.0;
     }
-    return totalDiscount;
+    return double.parse(totalDiscount.toStringAsFixed(2));
   }
 
   // Total discount from all auto apply promotions
