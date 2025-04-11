@@ -137,8 +137,8 @@ class CartModel extends ChangeNotifier {
 
   void updateGroupCategoryPrice(double remainingPromoAmount, Promotion promo){
     double remainingPromo = remainingPromoAmount;
-    for (var item in _groupCategoryPrice.entries) {
-      if(promo.specific_category == '1') {
+    if(promo.specific_category == '1') {
+      for (var item in _groupCategoryPrice.entries) {
         if(promo.category_id == item.key) {
           if (item.value >= remainingPromo) {
             _groupCategoryPrice[item.key] = item.value - remainingPromo;
@@ -148,27 +148,59 @@ class CartModel extends ChangeNotifier {
             _groupCategoryPrice[item.key] = 0;
           }
         }
-      } else if(promo.specific_category == '2') {
-        if (promo.multiple_category!.any((category) => category['category_id'].toString() == item.key)) {
-          if (item.value >= remainingPromo) {
-            _groupCategoryPrice[item.key] = item.value - remainingPromo;
-            remainingPromo = 0;
-          } else {
-            remainingPromo -= item.value;
-            _groupCategoryPrice[item.key] = 0;
-          }
-        }
-      } else {
-        // all category
-        if (item.value >= remainingPromo) {
-          _groupCategoryPrice[item.key] = item.value - remainingPromo;
-          remainingPromo = 0;
-        } else {
-          remainingPromo -= item.value;
-          _groupCategoryPrice[item.key] = 0;
-        }
       }
+    } else if(promo.specific_category == '2') {
+      double totalEligibleValue = 0;
+      Map<String, double> eligibleCategories = {};
+
+      _groupCategoryPrice.forEach((key, value) {
+        if (promo.multiple_category!.any((category) => category['category_id'].toString() == key)) {
+          eligibleCategories[key] = value;
+          totalEligibleValue += value;
+        }
+      });
+
+      if (totalEligibleValue <= 0 || remainingPromo <= 0) {
+        return;
+      }
+
+      if (remainingPromo > totalEligibleValue) {
+        remainingPromo = totalEligibleValue;
+      }
+
+      eligibleCategories.forEach((key, value) {
+        double discountForCategory = (value / totalEligibleValue) * remainingPromo;
+        double newValue = value - discountForCategory;
+        newValue = newValue < 0 ? 0 : newValue;
+        _groupCategoryPrice[key] = newValue;
+      });
+    } else {
+      double totalValue = 0;
+      _groupCategoryPrice.forEach((key, value) {
+        totalValue += value;
+      });
+
+      if (totalValue <= 0 || remainingPromo <= 0) {
+        return;
+      }
+
+      if (remainingPromo > totalValue) {
+        remainingPromo = totalValue;
+      }
+
+      Map<String, double> newCategoryTotalPriceMap = {};
+      _groupCategoryPrice.forEach((key, value) {
+        double discountForCategory = (value / totalValue) * remainingPromo;
+
+        double newValue = value - discountForCategory;
+        newValue = newValue < 0 ? 0 : newValue;
+
+        newCategoryTotalPriceMap[key] = newValue;
+      });
+
+      _groupCategoryPrice = newCategoryTotalPriceMap;
     }
+
   }
 
   // Calculate the discount for each promotion
