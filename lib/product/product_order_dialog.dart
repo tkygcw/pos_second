@@ -1371,7 +1371,8 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
       if(branchLinkProduct != null){
         if(widget.productDetail!.unit == 'each_c'){
           if(priceController.value.text.isNotEmpty || priceController.value.text != ''){
-            basePrice = priceController.value.text;
+            priceController = TextEditingController(text:  double.tryParse(branchLinkProduct!.price!) == 0 && widget.productDetail!.unit == 'each_c' ? '' : branchLinkProduct!.price);
+            basePrice = branchLinkProduct!.price!;
           } else {
             basePrice = "0.00";
           }
