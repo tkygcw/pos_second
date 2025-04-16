@@ -73,7 +73,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     actionStream = actionController.stream;
     simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? 0 : 1;
     quantityController = TextEditingController(text: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? '' : '$simpleIntInput');
-    priceController = TextEditingController(text:  double.tryParse(widget.productDetail!.price!) == 0 && widget.productDetail!.unit == 'each_c' ? '' : widget.productDetail!.price);
+    priceController = TextEditingController(text:  int.tryParse(widget.productDetail!.price!) == 0 && widget.productDetail!.unit == 'each_c' ? '' : widget.productDetail!.price);
     // priceController = TextEditingController(text: widget.productDetail!.price);
     nameController = TextEditingController(text: widget.productDetail!.name);
     productName = widget.productDetail!.name!;
@@ -1373,12 +1373,14 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
         if(widget.productDetail!.unit == 'each_c'){
           if(priceController.text == '') {
             if(priceController.value.text.isEmpty || priceController.value.text == ''){
-              priceController = TextEditingController(text: double.tryParse(branchLinkProduct!.price!) != 0 ? branchLinkProduct!.price! : '');
+              priceController = TextEditingController(text: int.tryParse(branchLinkProduct!.price!) != 0 ? branchLinkProduct!.price! : '');
               basePrice = priceController.text != '' ? priceController.text : '0';
               // basePrice = priceController.value.text;
             } else {
               basePrice = "0.00";
             }
+          } else {
+            basePrice = priceController.text;
           }
         } else {
           basePrice = branchLinkProduct!.price!;
