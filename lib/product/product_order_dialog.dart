@@ -73,7 +73,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     actionStream = actionController.stream;
     simpleIntInput = widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? 0 : 1;
     quantityController = TextEditingController(text: widget.productDetail!.unit != 'each' && widget.productDetail!.unit != 'each_c' ? '' : '$simpleIntInput');
-    priceController = TextEditingController(text: widget.productDetail!.price);
+    // priceController = TextEditingController(text: widget.productDetail!.price);
     nameController = TextEditingController(text: widget.productDetail!.name);
     productName = widget.productDetail!.name!;
     productChecking();
@@ -1370,11 +1370,11 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     try {
       if(branchLinkProduct != null){
         if(widget.productDetail!.unit == 'each_c'){
-          if(priceController.value.text.isNotEmpty || priceController.value.text != ''){
+          if(priceController.text == "" || priceController.text.isEmpty) {
             priceController = TextEditingController(text:  double.tryParse(branchLinkProduct!.price!) == 0 && widget.productDetail!.unit == 'each_c' ? '' : branchLinkProduct!.price);
-            basePrice = branchLinkProduct!.price!;
-          } else {
             basePrice = "0.00";
+          } else {
+            basePrice = priceController.text;
           }
         } else {
           basePrice = branchLinkProduct!.price!;
