@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter/material.dart';
 
@@ -54,14 +57,34 @@ abstract class CustomToastification {
 
   void playReviewSound() {
     try {
-      final assetsAudioPlayer = AssetsAudioPlayer();
-      assetsAudioPlayer.open(
-        Audio("audio/review.mp3"),
-      );
-    } catch (e) {
-      print("Play Sound Error: ${e}");
+      if(Platform.isWindows){
+        var player = Player();
+        player.open(Media('data/flutter_assets/audio/review.mp3'));
+      } else {
+        final assetsAudioPlayer = AssetsAudioPlayer();
+        assetsAudioPlayer.open(
+          Audio("audio/review.mp3"),
+        );
+      }
+    } catch (e, s) {
+      // FLog.error(
+      //   className: "custom toastification",
+      //   text: "playReviewSound failed",
+      //   exception: "Error: $e, StackTrace: $s",
+      // );
     }
   }
+
+  // void playReviewSound() {
+  //   try {
+  //     final assetsAudioPlayer = AssetsAudioPlayer();
+  //     assetsAudioPlayer.open(
+  //       Audio("audio/review.mp3"),
+  //     );
+  //   } catch (e) {
+  //     print("Play Sound Error: ${e}");
+  //   }
+  // }
 }
 
 class CustomFailedToast extends CustomToastification {

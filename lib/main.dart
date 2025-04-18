@@ -1,7 +1,11 @@
+import 'dart:io';
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
 import 'package:optimy_second_device/fragment/payment/function/payment_function.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
@@ -11,11 +15,12 @@ import 'package:optimy_second_device/page/login.dart';
 import 'package:optimy_second_device/page/second_display.dart';
 import 'package:optimy_second_device/translation/AppLocalizations.dart';
 import 'package:optimy_second_device/translation/appLanguage.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:presentation_displays/display.dart';
 import 'package:presentation_displays/displays_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'notifier/cart_notifier.dart';
 import 'notifier/connectivity_change_notifier.dart';
@@ -39,6 +44,20 @@ String appVersionCode = '', patch = '';
 
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Necessary initialization for package:media_kit.
+  MediaKit.ensureInitialized();
+
+  if(Platform.isWindows){
+    //windows manager initialized
+    await windowManager.ensureInitialized();
+    //enter fullscreen mode
+    windowManager.waitUntilReadyToShow(null, () async {
+      await windowManager.show();
+      await windowManager.focus();
+      await windowManager.setFullScreen(true);
+    });
+  }
 
   //get device ip
   getDeviceIp();
@@ -116,6 +135,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<AppLanguage>(builder: (context, model, child) {
         return ToastificationWrapper(
           child: MaterialApp(
+            scrollBehavior: CustomScrollBehavior(),
             navigatorKey: MyApp.navigatorKey,
             scaffoldMessengerKey: snackBarKey,
             locale: model.appLocal,
@@ -215,6 +235,18 @@ getDeviceIp() async {
 getAppVersion() async {
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   appVersionCode = '${packageInfo.version}${patch != '' ? '+$patch' : ''}';
+}
+
+class CustomScrollBehavior extends MaterialScrollBehavior {
+  // Override behavior methods and getters like dragDevices
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.invertedStylus
+  };
 }
 
 // class MyHomePage extends StatefulWidget {

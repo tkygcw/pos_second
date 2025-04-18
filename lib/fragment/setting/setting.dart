@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:collapsible_sidebar/collapsible_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/setting/about.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 import 'package:side_navigation/side_navigation.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../notifier/theme_color.dart';
 import '../../page/pos_pin.dart';
@@ -86,6 +89,21 @@ class _SettingMenuState extends State<SettingMenu> {
                               },
                               icon: Icon(Icons.dialpad),
                               label: Text(AppLocalizations.of(context)!.translate('back_to_pos_pin')),
+                            ),
+                            Visibility(
+                              visible: Platform.isWindows,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: 10),
+                                child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red
+                                    ),
+                                    onPressed: () async {
+                                      await windowManager.close();
+                                    },
+                                    child: Text('Close Optimy POS')
+                                ),
+                              ),
                             ),
                           ],
                         )),

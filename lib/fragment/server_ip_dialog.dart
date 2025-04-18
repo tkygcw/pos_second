@@ -9,6 +9,7 @@ import 'package:lan_scanner/lan_scanner.dart';
 import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:optimy_second_device/database/mock_data.dart';
+import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
 import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/page/pos_pin.dart';
 import 'package:optimy_second_device/page/progress_bar.dart';
@@ -385,10 +386,15 @@ class _TypeIpViewState extends State<TypeIpView> {
         break;
       case '3':
         {
-          Fluttertoast.showToast(
-              backgroundColor: Colors.redAccent,
-              msg: "Sub POS version not supported, please update to latest version");
+          CustomFailedToast(
+              title: 'Sub POS version outdated',
+              description: "Sub POS version outdated, please update to latest version",
+              duration: 6
+          ).showToast();
           await logout();
+          // Fluttertoast.showToast(
+          //     backgroundColor: Colors.redAccent,
+          //     msg: "Sub POS version not supported, please update to latest version");
         }
         break;
       default:
@@ -420,7 +426,9 @@ class _TypeIpViewState extends State<TypeIpView> {
     final prefs = await SharedPreferences.getInstance();
     prefs.clear();
     deleteDirectory();
-    displayManager.transferDataToPresentation("refresh_img");
+    if(!Platform.isWindows){
+      displayManager.transferDataToPresentation("refresh_img");
+    }
     clientAction.disconnectFromServer();
     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
   }
