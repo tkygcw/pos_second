@@ -3,6 +3,7 @@ import 'package:optimy_second_device/fragment/payment/function/payment_function.
 import 'package:optimy_second_device/fragment/payment/payment_method_widget.dart';
 import 'package:optimy_second_device/fragment/payment/payment_type/shared_widget/button_widget.dart';
 import 'package:optimy_second_device/fragment/payment/payment_type/shared_widget/final_amount_widget.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 
 import '../../../notifier/cart_notifier.dart';
