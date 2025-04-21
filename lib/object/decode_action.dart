@@ -86,6 +86,14 @@ class DecodeAction {
       var value12 = json['data']['subscription_data'];
       decodedSubscription = [Subscription.fromJson(value12)];
     }
+    if(json['data']['currency'] != null){
+      var value13 = json['data']['currency'];
+      currency_code = value13[0];
+      currency_symbol = value13[1];
+    } else {
+      currency_code = 'MYR';
+      currency_symbol = 'RM';
+    }
 
     ///image part
     // Iterable value7 = json['data']['image_list'];
