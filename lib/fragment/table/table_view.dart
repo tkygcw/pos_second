@@ -250,7 +250,7 @@ class _TableCard extends StatelessWidget {
                 child: Container(
                     alignment: Alignment.bottomCenter,
                     child: Text(
-                        "RM ${posTable.total_amount ?? '0.00'}",
+                        "$currency_symbol ${posTable.total_amount ?? '0.00'}",
                         style: TextStyle(fontSize: 18))),
               ),
 

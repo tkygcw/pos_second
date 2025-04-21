@@ -134,7 +134,7 @@ class _CartItem extends StatelessWidget {
               ),
             ),
             TextSpan(
-                text: "RM${getItemTotalPrice(productItem: cartItem)}",
+                text: "$currency_symbol${getItemTotalPrice(productItem: cartItem)}",
                 style: TextStyle(fontSize: 15, color: color.backgroundColor)),
           ],
         ),

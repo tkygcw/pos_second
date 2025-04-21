@@ -65,6 +65,8 @@ class ClientAction {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Map<String, dynamic> branchMap = await getPreferences();
     Branch branchObject = Branch.fromJson(branchMap);
+    currency_code = branchObject.currency_code ?? 'MYR';
+    currency_symbol = branchObject.currency_symbol ?? 'RM';
     notificationModel.showReconnectDialog = false;
     int i = 0;
     Map<String, dynamic>? result;
