@@ -408,10 +408,9 @@ class _CartPageState extends State<CartPage> {
                                                             cart.removeItem(cart.cartNotifierItem[index]);
                                                           }
                                                         } else {
-                                                          Fluttertoast.showToast(
-                                                            backgroundColor: Colors.red,
-                                                            msg: AppLocalizations.of(context)!.translate('order_already_placed'),
-                                                          );
+                                                          CustomFailedToast(
+                                                              title: AppLocalizations.of(context)!.translate('cannot_replace_same_order'),
+                                                          ).showToast();
                                                         }
                                                       }),
                                                 ),
@@ -428,12 +427,14 @@ class _CartPageState extends State<CartPage> {
                                                         if (checkProductStock(cart, cart.cartNotifierItem[index]) == true) {
                                                           cart.updateCartItemQuantity(index);
                                                         } else {
-                                                          Fluttertoast.showToast(
-                                                              backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('product_out_of_stock'));
+                                                          CustomFailedToast(
+                                                            title: AppLocalizations.of(context)!.translate('product_out_of_stock'),
+                                                          ).showToast();
                                                         }
                                                       } else {
-                                                        Fluttertoast.showToast(
-                                                            backgroundColor: Colors.red, msg: AppLocalizations.of(context)!.translate('order_already_placed'));
+                                                        CustomFailedToast(
+                                                          title: AppLocalizations.of(context)!.translate('order_already_placed'),
+                                                        ).showToast();
                                                       }
                                                       //controller.add('refresh');
                                                     })
@@ -653,19 +654,18 @@ class _CartPageState extends State<CartPage> {
                                   });
                                   // await checkCashRecord();
                                   if (widget.currentPage == 'menu') {
+                                    bool containsNotPlacedItem = cart.cartNotifierItem.any((item) => item.status == 0);
                                     //disableButton();
                                     if (cart.selectedOption == 'Dine in' && appSetting.table_order != 0) {
                                       if (cart.selectedTable.isNotEmpty && cart.cartNotifierItem.isNotEmpty) {
                                         openLoadingDialogBox();
-                                        if (cart.cartNotifierItem[0].status == 1) {
+                                        if (cart.cartNotifierItem[0].status == 1 && containsNotPlacedItem) {
                                           await callPlaceOrder(cart, '9');
                                         } else {
                                           if (cart.cartNotifierItem[0].status == 0) {
                                             await callPlaceOrder(cart, '8');
                                           } else {
-                                            Fluttertoast.showToast(
-                                                backgroundColor: Colors.red,
-                                                msg: AppLocalizations.of(context)!.translate('cannot_replace_same_order'));
+                                            CustomFailedToast(title: AppLocalizations.of(context)!.translate('cannot_replace_same_order')).showToast();
                                             Navigator.of(context).pop();
                                           }
                                         }

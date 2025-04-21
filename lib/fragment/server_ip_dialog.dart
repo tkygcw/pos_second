@@ -87,7 +87,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (!Platform.isIOS)
+                        if (!Platform.isIOS && !Platform.isWindows)
                           TabBar(
                             isScrollable: false,
                             unselectedLabelColor: Colors.black,
@@ -367,7 +367,11 @@ class _TypeIpViewState extends State<TypeIpView> {
         {
           await receivedResponse();
           if(mounted){
-            Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: AppLocalizations.of(context)!.translate("network_connection_failed"));
+            CustomFailedToast(
+                title: 'Network Error',
+                description: AppLocalizations.of(context)!.translate("network_connection_failed"),
+                duration: 6
+            ).showToast();
           }
         }
         break;
@@ -380,7 +384,11 @@ class _TypeIpViewState extends State<TypeIpView> {
         break;
       case '2':
         {
-          Fluttertoast.showToast(backgroundColor: Colors.redAccent, msg: "Login credential did not match with main POS");
+          CustomFailedToast(
+              title: 'Login Error',
+              description: "Login credential did not match with main POS",
+              duration: 6
+          ).showToast();
           await logout();
         }
         break;
@@ -392,9 +400,6 @@ class _TypeIpViewState extends State<TypeIpView> {
               duration: 6
           ).showToast();
           await logout();
-          // Fluttertoast.showToast(
-          //     backgroundColor: Colors.redAccent,
-          //     msg: "Sub POS version not supported, please update to latest version");
         }
         break;
       default:

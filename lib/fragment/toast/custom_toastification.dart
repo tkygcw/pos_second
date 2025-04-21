@@ -37,7 +37,7 @@ abstract class CustomToastification {
       showProgressBar: showProgressBar,
       closeOnClick: true,
       icon: isError ? Icon(Icons.cancel_rounded) : Icon(Icons.check_circle_rounded),
-      title: Text(title),
+      title: Text(title, maxLines: 2),
       description: description,
       autoCloseDuration: Duration(seconds: autoCloseDuration),
     );

@@ -10,7 +10,7 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{986984A7-1BEE-401D-AFD3-349644ED0CB8}
+AppId={{FE17E48D-071C-4730-ABCF-7BAE66C1B050}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -18,7 +18,7 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={userappdata}\com,optimy\optimy_second_device
+DefaultDirName={userappdata}\com.optimy\optimy_second_device
 UninstallDisplayIcon={app}\{#MyAppExeName}
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
@@ -49,6 +49,7 @@ Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Releas
 Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\libmpv-2.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\media_kit_libs_windows_audio_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\media_kit_native_event_loop.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\pdfium.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\flutter_project\optimy_second_device\build\windows\x64\runner\Release\printing_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion

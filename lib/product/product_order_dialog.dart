@@ -14,6 +14,7 @@ import '../../object/modifier_group.dart';
 import '../../object/modifier_item.dart';
 import '../../translation/AppLocalizations.dart';
 import '../fragment/cart/cart_dialog.dart';
+import '../fragment/toast/custom_toastification.dart';
 import '../object/branch_link_modifier.dart';
 import '../object/branch_link_product.dart';
 import '../object/cart_product.dart';
@@ -240,10 +241,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                 ? null
                 : (isChecked) {
               if (isChecked! && maxSelect != 0 && checkedModifiersCount >= maxSelect) {
-                Fluttertoast.showToast(
-                    backgroundColor: Colors.red,
-                    msg: '${modifierGroup.name} ${AppLocalizations.of(context)!.translate('choose_maximum')} $maxSelect ${AppLocalizations.of(context)!.translate('ge')}'
-                );
+                CustomFailedToast(
+                    title: '${modifierGroup.name} ${AppLocalizations.of(context)!.translate('choose_maximum')} $maxSelect ${AppLocalizations.of(context)!.translate('ge')}',
+                    duration: 6
+                ).showToast();
                 return;
               }
               setState(() {
@@ -386,7 +387,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                   productName = value;
                                                 });
                                               }else {
-                                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_name_empty'));
+                                                CustomFailedToast(
+                                                    title: AppLocalizations.of(context)!.translate('product_name_empty'),
+                                                    duration: 6
+                                                ).showToast();
                                               }
                                             },
                                           ),
@@ -551,7 +555,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                 simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
                                               });
                                               if(dialogStock == '0'){
-                                                Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+                                                CustomFailedToast(
+                                                    title: AppLocalizations.of(context)!.translate('product_variant_sold_out'),
+                                                    duration: 6
+                                                ).showToast();
                                               }
                                             }
                                           },
@@ -620,7 +627,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                           ),
                           onPressed: isButtonDisabled || isAddButtonDisabled ? null : ()  {
                             if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
-                              Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
+                              CustomFailedToast(
+                                  title: AppLocalizations.of(context)!.translate('custom_field_required'),
+                                  duration: 6
+                              ).showToast();
                             } else {
                               _productStockStatusAction();
                             }
@@ -756,7 +766,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                       productName = value;
                                                     });
                                                   }else {
-                                                    Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_name_empty'));
+                                                    CustomFailedToast(
+                                                        title: AppLocalizations.of(context)!.translate('product_name_empty'),
+                                                        duration: 6
+                                                    ).showToast();
                                                   }
                                                 },
                                               ),
@@ -921,7 +934,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                       simpleIntInput = int.parse(quantityController.text.replaceAll(',', ''));
                                                     });
                                                     if(dialogStock == '0'){
-                                                      Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('product_variant_sold_out'));
+                                                      CustomFailedToast(
+                                                          title: AppLocalizations.of(context)!.translate('product_variant_sold_out'),
+                                                          duration: 6
+                                                      ).showToast();
                                                     }
                                                   }
                                                 },
@@ -996,7 +1012,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                     ),
                                     onPressed: isButtonDisabled || isAddButtonDisabled ? null : () {
                                       if((priceController.text.isEmpty || priceController.text.trim().isEmpty) || (nameController.text.isEmpty || nameController.text.trim().isEmpty)){
-                                        Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000), msg: AppLocalizations.of(context)!.translate('custom_field_required'));
+                                        CustomFailedToast(
+                                            title: AppLocalizations.of(context)!.translate('custom_field_required'),
+                                            duration: 6
+                                        ).showToast();
                                       } else {
                                         _productStockStatusAction();
                                       }
@@ -1077,12 +1096,16 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   void _productStockStatusAction(){
     switch(checkProductStockStatus(widget.productDetail!, cart)){
       case 1 : {
-        Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-            msg: "Product variant sold out!");
+        CustomFailedToast(
+            title: 'Product variant sold out!',
+            duration: 6
+        ).showToast();
       }break;
       case 2 : {
-        Fluttertoast.showToast(backgroundColor: Color(0xFFFF0000),
-            msg: "Quantity input exceed stock amount");
+        CustomFailedToast(
+            title: 'Exceed stock amount',
+            duration: 6
+        ).showToast();
       }break;
       default: {
         if (cart.selectedOption == 'Dine in' && (appSetting.table_order == 1 || appSetting.table_order == 2)) {
@@ -1098,8 +1121,10 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
               openChooseTableDialog(cart);
             }
           } else {
-            Fluttertoast.showToast(
-                backgroundColor: Color(0xFFFF0000), msg: "Invalid qty input");
+            CustomFailedToast(
+                title: 'Invalid qty input',
+                duration: 6
+            ).showToast();
           }
         } else {
           // Disable the button after it has been pressed
