@@ -3,6 +3,7 @@ import 'package:optimy_second_device/fragment/payment/function/payment_function.
 import 'package:optimy_second_device/fragment/payment/payment_method_widget.dart';
 import 'package:optimy_second_device/fragment/payment/payment_type/shared_widget/button_widget.dart';
 import 'package:optimy_second_device/fragment/payment/payment_type/shared_widget/final_amount_widget.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:provider/provider.dart';
 
 import '../../../notifier/cart_notifier.dart';
@@ -118,7 +119,7 @@ class _CashViewState extends State<CashView> {
         spacing: 10,
         children: [
           ChoiceChip(
-            label: Text('RM $finalAmount'),
+            label: Text('$currency_symbol $finalAmount'),
             selected: chipSelected,
             elevation: 5,
             onSelected: (chipSelected) {
@@ -128,7 +129,7 @@ class _CashViewState extends State<CashView> {
             },
           ),
           ChoiceChip(
-            label: Text('RM 10.00'),
+            label: Text('$currency_symbol 10.00'),
             selected: chipSelected,
             elevation: 5,
             onSelected: (chipSelected) {
@@ -138,7 +139,7 @@ class _CashViewState extends State<CashView> {
             },
           ),
           ChoiceChip(
-            label: Text('RM 20.00'),
+            label: Text('$currency_symbol 20.00'),
             selected: chipSelected,
             elevation: 5,
             onSelected: (chipSelected) {
@@ -148,7 +149,7 @@ class _CashViewState extends State<CashView> {
             },
           ),
           ChoiceChip(
-            label: Text('RM 50.00'),
+            label: Text('$currency_symbol 50.00'),
             selected: chipSelected,
             elevation: 5,
             onSelected: (chipSelected) {
@@ -158,7 +159,7 @@ class _CashViewState extends State<CashView> {
             },
           ),
           ChoiceChip(
-            label: Text('RM 100.00'),
+            label: Text('$currency_symbol 100.00'),
             selected: chipSelected,
             elevation: 5,
             onSelected: (chipSelected) {
