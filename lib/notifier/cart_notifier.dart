@@ -315,7 +315,8 @@ class CartModel extends ChangeNotifier {
   //calculate the tax/charges amount after promotion
   double taxAmount(TaxLinkDining tax) {
     if(tax.specific_category == 0){
-      return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+      double result = discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+      return double.parse(result.toStringAsFixed(2));
     } else {
       double taxCategoryAmount = 0;
       List<dynamic> taxCategoryList = jsonDecode(tax.multiple_category!);
@@ -324,7 +325,8 @@ class CartModel extends ChangeNotifier {
           taxCategoryAmount += item.value;
         }
       }
-      return taxCategoryAmount * (double.parse(tax.tax_rate!) / 100);
+      double result = taxCategoryAmount * (double.parse(tax.tax_rate!) / 100);
+      return double.parse(result.toStringAsFixed(2));
     }
   }
 
