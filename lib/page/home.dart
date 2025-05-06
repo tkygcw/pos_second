@@ -44,6 +44,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int count = 0;
   List<AppSetting> appSettingList = [];
   bool isCartExpanded = false;
+  AppSetting appSetting = decodeAction.decodedAppSetting!;
 
   @override
   void initState() {
@@ -333,7 +334,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         }),
         isSelected: true,
       ),
-      if(widget.user!.sub_pos_payment == 1)
+      if(widget.user!.sub_pos_payment == 1 && appSetting.table_order == 1)
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('table'),
         icon: Icons.table_restaurant,
@@ -343,7 +344,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           isCollapsedNotifier.value = !isCollapsedNotifier.value;
         }),
       ),
-      if(widget.user!.sub_pos_payment == 1)
+      if(widget.user!.sub_pos_payment == 1 && appSetting.table_order == 1)
       CollapsibleItem(
         text: AppLocalizations.of(context)!.translate('other_order'),
         icon: Icons.shopping_cart,

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class CartModel extends ChangeNotifier {
   final PromotionFunction _promoFunc = PromotionFunction();
   CartPaymentDetail? cartNotifierPayment;
   List<PosTable> _selectedTable = [];
+  String selectedTableIndex = '';
   List<Promotion> _autoPromotion = [];
   Promotion? _selectedPromotion ;
   String selectedOption = 'Dine in';
@@ -132,17 +135,72 @@ class CartModel extends ChangeNotifier {
     _groupCategoryPrice = totalByCategory;
   }
 
-  void updateGroupCategoryPrice(double remainingPromoAmount){
+  void updateGroupCategoryPrice(double remainingPromoAmount, Promotion promo){
     double remainingPromo = remainingPromoAmount;
-    for (var item in _groupCategoryPrice.entries) {
-      if (item.value >= remainingPromo) {
-        _groupCategoryPrice[item.key] = item.value - remainingPromo;
-        remainingPromo = 0;
-      } else {
-        remainingPromo -= item.value;
-        _groupCategoryPrice[item.key] = 0;
+    if(promo.specific_category == '1') {
+      for (var item in _groupCategoryPrice.entries) {
+        if(promo.category_id == item.key) {
+          if (item.value >= remainingPromo) {
+            _groupCategoryPrice[item.key] = item.value - remainingPromo;
+            remainingPromo = 0;
+          } else {
+            remainingPromo -= item.value;
+            _groupCategoryPrice[item.key] = 0;
+          }
+        }
       }
+    } else if(promo.specific_category == '2') {
+      double totalEligibleValue = 0;
+      Map<String, double> eligibleCategories = {};
+
+      _groupCategoryPrice.forEach((key, value) {
+        if (promo.multiple_category!.any((category) => category['category_id'].toString() == key)) {
+          eligibleCategories[key] = value;
+          totalEligibleValue += value;
+        }
+      });
+
+      if (totalEligibleValue <= 0 || remainingPromo <= 0) {
+        return;
+      }
+
+      if (remainingPromo > totalEligibleValue) {
+        remainingPromo = totalEligibleValue;
+      }
+
+      eligibleCategories.forEach((key, value) {
+        double discountForCategory = (value / totalEligibleValue) * remainingPromo;
+        double newValue = value - discountForCategory;
+        newValue = newValue < 0 ? 0 : newValue;
+        _groupCategoryPrice[key] = newValue;
+      });
+    } else {
+      double totalValue = 0;
+      _groupCategoryPrice.forEach((key, value) {
+        totalValue += value;
+      });
+
+      if (totalValue <= 0 || remainingPromo <= 0) {
+        return;
+      }
+
+      if (remainingPromo > totalValue) {
+        remainingPromo = totalValue;
+      }
+
+      Map<String, double> newCategoryTotalPriceMap = {};
+      _groupCategoryPrice.forEach((key, value) {
+        double discountForCategory = (value / totalValue) * remainingPromo;
+
+        double newValue = value - discountForCategory;
+        newValue = newValue < 0 ? 0 : newValue;
+
+        newCategoryTotalPriceMap[key] = newValue;
+      });
+
+      _groupCategoryPrice = newCategoryTotalPriceMap;
     }
+
   }
 
   // Calculate the discount for each promotion
@@ -163,7 +221,7 @@ class CartModel extends ChangeNotifier {
         } else {
           totalDiscount = categoryTotalPrice * (double.parse(promo.amount!) / 100);
         }
-        updateGroupCategoryPrice(totalDiscount);
+        updateGroupCategoryPrice(totalDiscount, promo);
       } else if (promo.specific_category == '2') {
         //multiple category promo
         for (var item in _groupCategoryPrice.entries) {
@@ -178,7 +236,7 @@ class CartModel extends ChangeNotifier {
           // Percentage discount
           totalDiscount += categoryTotalPrice * (double.parse(promo.amount!) / 100);
         }
-        updateGroupCategoryPrice(totalDiscount);
+        updateGroupCategoryPrice(totalDiscount, promo);
       } else {
         //non specific category promotion (specific_category == 0)
         double totalAmount = _groupCategoryPrice.values.reduce((a, b) => a + b);
@@ -196,7 +254,7 @@ class CartModel extends ChangeNotifier {
               totalDiscount += totalAmount * (double.parse(promo.amount!) / 100);
             }
           }
-          updateGroupCategoryPrice(totalDiscount);
+          updateGroupCategoryPrice(totalDiscount, promo);
         } else {
           //manual apply all category promotion
           if (promo.type == 0) {
@@ -212,7 +270,7 @@ class CartModel extends ChangeNotifier {
               totalDiscount = double.parse(promo.amount!);
             }
           }
-          updateGroupCategoryPrice(totalDiscount);
+          updateGroupCategoryPrice(totalDiscount, promo);
           // if (promo.type == 0) {
           //   // Percentage discount
           //   totalDiscount += subtotal * (double.parse(promo.amount!) / 100);
@@ -225,12 +283,14 @@ class CartModel extends ChangeNotifier {
     }catch(e){
       totalDiscount = 0.0;
     }
-    return totalDiscount;
+    return double.parse(totalDiscount.toStringAsFixed(2));
   }
 
   // Total discount from all auto apply promotions
   double get totalAutoPromotionDiscount {
-    return _autoPromotion.fold(0, (sum, promo) => sum + promo.promoAmount!);
+    return _autoPromotion.fold(0, (sum, promo) =>
+      promo.auto_apply == '1' ? sum + promo.promoAmount! : sum
+    );
   }
 
   // Total discount from selected promotions
@@ -254,7 +314,20 @@ class CartModel extends ChangeNotifier {
 
   //calculate the tax/charges amount after promotion
   double taxAmount(TaxLinkDining tax) {
-    return discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+    if(tax.specific_category == 0){
+      double result = discountedSubtotal * (double.parse(tax.tax_rate!) / 100);
+      return double.parse(result.toStringAsFixed(2));
+    } else {
+      double taxCategoryAmount = 0;
+      List<dynamic> taxCategoryList = jsonDecode(tax.multiple_category!);
+      for (var item in _groupCategoryPrice.entries) {
+        if (taxCategoryList.any((category) => category['category_id'].toString() == item.key)) {
+          taxCategoryAmount += item.value;
+        }
+      }
+      double result = taxCategoryAmount * (double.parse(tax.tax_rate!) / 100);
+      return double.parse(result.toStringAsFixed(2));
+    }
   }
 
   // Total discount from all promotions
@@ -283,11 +356,13 @@ class CartModel extends ChangeNotifier {
 
   CartModel({
     List<PosTable>? selectedTable,
+    String? selectedTableIndex,
     List<cartProductItem>? cartNotifierItem,
     String? selectedOption,
     String? selectedOptionId
   }){
     this._selectedTable = selectedTable ?? [];
+    this.selectedTableIndex = selectedTableIndex ?? '';
     this._cartNotifierItem = cartNotifierItem ?? [];
     this.selectedOption = selectedOption ?? 'Dine in';
     this.selectedOptionId = selectedOptionId ?? '';
@@ -327,6 +402,9 @@ class CartModel extends ChangeNotifier {
   }
 
   void initialLoad({bool? notify = true}) {
+    removeSelectedTableIndex();
+    removeAllTable();
+    removeAllCartItem();
     _currentOrderCache.clear();
     _selectedTable.clear();
     _cartNotifierItem.clear();
@@ -340,6 +418,7 @@ class CartModel extends ChangeNotifier {
   }
 
   void notDineInInitLoad(){
+    removeSelectedTableIndex();
     removeAllTable();
     removeAllCartItem();
     removePromotion();
@@ -459,6 +538,10 @@ class CartModel extends ChangeNotifier {
   void removeAllTable(){
     _selectedTable.clear();
     notifyListeners();
+  }
+
+  void removeSelectedTableIndex({bool? notify = true}) {
+    selectedTableIndex = '';
   }
 
   void removeSpecificTable(PosTable posTable){

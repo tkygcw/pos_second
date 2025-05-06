@@ -1,5 +1,7 @@
 
 
+import 'dart:convert';
+
 import 'package:optimy_second_device/object/product_variant.dart';
 import 'package:optimy_second_device/object/variant_item.dart';
 
@@ -24,6 +26,9 @@ class OrderDetailFields {
     price,
     original_price,
     quantity,
+    promo,
+    charge,
+    tax,
     remark,
     account,
     edited_by,
@@ -54,6 +59,9 @@ class OrderDetailFields {
   static String price = 'price';
   static String original_price = 'original_price';
   static String quantity = 'quantity';
+  static String promo = 'promo';
+  static String charge = 'charge';
+  static String tax = 'tax';
   static String remark = 'remark';
   static String account = 'account';
   static String edited_by = 'edited_by';
@@ -85,6 +93,9 @@ class OrderDetail{
   String? price = '';
   String? original_price = '';
   String? quantity;
+  Map<String, double>? promo = {};
+  Map<String, double>? charge = {};
+  Map<String, double>? tax = {};
   String? remark;
   String? account;
   String? edited_by;
@@ -148,6 +159,9 @@ class OrderDetail{
         this.price,
         this.original_price,
         this.quantity,
+        this.promo,
+        this.charge,
+        this.tax,
         this.remark,
         this.account,
         this.edited_by,
@@ -205,6 +219,9 @@ class OrderDetail{
     String? price,
     String? original_price,
     String? quantity,
+    Map<String, double>? promo,
+    Map<String, double>? charge,
+    Map<String, double>? tax,
     String? remark,
     String? account,
     String? edited_by,
@@ -235,6 +252,9 @@ class OrderDetail{
           price: price ?? this.price,
           original_price: original_price ?? this.original_price,
           quantity: quantity ?? this.quantity,
+          promo: promo ?? this.promo,
+          charge: charge ?? this.charge,
+          tax: tax ?? this.tax,
           remark: remark ?? this.remark,
           account: account ?? this.account,
           edited_by: edited_by ?? this.edited_by,
@@ -270,6 +290,39 @@ class OrderDetail{
         price: json[OrderDetailFields.price] as String?,
         original_price: json[OrderDetailFields.original_price] as String?,
         quantity: json[OrderDetailFields.quantity] as String?,
+        promo: json['promo'] == null
+            ? {}
+            : (json['promo'] is String)
+            ? (json['promo'].toString().trim().isNotEmpty
+            ? Map<String, double>.from(jsonDecode(json['promo'] as String).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {})
+            : (json['promo'] is Map)
+            ? Map<String, double>.from((json['promo'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {},
+        charge: json['charge'] == null
+            ? {}
+            : (json['charge'] is String)
+            ? (json['charge'].toString().trim().isNotEmpty
+            ? Map<String, double>.from(jsonDecode(json['charge'] as String).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {})
+            : (json['charge'] is Map)
+            ? Map<String, double>.from((json['charge'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {},
+        tax: json['tax'] == null
+            ? {}
+            : (json['tax'] is String)
+            ? (json['tax'].toString().trim().isNotEmpty
+            ? Map<String, double>.from(jsonDecode(json['tax'] as String).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {})
+            : (json['tax'] is Map)
+            ? Map<String, double>.from((json['tax'] as Map).map(
+                (key, value) => MapEntry(key as String, (value as num).toDouble())))
+            : {},
         remark: json[OrderDetailFields.remark] as String?,
         account: json[OrderDetailFields.account] as String?,
         edited_by: json[OrderDetailFields.edited_by] as String?,
@@ -324,6 +377,9 @@ class OrderDetail{
     OrderDetailFields.price: price,
     OrderDetailFields.original_price: original_price,
     OrderDetailFields.quantity: quantity,
+    OrderDetailFields.promo: jsonEncode(promo),
+    OrderDetailFields.charge: jsonEncode(charge),
+    OrderDetailFields.tax: jsonEncode(tax),
     OrderDetailFields.remark: remark,
     OrderDetailFields.account: account,
     OrderDetailFields.edited_by: edited_by,
@@ -363,6 +419,9 @@ class OrderDetail{
     OrderDetailFields.price: price,
     OrderDetailFields.original_price: original_price,
     OrderDetailFields.quantity: quantity,
+    OrderDetailFields.promo: jsonEncode(promo),
+    OrderDetailFields.charge: jsonEncode(charge),
+    OrderDetailFields.tax: jsonEncode(tax),
     OrderDetailFields.remark: remark,
     OrderDetailFields.account: account,
     OrderDetailFields.edited_by: edited_by,
@@ -389,6 +448,9 @@ class OrderDetail{
     OrderDetailFields.price: price,
     OrderDetailFields.original_price: original_price,
     OrderDetailFields.quantity: quantity,
+    OrderDetailFields.promo: jsonEncode(promo),
+    OrderDetailFields.charge: jsonEncode(charge),
+    OrderDetailFields.tax: jsonEncode(tax),
     OrderDetailFields.remark: remark,
     OrderDetailFields.account: account,
     OrderDetailFields.edited_by: edited_by,

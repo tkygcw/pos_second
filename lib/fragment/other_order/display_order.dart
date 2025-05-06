@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/other_order/other_order_function.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/notifier/cart_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
@@ -36,6 +37,8 @@ class _DisplayOrderPageState extends State<DisplayOrderPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       cartModel.initialLoad();
     });
+    // clear all SubPosOrderCache
+    clientAction.connectRequestPort(action: '25');
   }
 
   @override
@@ -104,6 +107,7 @@ class _OrderCard extends StatelessWidget {
                 List<cartProductItem> itemList = [];
                 for(var order in orderFunction.orderDetailList){
                   var item = cartProductItem(
+                    order_detail_sqlite_id: order.order_detail_sqlite_id.toString(),
                     product_sku: order.product_sku,
                     product_name: order.productName,
                     price: order.price,
@@ -121,6 +125,7 @@ class _OrderCard extends StatelessWidget {
                     status: 0,
                     category_id: order.product_category_id,
                     order_queue: orderCache.order_queue,
+                    custom_table_number: orderCache.custom_table_number,
                   );
                   itemList.add(item);
                 }
@@ -158,7 +163,9 @@ class _OrderCard extends StatelessWidget {
                 size: 30.0,
               ),
               trailing: Text(
-                '#${orderCache.batch_id}',
+                orderCache.custom_table_number != ''
+                  ? '${AppLocalizations.of(context)!.translate('table')} ${orderCache.custom_table_number!}'
+                  : '#${orderCache.batch_id}',
                 style: TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? 20 : 15),
               ),
               subtitle: Column(

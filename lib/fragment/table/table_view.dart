@@ -142,6 +142,7 @@ class _TableCard extends StatelessWidget {
                   List<cartProductItem> itemList = [];
                   for(var order in orderDetail){
                     var item = cartProductItem(
+                      order_detail_sqlite_id: order.order_detail_sqlite_id.toString(),
                       product_sku: order.product_sku,
                       product_name: order.productName,
                       price: order.price,
@@ -203,28 +204,10 @@ class _TableCard extends StatelessWidget {
                   ),
                 ),
               ),
-              posTable.seats == '2'
-                  ?
-              Container(
-                alignment: Alignment.center,
-                child: Image.asset("drawable/two-seat.jpg"),
-              )
-                  :
-              posTable.seats == '4'
-                  ?
               Container(
                   alignment: Alignment.center,
                   child: Image.asset("drawable/four-seat.jpg")
-              )
-                  :
-              posTable.seats == '6'
-                  ?
-              Container(
-                  alignment: Alignment.center,
-                  child: Image.asset("drawable/six-seat.jpg")
-              )
-                  :
-              Container(),
+              ),
               // Ink.image(
               //   image: tableList[index].seats == '2'
               //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/two-seat.jpg'))
