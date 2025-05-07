@@ -100,6 +100,8 @@ class _OrderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4.0)),
       child: InkWell(
         onTap: () async {
+          if(orderCache.custom_table_number != '' && orderCache.custom_table_number != null)
+            cart.selectedTableIndex = orderCache.custom_table_number!;
           int status = await orderFunction.readAllOrderDetail(orderCache);
           if(status == 1){
             List<cartProductItem> itemList = [];
@@ -155,7 +157,9 @@ class _OrderCard extends StatelessWidget {
                 size: 30.0,
               ),
               trailing: Text(
-                '#${orderCache.batch_id}',
+                orderCache.custom_table_number != ''
+                  ? '${AppLocalizations.of(context)!.translate('table')} ${orderCache.custom_table_number!}'
+                  : '#${orderCache.batch_id}',
                 style: TextStyle(fontSize: MediaQuery.of(context).orientation == Orientation.landscape || MediaQuery.of(context).size.width > 500 ? 20 : 15),
               ),
               subtitle: Column(

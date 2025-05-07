@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:optimy_second_device/fragment/table/table_view_function.dart';
 import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
+import 'package:optimy_second_device/main.dart';
 import 'package:optimy_second_device/notifier/table_notifier.dart';
 import 'package:optimy_second_device/notifier/theme_color.dart';
 import 'package:optimy_second_device/object/cart_product.dart';
@@ -141,6 +142,7 @@ class _TableCard extends StatelessWidget {
                   List<cartProductItem> itemList = [];
                   for(var order in orderDetail){
                     var item = cartProductItem(
+                      order_detail_sqlite_id: order.order_detail_sqlite_id.toString(),
                       product_sku: order.product_sku,
                       product_name: order.productName,
                       price: order.price,
@@ -202,28 +204,10 @@ class _TableCard extends StatelessWidget {
                   ),
                 ),
               ),
-              posTable.seats == '2'
-                  ?
-              Container(
-                alignment: Alignment.center,
-                child: Image.asset("drawable/two-seat.jpg"),
-              )
-                  :
-              posTable.seats == '4'
-                  ?
               Container(
                   alignment: Alignment.center,
                   child: Image.asset("drawable/four-seat.jpg")
-              )
-                  :
-              posTable.seats == '6'
-                  ?
-              Container(
-                  alignment: Alignment.center,
-                  child: Image.asset("drawable/six-seat.jpg")
-              )
-                  :
-              Container(),
+              ),
               // Ink.image(
               //   image: tableList[index].seats == '2'
               //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/two-seat.jpg'))
@@ -250,7 +234,7 @@ class _TableCard extends StatelessWidget {
                 child: Container(
                     alignment: Alignment.bottomCenter,
                     child: Text(
-                        "RM ${posTable.total_amount ?? '0.00'}",
+                        "$currency_symbol ${posTable.total_amount ?? '0.00'}",
                         style: TextStyle(fontSize: 18))),
               ),
 

@@ -41,6 +41,8 @@ final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();
 AppLanguage appLanguage = AppLanguage();
 String appVersionCode = '', patch = '';
+String currency_code = 'MYR';
+String currency_symbol = 'RM';
 
 void main() async  {
   WidgetsFlutterBinding.ensureInitialized();

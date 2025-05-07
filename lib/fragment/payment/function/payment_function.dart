@@ -88,6 +88,7 @@ class PaymentFunction extends ChangeNotifier {
           final_amount: cart.netTotal.toStringAsFixed(2)
       );
       Map<String, dynamic> param = {
+        'cart': cart,
         'orderCacheList': cart.currentOrderCache,
         'orderData': orderData,
         'promotion': getAllAppliedPromotion(cart),
@@ -124,7 +125,7 @@ class PaymentFunction extends ChangeNotifier {
 
   List<Promotion> getAllAppliedPromotion(CartModel cart) {
     List<Promotion> allPromotion = cart.autoPromotion;
-    if(cart.selectedPromotion != null){
+    if(cart.selectedPromotion != null && !allPromotion.contains(cart.selectedPromotion)){
       allPromotion.add(cart.selectedPromotion!);
     }
     return allPromotion;
