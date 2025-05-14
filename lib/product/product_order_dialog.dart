@@ -1171,9 +1171,15 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                       child: TextField(
                         autofocus: true,
                         controller: tableController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.text,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
+                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                          TextInputFormatter.withFunction((oldValue, newValue) {
+                            return newValue.copyWith(
+                              text: newValue.text.toUpperCase(),
+                              selection: newValue.selection,
+                            );
+                          }),
                         ],
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
