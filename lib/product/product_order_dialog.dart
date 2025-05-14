@@ -64,6 +64,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
   bool isLoaded = false;
   bool hasPromo = false;
   bool isButtonDisabled = false, isAddButtonDisabled = false;
+  bool customPriceModified = false;
 
   @override
   void initState() {
@@ -430,6 +431,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                             ),
                                             onChanged: (value) {
                                               setState(() {
+                                                customPriceModified = true;
                                                 getProductPrice(widget.productDetail!.product_sqlite_id.toString());
                                               });
                                             },
@@ -797,6 +799,7 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
                                                   hintText: Utils.convertTo2Dec(dialogPrice),
                                                 ),
                                                 onChanged: (value) =>  setState(() {
+                                                  customPriceModified = true;
                                                   getProductPrice(widget.productDetail!.product_sqlite_id.toString());
                                                 }),
                                                 onSubmitted: (value) {
@@ -1371,17 +1374,15 @@ class _ProductOrderDialogState extends State<ProductOrderDialog> {
     try {
       if(branchLinkProduct != null){
         if(widget.productDetail!.unit == 'each_c'){
-          if(priceController.text == '') {
-            if(priceController.value.text.isEmpty || priceController.value.text == ''){
+
+
+          if(!customPriceModified) {
+            if(branchLinkProduct != null){
               priceController = TextEditingController(text: int.tryParse(branchLinkProduct!.price!) != 0 ? branchLinkProduct!.price! : '');
-              basePrice = priceController.text != '' ? priceController.text : '0';
-              // basePrice = priceController.value.text;
-            } else {
-              basePrice = "0.00";
             }
-          } else {
-            basePrice = priceController.text;
           }
+          basePrice = priceController.text.isNotEmpty ? priceController.text : '0';
+
         } else {
           basePrice = branchLinkProduct!.price!;
         }
