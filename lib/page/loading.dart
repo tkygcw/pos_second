@@ -94,12 +94,14 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   initAppSetting(){
+    var appSettingModel = AppSettingModel.instance;
     if(decodeAction.decodedAppSetting!.show_sku == 1){
-      AppSettingModel.instance.setShowSKUStatus(true);
+      appSettingModel.setShowSKUStatus(true);
     } else {
-      AppSettingModel.instance.setShowSKUStatus(false);
+      appSettingModel.setShowSKUStatus(false);
     }
-    AppSettingModel.instance.setTableOrder = decodeAction.decodedAppSetting!.table_order!;
+    appSettingModel.setTableOrder = decodeAction.decodedAppSetting!.table_order!;
+    appSettingModel.setCancelReason = decodeAction.decodedAppSetting!.required_cancel_reason!;
     appLanguage.changeLanguage(Locale(decodeAction.appLanguageCode));
   }
 

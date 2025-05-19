@@ -2,8 +2,10 @@ import 'package:flutter/cupertino.dart';
 
 class AppSettingModel extends ChangeNotifier {
   static final AppSettingModel instance = AppSettingModel._init();
+  bool? _required_cancel_reason;
   bool? _show_sku;
   int? _table_order;
+
 
   AppSettingModel._init();
   // void initialLoad() async {
@@ -19,8 +21,17 @@ class AppSettingModel extends ChangeNotifier {
   //   }
   // }
 
+  bool? get required_cancel_reason => _required_cancel_reason;
   bool? get showSKUStatus => _show_sku;
   int? get tableOrder => _table_order;
+
+  set setCancelReason (int value){
+    if(value == 1){
+      _required_cancel_reason = true;
+    } else {
+      _required_cancel_reason = false;
+    }
+  }
 
   set setTableOrder (int value){
     _table_order = value;

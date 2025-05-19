@@ -15,8 +15,35 @@ class TableViewFunction {
 
   List<OrderCache> get orderCacheList => _orderCacheList;
 
-
   List<PosTable> get tableList => _tableList;
+
+  changeTable({required String startTableNum, required String destinationTableNum}) async {
+    Map<String, dynamic> map = {
+      'start_table_num': startTableNum,
+      'destination_table_num': destinationTableNum,
+    };
+    await clientAction.connectRequestPort(action: '26', param: jsonEncode(map), callback: _decodeChangeTableData);
+    return _responseStatus;
+  }
+
+  void _decodeChangeTableData(response){
+    try{
+      var json = jsonDecode(clientAction.response!);
+      String status = json['status'];
+      _responseStatus = int.parse(status);
+      switch(status){
+        case '1': {
+          //refresh table view
+        }break;
+        default: {
+          clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
+        }
+      }
+    }catch(e, s){
+      print('change table error: $e, trace: ${s}');
+      //readAllTable();
+    }
+  }
 
   Future<List<PosTable>> readAllTable({bool? resetMainPosOrderCache}) async {
     await clientAction.connectRequestPort(action: '13', param: '', callback: (response) => _decodeData(response, resetMainPosOrderCache));

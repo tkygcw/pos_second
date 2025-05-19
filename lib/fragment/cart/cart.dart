@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_usb_printer/flutter_usb_printer.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:optimy_second_device/fragment/cart/cancel_item/adjust_quantity.dart';
 import 'package:optimy_second_device/fragment/cart/other_order_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/promotion_dialog.dart';
 import 'package:optimy_second_device/fragment/cart/reprint_kitchen_list_dialog.dart';
@@ -364,8 +365,8 @@ class _CartPageState extends State<CartPage> {
                                         key: ValueKey(cart.cartNotifierItem[index].product_name),
                                         direction: widget.currentPage == 'menu' &&
                                             cart.cartNotifierItem[index].status == 0
-                                            // || widget.currentPage == 'table' ||
-                                            // widget.currentPage == 'other_order'
+                                            || widget.currentPage == 'table' ||
+                                            widget.currentPage == 'other_order'
                                             ? DismissDirection.startToEnd
                                             : DismissDirection.none,
                                         confirmDismiss: (direction) async {
@@ -1958,10 +1959,10 @@ class _CartPageState extends State<CartPage> {
             transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
             child: Opacity(
               opacity: a1.value,
-              child: CartRemoveDialog(
+              child: currentPage == 'menu' ? CartRemoveDialog(
                 cartItem: item,
                 currentPage: currentPage,
-              ),
+              ) : AdjustQuantityDialog(cartItem: item, currentPage: currentPage)
             ),
           );
         },

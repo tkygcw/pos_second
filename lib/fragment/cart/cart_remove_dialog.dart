@@ -16,7 +16,7 @@ import '../../object/printer.dart';
 import '../../object/table_use_detail.dart';
 import '../../object/user.dart';
 import '../../translation/AppLocalizations.dart';
-import 'adjust_quantity.dart';
+import 'cancel_item/adjust_quantity.dart';
 
 class CartRemoveDialog extends StatefulWidget {
   final cartProductItem? cartItem;

@@ -15,11 +15,13 @@ import '../../notifier/cart_notifier.dart';
 import '../../page/loading_dialog.dart';
 import '../../translation/AppLocalizations.dart';
 
-var tableViewFunc = TableViewFunction();
+final tableViewFunc = TableViewFunction();
 
 class TableView extends StatefulWidget {
   final ThemeColor themeColor;
-  const TableView({super.key, required this.themeColor});
+  final bool? changeTable;
+  final PosTable? changeTableFrom;
+  const TableView({super.key, required this.themeColor, this.changeTable, this.changeTableFrom});
 
   @override
   State<TableView> createState() => _TableViewState();
@@ -57,10 +59,15 @@ class _TableViewState extends State<TableView> {
                   builder: (context, tableModel, child) {
                     return GridView.count(
                       shrinkWrap: true,
-                      crossAxisCount: crossAxisCount,
+                      crossAxisCount: widget.changeTable != true ? crossAxisCount : 4,
                       children: List.generate(
                           tableModel.notifierTableList.length, (index) {
-                        return _TableCard(posTable: tableModel.notifierTableList[index], color: color);
+                        return _TableCard(
+                          posTable: tableModel.notifierTableList[index],
+                          color: color,
+                          changeTable: widget.changeTable,
+                          changeTableFrom: widget.changeTableFrom,
+                        );
                       }),
                     );
                   });
@@ -91,7 +98,9 @@ class _TableViewState extends State<TableView> {
 class _TableCard extends StatelessWidget {
   final ThemeColor color;
   final PosTable posTable;
-  const _TableCard({super.key, required this.posTable, required this.color});
+  final bool? changeTable;
+  final PosTable? changeTableFrom;
+  const _TableCard({super.key, required this.posTable, required this.color, this.changeTable, this.changeTableFrom});
 
   @override
   Widget build(BuildContext context) {
@@ -119,61 +128,15 @@ class _TableCard extends StatelessWidget {
       elevation: 5,
       child: InkWell(
         splashColor: Colors.blue.withAlpha(30),
-        onDoubleTap: () {
+        onDoubleTap: changeTable == true ? null : () {
           if (posTable.status != 1) {
             //openAddTableDialog(tableList[index]);
           } else {
-            //openChangeTableDialog(tableList[index], cart);
+            openChangeTableDialog(context, color, posTable);
           }
         },
         onTap: () async {
-          openLoadingDialogBox(context);
-          Future.delayed(Duration(milliseconds: 500), () async {
-            if(isInCart){
-              tableViewFunc.unselectSpecificSubPosOrderCache(posTable.table_use_key!);
-              cart.removeGroupedTable(posTable);
-              cart.removeSpecificItem(posTable.table_use_key);
-            } else {
-              if(posTable.status == 1){
-                int status = await tableViewFunc.readSpecificTableDetail(posTable);
-                if(status == 1){
-                  List<OrderDetail> orderDetail = tableViewFunc.orderDetailList;
-                  List<OrderCache> orderCache = tableViewFunc.orderCacheList;
-                  List<cartProductItem> itemList = [];
-                  for(var order in orderDetail){
-                    var item = cartProductItem(
-                      order_detail_sqlite_id: order.order_detail_sqlite_id.toString(),
-                      product_sku: order.product_sku,
-                      product_name: order.productName,
-                      price: order.price,
-                      base_price: order.original_price,
-                      orderModifierDetail: order.orderModifierDetail,
-                      productVariantName: order.product_variant_name,
-                      unit: order.unit,
-                      quantity: num.parse(order.quantity!),
-                      remark: order.remark,
-                      refColor: Colors.black,
-                      first_cache_created_date_time: orderCache.last.created_at,
-                      first_cache_batch: orderCache.last.batch_id,
-                      table_use_key: orderCache.last.table_use_key,
-                      per_quantity_unit: order.per_quantity_unit,
-                      status: 0,
-                      category_id: order.product_category_id,
-                    );
-                    itemList.add(item);
-                  }
-                  cart.addAllItem(itemList, notifyListener: false);
-                  cart.addTable(posTable);
-                  cart.setCurrentOrderCache = orderCache;
-                } else {
-                  CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
-                }
-              } else {
-                CustomFailedToast(title: AppLocalizations.of(context)!.translate('table_not_in_used')).showToast();
-              }
-            }
-            Navigator.of(context).pop();
-          });
+          await cardOnTap(context, isInCart, cart);
         },
         child: Container(
           margin: EdgeInsets.all(5),
@@ -230,7 +193,7 @@ class _TableCard extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Text(posTable.number!)),
               Visibility(
-                visible: MediaQuery.of(context).size.height > 500 ? true : false,
+                visible: MediaQuery.of(context).size.height > 500 && changeTable != true ? true : false,
                 child: Container(
                     alignment: Alignment.bottomCenter,
                     child: Text(
@@ -243,6 +206,107 @@ class _TableCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  cardOnTap(BuildContext context, bool isInCart, CartModel cart) async {
+    if(changeTable == true){
+      //change table func
+      var startTableNumber = changeTableFrom!.number!;
+      var destinationTableNumber = posTable.number!;
+      if(startTableNumber != destinationTableNumber){
+        int status = await tableViewFunc.changeTable(startTableNum: startTableNumber, destinationTableNum: destinationTableNumber);
+        if(status == 1){
+          Navigator.of(context).pop();
+          Provider.of<TableModel>(context, listen: false).getTableFromServer(resetMainPosOrderCache: true);
+        }
+      } else {
+        CustomFailedToast(title: "Cannot change to same table").showToast();
+      }
+    } else {
+      openLoadingDialogBox(context);
+      Future.delayed(Duration(milliseconds: 500), () async {
+        if(isInCart){
+          tableViewFunc.unselectSpecificSubPosOrderCache(posTable.table_use_key!);
+          cart.removeGroupedTable(posTable);
+          cart.removeSpecificItem(posTable.table_use_key);
+        } else {
+          if(posTable.status == 1){
+            int status = await tableViewFunc.readSpecificTableDetail(posTable);
+            if(status == 1){
+              List<OrderDetail> orderDetail = tableViewFunc.orderDetailList;
+              List<OrderCache> orderCache = tableViewFunc.orderCacheList;
+              List<cartProductItem> itemList = [];
+              for(var order in orderDetail){
+                var item = cartProductItem(
+                  order_detail_sqlite_id: order.order_detail_sqlite_id.toString(),
+                  product_sku: order.product_sku,
+                  product_name: order.productName,
+                  price: order.price,
+                  base_price: order.original_price,
+                  orderModifierDetail: order.orderModifierDetail,
+                  productVariantName: order.product_variant_name,
+                  unit: order.unit,
+                  quantity: num.parse(order.quantity!),
+                  remark: order.remark,
+                  refColor: Colors.black,
+                  first_cache_created_date_time: orderCache.last.created_at,
+                  first_cache_batch: orderCache.last.batch_id,
+                  table_use_key: orderCache.last.table_use_key,
+                  per_quantity_unit: order.per_quantity_unit,
+                  status: 0,
+                  category_id: order.product_category_id,
+                );
+                itemList.add(item);
+              }
+              cart.addAllItem(itemList, notifyListener: false);
+              cart.addTable(posTable);
+              cart.setCurrentOrderCache = orderCache;
+            } else {
+              CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
+            }
+          } else {
+            CustomFailedToast(title: AppLocalizations.of(context)!.translate('table_not_in_used')).showToast();
+          }
+        }
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
+  Future<Future<Object?>> openChangeTableDialog(BuildContext context, ThemeColor color, PosTable selectedTable) async {
+    return showGeneralDialog(
+        barrierColor: Colors.black.withOpacity(0.5),
+        transitionBuilder: (context, a1, a2, widget) {
+          final curvedValue = Curves.easeInOutBack.transform(a1.value) - 1.0;
+          return Transform(
+            transform: Matrix4.translationValues(0.0, curvedValue * 200, 0.0),
+            child: Opacity(
+                opacity: a1.value,
+                child: AlertDialog(
+                  title: Text("Change table to"),
+                  content: SizedBox(
+                    height: MediaQuery.of(context).size.height / 2,
+                    width: MediaQuery.of(context).size.width / 2,
+                    child: TableView(themeColor: color, changeTable: true, changeTableFrom: selectedTable,),
+                  ),
+                  actions: [
+                    ElevatedButton.icon(
+                      onPressed: ()=> Navigator.of(context).pop(),
+                      label: Text("Close"),
+                      icon: Icon(Icons.close),
+                    )
+                  ],
+                )
+            ),
+          );
+        },
+        transitionDuration: Duration(milliseconds: 200),
+        barrierDismissible: false,
+        context: context,
+        pageBuilder: (context, animation1, animation2) {
+          // ignore: null_check_always_fails
+          return null!;
+        });
   }
 
   Future<Future<Object?>> openLoadingDialogBox(BuildContext context) async {
