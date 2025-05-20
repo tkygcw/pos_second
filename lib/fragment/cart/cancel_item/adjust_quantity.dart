@@ -6,6 +6,7 @@ import 'package:optimy_second_device/fragment/cart/cancel_item/quantity_input_wi
 import 'package:optimy_second_device/fragment/cart/cancel_item/reason_input_widget.dart';
 import 'package:optimy_second_device/fragment/custom_pin_dialog.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
+import 'package:optimy_second_device/object/cancel_item_data.dart';
 import 'package:provider/provider.dart';
 import 'package:quantity_input/quantity_input.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -279,12 +280,38 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
 
   Future<void> callCancelItem(int userId) async {
     //Call main pos cancel item
-    print("call main pos cancel item");
     print("userId: $userId");
     print("order detail sqlite id: ${widget.cartItem.order_detail_sqlite_id}");
     print("restock: $restock");
     print("reason: $reason");
     print("cancel qty: $simpleIntInput");
+    var data = CancelItemData(
+      userId: userId,
+      orderDetailSqliteId: widget.cartItem.order_detail_sqlite_id,
+      restock: restock,
+      cancelQty: simpleIntInput,
+      reason: reason
+    );
+    await clientAction.connectRequestPort(action: '27', param: jsonEncode(data), callback: _decodeResponse);
+  }
+
+  void _decodeResponse(response){
+    try{
+      var json = jsonDecode(clientAction.response!);
+      String status = json['status'];
+      //_responseStatus = int.parse(status);
+      switch(status){
+        case '1': {
+          CustomSuccessToast(title: "Delete successful").showToast();
+        }break;
+        default: {
+          clientAction.openReconnectDialog(action: json['action'], callback: _decodeResponse);
+        }
+      }
+    }catch(e){
+      print('init table error: $e');
+      //readAllTable();
+    }
   }
 
   readAdminData(String pin, {required CartModel cart}) async {
