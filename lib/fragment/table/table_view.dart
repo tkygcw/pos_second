@@ -118,7 +118,7 @@ class _TableCard extends StatelessWidget {
     return Card(
       color: posTable.status != 0 && MediaQuery.of(context).size.height < 500 ?
       toColor(posTable.card_color!) : Colors.white,
-      shape: isInCart? RoundedRectangleBorder(
+      shape: isInCart ? RoundedRectangleBorder(
           side: BorderSide(color: color.backgroundColor, width: 3.0),
           borderRadius: BorderRadius.circular(4.0)) : RoundedRectangleBorder(
           side: BorderSide(
@@ -217,7 +217,7 @@ class _TableCard extends StatelessWidget {
         int status = await tableViewFunc.changeTable(startTableNum: startTableNumber, destinationTableNum: destinationTableNumber);
         if(status == 1){
           Navigator.of(context).pop();
-          Provider.of<TableModel>(context, listen: false).getTableFromServer(resetMainPosOrderCache: true);
+          TableModel.instance.getTableFromServer(resetMainPosOrderCache: true);
         }
       } else {
         CustomFailedToast(title: "Cannot change to same table").showToast();

@@ -279,15 +279,9 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
   }
 
   Future<void> callCancelItem(int userId) async {
-    //Call main pos cancel item
-    print("userId: $userId");
-    print("order detail sqlite id: ${widget.cartItem.order_detail_sqlite_id}");
-    print("restock: $restock");
-    print("reason: $reason");
-    print("cancel qty: $simpleIntInput");
     var data = CancelItemData(
       userId: userId,
-      orderDetailSqliteId: widget.cartItem.order_detail_sqlite_id,
+      orderDetailSqliteId: int.parse(widget.cartItem.order_detail_sqlite_id!),
       restock: restock,
       cancelQty: simpleIntInput,
       reason: reason
@@ -303,6 +297,8 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
       switch(status){
         case '1': {
           CustomSuccessToast(title: "Delete successful").showToast();
+          TableModel.instance.getTableFromServer(resetMainPosOrderCache: true);
+          CartModel.instance.initialLoad();
         }break;
         default: {
           clientAction.openReconnectDialog(action: json['action'], callback: _decodeResponse);

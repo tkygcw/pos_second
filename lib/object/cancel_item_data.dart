@@ -9,7 +9,7 @@ class CancelItemDataFields {
 
 class CancelItemData {
   int? userId;
-  String? orderDetailSqliteId;
+  int? orderDetailSqliteId;
   bool? restock;
   num? cancelQty;
   String? reason;
