@@ -38,7 +38,10 @@ class ClientAction {
   Future<String?> getDeviceIp() async {
     var wifiIP= await networkInfo.getWifiIP();
     if(wifiIP == null) {
-      List<NetworkInterface> interfaces = await NetworkInterface.list();
+      List<NetworkInterface> interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+        includeLoopback: false,
+      );
       for (var interface in interfaces) {
         for (var address in interface.addresses) {
           wifiIP = address.address;
