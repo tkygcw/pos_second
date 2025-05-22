@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/cancel_item/quantity_input_widget.dart';
 import 'package:optimy_second_device/fragment/cart/cancel_item/reason_input_widget.dart';
 import 'package:optimy_second_device/fragment/custom_pin_dialog.dart';
+import 'package:optimy_second_device/fragment/table/table_view_function.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/object/cancel_item_data.dart';
 import 'package:provider/provider.dart';
@@ -273,7 +274,7 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
           //await callUpdateCart(userData, dateTime, cart);
         }
       }
-    } else{ //no changes
+    } else { //no changes
       Navigator.of(context).pop();
     }
   }
@@ -284,12 +285,13 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
       orderDetailSqliteId: int.parse(widget.cartItem.order_detail_sqlite_id!),
       restock: restock,
       cancelQty: simpleIntInput,
-      reason: reason
+      reason: reason,
+      selectedTable: CartModel.instance.selectedTable
     );
-    await clientAction.connectRequestPort(action: '27', param: jsonEncode(data), callback: _decodeResponse);
+    await clientAction.connectRequestPort(action: '27', param: jsonEncode(data), callback: (response)=> _decodeResponse(response, data));
   }
 
-  void _decodeResponse(response){
+  void _decodeResponse(response, data){
     try{
       var json = jsonDecode(clientAction.response!);
       String status = json['status'];
@@ -297,11 +299,10 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
       switch(status){
         case '1': {
           CustomSuccessToast(title: "Delete successful").showToast();
-          TableModel.instance.getTableFromServer(resetMainPosOrderCache: true);
           CartModel.instance.initialLoad();
         }break;
         default: {
-          clientAction.openReconnectDialog(action: json['action'], callback: _decodeResponse);
+          clientAction.openReconnectDialog(action: '27', param: jsonEncode(data), callback: (response)=> _decodeResponse(response, data));
         }
       }
     }catch(e){

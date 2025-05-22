@@ -123,7 +123,7 @@ class ClientAction {
             print('server down');
             // timer?.cancel();
             socket.destroy();
-            // openReconnectDialog(keepAlive: true);
+            openReconnectDialog(keepAlive: true);
           });
     } else {
       result = {'status': '1'};
@@ -230,6 +230,7 @@ class ClientAction {
             result = {'status': '0', 'action': action, 'param': param};
             callback(jsonEncode(result));
           }
+          requestSocket.destroy();
           return;
         }
         try{

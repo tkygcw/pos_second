@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:optimy_second_device/fragment/toast/custom_toastification.dart';
 import 'package:optimy_second_device/object/order_cache.dart';
 import 'package:optimy_second_device/object/order_detail.dart';
 
@@ -22,26 +23,21 @@ class TableViewFunction {
       'start_table_num': startTableNum,
       'destination_table_num': destinationTableNum,
     };
-    await clientAction.connectRequestPort(action: '26', param: jsonEncode(map), callback: _decodeChangeTableData);
+    await clientAction.connectRequestPort(action: '26', param: jsonEncode(map), callback: (response) => _decodeChangeTableData(response, map));
     return _responseStatus;
   }
 
-  void _decodeChangeTableData(response){
+  void _decodeChangeTableData(response, param){
     try{
       var json = jsonDecode(clientAction.response!);
-      String status = json['status'];
+      String status = json['status'] as String;
       _responseStatus = int.parse(status);
-      switch(status){
-        case '1': {
-          //refresh table view
-        }break;
-        default: {
-          clientAction.openReconnectDialog(action: json['action'], callback: _decodeData);
-        }
+      if(status == '4') {
+        clientAction.openReconnectDialog(action: '26', param: jsonEncode(param), callback: (response) => _decodeChangeTableData(response, param));
       }
     }catch(e, s){
       print('change table error: $e, trace: ${s}');
-      //readAllTable();
+      CustomFailedToast(title: "_decodeChangeTableData error", description: e.toString()).showToast();
     }
   }
 

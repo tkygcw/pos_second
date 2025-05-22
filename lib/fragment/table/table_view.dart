@@ -58,8 +58,9 @@ class _TableViewState extends State<TableView> {
               return Consumer<TableModel>(
                   builder: (context, tableModel, child) {
                     return GridView.count(
+                      padding: EdgeInsets.zero,
                       shrinkWrap: true,
-                      crossAxisCount: widget.changeTable != true ? crossAxisCount : 4,
+                      crossAxisCount: widget.changeTable != true ? crossAxisCount : changeTableCrossAxisCount,
                       children: List.generate(
                           tableModel.notifierTableList.length, (index) {
                         return _TableCard(
@@ -75,6 +76,15 @@ class _TableViewState extends State<TableView> {
         }
       }
     );
+  }
+
+  int get changeTableCrossAxisCount {
+    var orientation = MediaQuery.of(context).orientation;
+    if(orientation == Orientation.landscape){
+      return 4;
+    } else {
+      return 2;
+    }
   }
 
   int get crossAxisCount {
@@ -157,7 +167,7 @@ class _TableCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(5.0)
                     ),
                     child: Text(
-                      "Group: ${posTable.group}",
+                      groupText(context),
                       style:
                       TextStyle(fontSize: 18,
                         color: fontColor(
@@ -171,24 +181,6 @@ class _TableCard extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Image.asset("drawable/four-seat.jpg")
               ),
-              // Ink.image(
-              //   image: tableList[index].seats == '2'
-              //       ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/two-seat.jpg'))
-              //   // NetworkImage(
-              //   //         "https://www.hometown.in/media/cms/icon/Two-Seater-Dining-Sets.png")
-              //       : tableList[index].seats == '4'
-              //           ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/four-seat.jpg'))
-              //   // NetworkImage(
-              //   //             "https://www.hometown.in/media/cms/icon/Four-Seater-Dining-Sets.png")
-              //           : tableList[index].seats == '6'
-              //               ? FileImage(File('data/user/0/com.example.pos_system/files/assets/img/six-seat.jpg'))
-              //   // NetworkImage(
-              //   //                 "https://www.hometown.in/media/cms/icon/Six-Seater-Dining-Sets.png")
-              //               : FileImage(File('data/user/0/com.example.pos_system/files/assets/img/duitNow.jpg')),
-              //   // NetworkImage(
-              //   //                 "https://png.pngtree.com/png-vector/20190820/ourmid/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"),
-              //   fit: BoxFit.cover,
-              // ),
               Container(
                   alignment: Alignment.center,
                   child: Text(posTable.number!)),
@@ -208,16 +200,25 @@ class _TableCard extends StatelessWidget {
     );
   }
 
+  String groupText(BuildContext context) {
+    var orientation = MediaQuery.of(context).orientation;
+    if(changeTable == true && orientation == Orientation.portrait){
+      return posTable.group ?? '';
+    } else {
+      return "Group: ${posTable.group}";
+    }
+  }
+
   cardOnTap(BuildContext context, bool isInCart, CartModel cart) async {
     if(changeTable == true){
+      Navigator.of(context).pop();
       //change table func
       var startTableNumber = changeTableFrom!.number!;
       var destinationTableNumber = posTable.number!;
       if(startTableNumber != destinationTableNumber){
         int status = await tableViewFunc.changeTable(startTableNum: startTableNumber, destinationTableNum: destinationTableNumber);
-        if(status == 1){
-          Navigator.of(context).pop();
-          TableModel.instance.getTableFromServer(resetMainPosOrderCache: true);
+        if(status == 2){
+          CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
         }
       } else {
         CustomFailedToast(title: "Cannot change to same table").showToast();
