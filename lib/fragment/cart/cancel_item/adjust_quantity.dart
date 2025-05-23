@@ -1,15 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:optimy_second_device/fragment/cart/cancel_item/quantity_input_widget.dart';
 import 'package:optimy_second_device/fragment/cart/cancel_item/reason_input_widget.dart';
 import 'package:optimy_second_device/fragment/custom_pin_dialog.dart';
-import 'package:optimy_second_device/fragment/table/table_view_function.dart';
 import 'package:optimy_second_device/notifier/app_setting_notifier.dart';
 import 'package:optimy_second_device/object/cancel_item_data.dart';
 import 'package:provider/provider.dart';
-import 'package:quantity_input/quantity_input.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../main.dart';
@@ -68,7 +65,6 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
       });
     }
   }
-
 
   Future showSecondDialog(BuildContext context, ThemeColor color, CartModel cart) {
     return showDialog(
@@ -148,7 +144,6 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
         }
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -278,7 +273,11 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
       reason: reason,
       selectedTable: CartModel.instance.selectedTable
     );
-    await clientAction.connectRequestPort(action: '27', param: jsonEncode(data), callback: (response)=> _decodeResponse(response, data));
+    if(widget.currentPage != 'other_order'){
+      await clientAction.connectRequestPort(action: '27', param: jsonEncode(data), callback: (response) => _decodeResponse(response, data));
+    } else {
+      await clientAction.connectRequestPort(action: '28', param: jsonEncode(data), callback: (response) => _decodeResponse(response, data));
+    }
   }
 
   void _decodeResponse(response, data){

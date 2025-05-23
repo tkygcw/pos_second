@@ -468,7 +468,7 @@ class _CartPageState extends State<CartPage> {
                             SizedBox(height: MediaQuery.of(context).size.height > 500 ? isLandscapeOrien() ? 10 : 0 : 5),
                             SizedBox(
                               height: MediaQuery.of(context).size.height > 500 ?
-                              widget.currentPage == 'menu' || widget.currentPage == 'table' ? isLandscapeOrien() ? 130 : 100 :
+                              widget.currentPage == 'menu' || widget.currentPage == 'table' || widget.currentPage == 'other_order' ? isLandscapeOrien() ? 130 : 100 :
                               null : 25,
                               // widget.currentPage == 'menu' || widget.currentPage == 'table' && MediaQuery.of(context).size.height > 500
                               //     ? 130

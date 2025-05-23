@@ -134,6 +134,10 @@ class DecodeAction {
           TableModel.instance.getTableFromServer(resetMainPosOrderCache: true);
         }
         break;
+        case '5': {
+          OtherOrderFunction.instance.readAllOrderCache(resetMainPosOrderCache: true);
+        }
+        break;
         // case'17': {
         //   Map<String, dynamic>? objectData;
         //   Map<String, dynamic>? result;
