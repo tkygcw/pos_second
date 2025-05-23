@@ -54,7 +54,7 @@ class _CustomPinDialogState extends State<CustomPinDialog> {
   Widget build(BuildContext context) {
     var color = context.watch<ThemeColor>();
     return AlertDialog(
-      title: Text(AppLocalizations.of(context)!.translate('enter_your_pin')),
+      title: Text(AppLocalizations.of(context)!.translate('enter_pin')),
       content: ValueListenableBuilder(
           valueListenable: adminPosPinController,
           builder: (context, TextEditingValue value, __) {

@@ -126,8 +126,7 @@ class _TableCard extends StatelessWidget {
           },
     );
     return Card(
-      color: posTable.status != 0 && MediaQuery.of(context).size.height < 500 ?
-      toColor(posTable.card_color!) : Colors.white,
+      color: getCardColor(context),
       shape: isInCart ? RoundedRectangleBorder(
           side: BorderSide(color: color.backgroundColor, width: 3.0),
           borderRadius: BorderRadius.circular(4.0)) : RoundedRectangleBorder(
@@ -200,6 +199,20 @@ class _TableCard extends StatelessWidget {
     );
   }
 
+  Color getCardColor(BuildContext context){
+    Color defaultColor = Colors.white;
+    if(changeTable == true){
+      if(posTable.number == changeTableFrom!.number!){
+        defaultColor = Colors.redAccent;
+      }
+    } else {
+      if(posTable.status != 0 && MediaQuery.of(context).size.height < 500) {
+        defaultColor = toColor(posTable.card_color!);
+      }
+    }
+    return defaultColor;
+  }
+
   String groupText(BuildContext context) {
     var orientation = MediaQuery.of(context).orientation;
     if(changeTable == true && orientation == Orientation.portrait){
@@ -221,7 +234,7 @@ class _TableCard extends StatelessWidget {
           CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
         }
       } else {
-        CustomFailedToast(title: "Cannot change to same table").showToast();
+        CustomFailedToast(title: AppLocalizations.of(context)!.translate('cannot_change_to_merged_table')).showToast();
       }
     } else {
       openLoadingDialogBox(context);

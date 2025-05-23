@@ -198,6 +198,7 @@
   "enter_server_ip": "Enter server IP",
   "enter_table_number": "Enter table number",
   "enter_yes": "Please type YES to proceed",
+  "enter_pin": "Enter PIN",
   "error": "Error: ",
   "exit_app": "Exit app",
   "fail_create": "Fail create",

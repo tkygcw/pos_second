@@ -248,7 +248,6 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
       final String? pos_user = prefs.getString('pos_pin_user');
       Map<String, dynamic> userMap = json.decode(pos_user!);
       User userData = User.fromJson(userMap);
-      print("userData.edit_price_without_pin: ${userData.edit_price_without_pin}");
       if(simpleIntInput > widget.cartItem.quantity!){
         CustomFailedToast(title: AppLocalizations.of(context)!.translate('quantity_invalid')).showToast();
         setState(() {
@@ -260,18 +259,9 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
           ShowCustomPinDialog(permission: Permission.cancelItem).showPinDialog(
             context, () async => await callCancelItem(userData.user_id!),
           );
-          // showDialog(
-          //   context: context,
-          //   barrierDismissible: false,
-          //   builder: (context) => CustomPinDialog(
-          //     permission: Permission.editPrice,
-          //     callback: () async => await callUpdateCart(userData, dateTime, cart),
-          //   ),
-          // );
         } else {
           //Send cancel item request to main pos
           await callCancelItem(userData.user_id!);
-          //await callUpdateCart(userData, dateTime, cart);
         }
       }
     } else { //no changes
@@ -295,14 +285,17 @@ class _AdjustQuantityDialogState extends State<AdjustQuantityDialog> {
     try{
       var json = jsonDecode(clientAction.response!);
       String status = json['status'];
-      //_responseStatus = int.parse(status);
       switch(status){
         case '1': {
           CustomSuccessToast(title: "Delete successful").showToast();
           CartModel.instance.initialLoad();
         }break;
+        case '2': {
+          CustomSuccessToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
+          CartModel.instance.initialLoad();
+        }break;
         default: {
-          clientAction.openReconnectDialog(action: '27', param: jsonEncode(data), callback: (response)=> _decodeResponse(response, data));
+          clientAction.openReconnectDialog(action: '27', param: jsonEncode(data), callback: (response) => _decodeResponse(response, data));
         }
       }
     }catch(e){
