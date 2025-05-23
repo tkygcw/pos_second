@@ -86,7 +86,7 @@ class _ServerIpDialogState extends State<ServerIpDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (!Platform.isIOS)
+
                           TabBar(
                             isScrollable: false,
                             unselectedLabelColor: Colors.black,
@@ -641,7 +641,10 @@ class _ScanIpViewState extends State<ScanIpView> {
     var wifiName = await NetworkInfo().getWifiName();
 
     if(wifiIP == null) {
-      List<NetworkInterface> interfaces = await NetworkInterface.list();
+      List<NetworkInterface> interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+        includeLoopback: false,
+      );
       for (var interface in interfaces) {
         for (var address in interface.addresses) {
           wifiIP = address.address;
@@ -651,27 +654,96 @@ class _ScanIpViewState extends State<ScanIpView> {
     }
 
     var subnet = ipToCSubnet(wifiIP!);
+    await performParallelTcpScan(subnet, wifiName ?? 'Unknown Network', wifiIP);
+    // final stream = scanner.icmpScan(subnet, progressCallback: (progress) {
+    //   if (mounted) {
+    //     setState(() {
+    //       if (wifiName != null) {
+    //         info = Text('${AppLocalizations.of(context)!.translate('scanning_device_within')} $wifiName');
+    //       } else {
+    //         info = Text(AppLocalizations.of(context)!.translate('scanning'));
+    //       }
+    //       percentage = progress;
+    //       if (percentage == 1.0) {
+    //         streamController.sink.add("done");
+    //         // isLoad = true;
+    //       }
+    //     });
+    //   }
+    // });
 
-    final stream = scanner.icmpScan(subnet, progressCallback: (progress) {
-      if (mounted) {
-        setState(() {
-          if (wifiName != null) {
-            info = Text('${AppLocalizations.of(context)!.translate('scanning_device_within')} $wifiName');
-          } else {
-            info = Text(AppLocalizations.of(context)!.translate('scanning'));
-          }
-          percentage = progress;
-          if (percentage == 1.0) {
-            streamController.sink.add("done");
-            // isLoad = true;
-          }
-        });
+    // stream.listen((Host host) {
+    //   ips.add(host.internetAddress.address);
+    // });
+  }
+
+  Future<void> performParallelTcpScan(String subnet, String wifiName, String wifiIP) async {
+    try {
+      int completed = 0;
+      const int totalHosts = 254;
+      List<Future<void>> scanFutures = [];
+
+      setState(() {
+        info = Text('${AppLocalizations.of(context)!.translate('scanning_device_within')} $wifiName');
+      });
+
+      for (int i = 1; i <= totalHosts; i++) {
+        String ip = "$subnet.$i";
+
+        if (ip != wifiIP) {
+          scanFutures.add(
+              checkPort(ip, 9999).then((isReachable) {
+                if (isReachable) {
+                  setState(() {
+                    ips.add(ip);
+                  });
+                }
+
+                completed++;
+                if (mounted) {
+                  setState(() {
+                    percentage = completed / totalHosts;
+                  });
+                }
+              }).catchError((e) {
+                completed++;
+                if (mounted) {
+                  setState(() {
+                    percentage = completed / totalHosts;
+                  });
+                }
+              })
+          );
+        } else {
+          completed++;
+          setState(() {
+            percentage = completed / totalHosts;
+          });
+        }
       }
-    });
+      await Future.wait(scanFutures);
 
-    stream.listen((Host host) {
-      ips.add(host.internetAddress.address);
-    });
+      setState(() {
+        streamController.sink.add("done");
+        isLoad = true;
+      });
+    } catch(e) {
+      print("performParallelTcpScan error: ${e}");
+      setState(() {
+        streamController.sink.add("done");
+        isLoad = true;
+      });
+    }
+  }
+
+  Future<bool> checkPort(String ip, int port) async {
+    try {
+      final socket = await Socket.connect(ip, port, timeout: Duration(seconds: 2));
+      socket.destroy();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   checkScanStatus(response) async {

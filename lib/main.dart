@@ -35,7 +35,7 @@ final LCDDisplay lcdDisplay = LCDDisplay();
 final DecodeAction decodeAction = DecodeAction();
 DisplayManager displayManager = DisplayManager();
 AppLanguage appLanguage = AppLanguage();
-String appVersionCode = '', patch = '1';
+String appVersionCode = '', patch = '2';
 String currency_code = 'MYR';
 String currency_symbol = 'RM';
 
