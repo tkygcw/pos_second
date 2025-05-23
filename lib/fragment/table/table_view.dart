@@ -202,7 +202,7 @@ class _TableCard extends StatelessWidget {
   Color getCardColor(BuildContext context){
     Color defaultColor = Colors.white;
     if(changeTable == true){
-      if(posTable.number == changeTableFrom!.number!){
+      if(posTable.group == changeTableFrom!.group){
         defaultColor = Colors.redAccent;
       }
     } else {
@@ -226,9 +226,11 @@ class _TableCard extends StatelessWidget {
     if(changeTable == true){
       Navigator.of(context).pop();
       //change table func
-      var startTableNumber = changeTableFrom!.number!;
-      var destinationTableNumber = posTable.number!;
-      if(startTableNumber != destinationTableNumber){
+      String startTableNumber = changeTableFrom!.number!;
+      String destinationTableNumber = posTable.number!;
+      String startTableGroup = changeTableFrom!.group!;
+      String? destinationTableGroup = posTable.group;
+      if(startTableGroup != destinationTableGroup){
         int status = await tableViewFunc.changeTable(startTableNum: startTableNumber, destinationTableNum: destinationTableNumber);
         if(status == 2){
           CustomFailedToast(title: AppLocalizations.of(context)!.translate('order_is_in_payment')).showToast();
